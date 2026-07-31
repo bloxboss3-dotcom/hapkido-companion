@@ -15,7 +15,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   assigns items; a third course is a data entry.
 - **Engine:** Hanbit's FSRS-5 scheduler, session planner, FX/celebration system,
   storage/migration safety — preserved via the transform-override build
-  (`dev/build/`). 123/123 automated checks passing.
+  (`dev/build/`). 132/132 automated checks passing.
 - **Repo:** `npm run build` / `npm test` / `npm run check`, plus a GitHub Actions
   job that rebuilds `index.html` on every PR and fails if the deployed file has
   drifted from the source it is generated from. Dependencies are locked
@@ -63,6 +63,18 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   and a Legendary within 50; and **there is no real-money path, ever.** No
   character performs a technique, and nothing here is rank — the screen says
   so, and tests assert both.
+- **Learning effectiveness, with no video yet.** Four of the five technique
+  rungs were multiple choice — recognition, not production. Added `t-explain`:
+  the student explains the technique in their own words FIRST, then compares
+  against purpose + keyDetails and grades honestly. Inducing self-explanation
+  is among the best-evidenced study interventions (Bisra et al. 2018, g≈0.55,
+  and it holds for procedural knowledge), and it needed no new content. Also a
+  mental-rehearsal prompt on each technique, written around the attack as the
+  cue because that is the condition the evidence actually supports (Toth et al.
+  2020, r≈0.13 — real but small, and the copy says so rather than overselling).
+  **Heads-up:** adding a rung means items that were "mastered" now have one more
+  thing to do, so the Knowledge-mastered count dips once. That is honest, not a
+  bug — there is genuinely more to know.
 - **Content:** 106 provisional items across three belts —
   White (53: etiquette, commands, counting, principles, safety, stances,
   falls-knowledge, first strikes, wrist releases), White·Yellow Stripe (30:
@@ -80,7 +92,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 - **Deploy:** GitHub Pages serves root `index.html` (generated single-file), now
   by `git push` to `main` rather than manual upload. **Fully automatic:** the
   `auto-merge` job in `verify.yml` squash-merges a green non-draft `claude/*`
-  PR and Pages republishes itself, so nobody clicks merge. The 123-check matrix
+  PR and Pages republishes itself, so nobody clicks merge. The 132-check matrix
   is therefore the only gate before students see a change — grow it, and keep
   PRs in draft until they are actually finished. The repo had drifted — only
   a hand-uploaded `index.html` was on GitHub, one build behind (still the old
@@ -124,7 +136,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 npm ci                                           # playwright, exactly as locked
 npm run check                                    # build + in-sync check + matrix
 ```
-Confirm 123/123, commit any drift, then pick up item 1 or 3 above with Kevin.
+Confirm 132/132, commit any drift, then pick up item 1 or 3 above with Kevin.
 After a deploy lands, `npm run smoke` checks the live site (needs network).
 When authoring the next belt, remember it wants units in BOTH courses.
 Original Hanbit app must never be modified: `dev/hanbit-korean.BACKUP-2026-07-30.html`

@@ -416,6 +416,31 @@ function renderBelt() {
     ${units}${cumCard}`;
 }
 
+/* Mental rehearsal. Worth being honest about the size of this one: pooled
+   across 37 studies the effect survives publication-bias correction but is
+   small (Toth et al. 2020, r≈0.13), well below retrieval practice or
+   self-explanation. What the same analysis found is that it works best for
+   EXTERNALLY CUED movement — a response to something that happens to you —
+   which is exactly the shape of a defence against a grab. So the prompt is
+   written around the cue rather than as free-floating visualisation.
+
+   It is rehearsal of knowledge, not practice: no restricted technique is ever
+   unlocked by it, and for those the wording deliberately stays on recognising
+   the situation and your own footing rather than applying anything to anyone. */
+function imageryPrompt(it) {
+  const steps = (it.stepSequence || []).length;
+  if (!steps) return '';
+  const cue = it.attackOrGrab ? lowerFirst(it.attackOrGrab) : null;
+  const open = cue
+    ? `Picture <b>${esc(cue)}</b> happening — the moment it starts, not after.`
+    : `Picture the moment <b>${esc(it.name)}</b> begins.`;
+  const body = isRestricted(it)
+    ? 'Then walk the steps through in your head: what you would recognise, where your feet go, where your balance is. Rehearsing it mentally is not practising it — this one is still class-only.'
+    : 'Then run the steps through in your head at your own pace, feeling where your weight is at each one.';
+  return `<div class="imagery"><b>Before class, in your head:</b> ${open} ${body}
+    <span class="faint"> Mental rehearsal is a small effect, not a substitute for mat time — but it is free and it costs nothing to do on the bus.</span></div>`;
+}
+
 /* Weighted progress for one item, plus what each drill is worth toward it.
    The long exercises carry the most weight, so ordering the steps visibly
    moves a technique further than a recognition question does. Reports
@@ -483,6 +508,7 @@ function renderItemDetail(it) {
     ${(it.keyDetails || []).length ? `<div class="tip"><b>Key points</b><ul class="kd">${it.keyDetails.map(k => `<li>${esc(k)}</li>`).join('')}</ul></div>` : ''}
     ${(it.commonErrors || []).length ? `<div class="tip"><b>Common mistakes to spot</b><ul class="kd">${it.commonErrors.map(k => `<li>${esc(k)}</li>`).join('')}</ul></div>` : ''}
     ${(it.safetyNotes || []).length ? `<div class="tip"><b>Safety</b><ul class="kd">${it.safetyNotes.map(k => `<li>${esc(k)}</li>`).join('')}</ul></div>` : ''}
+    ${imageryPrompt(it)}
     ${isRestricted(it) ? supervisionNotice(it) : ''}
     ${(it.instructorCheckpoints || []).length ? `<div class="tip"><b>What your instructor checks</b><ul class="kd">${it.instructorCheckpoints.map(k => `<li>${esc(k)}</li>`).join('')}</ul></div>` : ''}
     ${canPractice(it)

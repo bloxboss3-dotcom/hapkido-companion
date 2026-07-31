@@ -227,6 +227,19 @@ header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, va
 .fb-steps.marked li.missed { color: var(--tx); font-weight: 600; }
 .fb-steps.marked li.missed::marker { color: var(--bad); font-weight: 700; }
 
+/* ---- explain-it-yourself rung ---- */
+.explain-cue { border-style: dashed; }
+.ex-purpose { font-size: 14px; line-height: 1.55; margin-bottom: 8px; }
+.ex-points { margin: 0; padding-left: 18px; font-size: 13.5px; }
+.ex-points li { margin-bottom: 4px; }
+.ex-watch { margin-top: 9px; font-size: 13px; color: var(--tx-dim); }
+.ex-watch b { color: var(--warn); }
+
+/* ---- mental-rehearsal prompt ---- */
+.imagery { margin-top: 12px; padding: 11px 13px; border-radius: var(--radius-sm);
+  border: 1px dashed var(--line); background: var(--bg-soft); font-size: 12.5px; line-height: 1.55; color: var(--tx-dim); }
+.imagery b { color: var(--tx); }
+
 /* ---- the tab bar has to show every tab ----
    A sixth tab pushed Settings off the right edge on a normal phone, and both
    Method and Settings at 320px. The bar scrolled, but a scroll nobody can see
