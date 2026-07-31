@@ -8,9 +8,10 @@
     "build": "python3 dev/build/transform.py",
     "test": "node dev/build/test-matrix.js",
     "check": "npm run build && git diff --exit-code -- index.html dev/hapkido-companion/index.html && npm test",
+    "smoke": "node dev/build/smoke-deployed.js",
     "serve": "python3 -m http.server 8080"
   },
   "devDependencies": {
-    "playwright": "^1.56.1"
+    "playwright": "1.56.1"
   }
 }

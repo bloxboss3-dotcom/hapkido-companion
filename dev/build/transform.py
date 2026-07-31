@@ -8,7 +8,7 @@ appended before BOOT, where later function declarations override the
 originals. Every anchor is asserted so a drifted source fails loudly
 instead of silently mangling the file.
 """
-import sys, pathlib
+import sys, pathlib, shutil
 
 # Path-portable: works from any checkout. Expected layout:
 #   <repo>/dev/build/transform.py   (this file)
@@ -49,6 +49,22 @@ s = sub1(s, 'content="Hanbit — an ad-free Korean trainer built on retrieval pr
          'content="Hapkido Companion (working title) — an ad-free training companion for students of the school. Terminology, principles, and technique knowledge on FSRS spaced repetition; physical skill is verified only by instructors. Stores nothing anywhere but your own browser."',
          'meta-desc')
 s = sub1(s, '%ED%95%9C%3C', '%ED%95%A9%3C', 'icon-glyph')  # 한 -> 합
+
+# iOS ignores SVG favicons, so Add-to-Home-Screen needs a real raster or it
+# falls back to a generic glyph. This is the only file the page references;
+# Safari fetches it when a student adds the app, never on load — so the
+# "works with the network off" property survives (you just lose the icon).
+s = sub1(s, '''<!-- No external requests of any kind: Korean text uses the system font stack
+     so the file works with the network switched off and nothing is ever
+     fetched, logged or phoned home. -->''',
+         '''<!-- No external requests of any kind: Korean text uses the system font stack
+     so the file works with the network switched off and nothing is ever
+     fetched, logged or phoned home. The single same-origin file referenced
+     below is apple-touch-icon.png, which only iOS requests when a student
+     taps Add to Home Screen — never during normal use. -->''', 'offline-comment')
+s = sub1(s, '%3E%ED%95%A9%3C/text%3E%3C/svg%3E">',
+         '%3E%ED%95%A9%3C/text%3E%3C/svg%3E">\n'
+         '<link rel="apple-touch-icon" href="apple-touch-icon.png">', 'apple-touch-icon')
 s = sub1(s, 'Hanbit needs JavaScript — the whole app, including the scheduler, runs locally in your browser.',
          'This app needs JavaScript — everything, including the scheduler, runs locally in your browser.', 'noscript')
 s = sub1(s, '</head>', '<script src="data/curriculum.js"></script>\n</head>', 'curriculum-script')
@@ -128,6 +144,16 @@ cur_path = DEV / 'hapkido-companion' / 'data' / 'curriculum.js'
 single = s.replace('<script src="data/curriculum.js"></script>',
                    '<script>\n' + cur_path.read_text(encoding='utf-8') + '\n</script>', 1)
 (REPO / 'index.html').write_text(single, encoding='utf-8')
+
+# ---------- place the iOS home-screen icon beside each index.html ----------
+# The icon has to sit next to the file that references it, so the folder build
+# and the deployed root build each get their own copy. Source of truth is the
+# one in dev/hapkido-companion/; asserted so a deleted icon fails the build
+# instead of silently shipping a broken <link>.
+ICON = 'apple-touch-icon.png'
+icon_src = DEV / 'hapkido-companion' / ICON
+assert icon_src.exists(), f'MISSING ICON: {icon_src}'
+shutil.copyfile(icon_src, REPO / ICON)
 
 # ---------- report ----------
 lines = s.count('\n') + 1

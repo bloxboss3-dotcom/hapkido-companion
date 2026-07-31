@@ -89,13 +89,23 @@ declares them; `domain.track` assigns items. Adding a third = one data entry.
 ## Build & test — required before every deploy
 
 ```bash
-npm install                           # once: playwright
+npm ci                                # once: playwright, exactly as locked
 npm run build                         # rebuilds both index.html files
-npm test                              # 84 checks; needs playwright + chromium
+npm test                              # 85 checks; needs playwright + chromium
 npm run check                         # build + in-sync check + test (what CI runs)
+npm run smoke                         # optional: tests the DEPLOYED site (needs network)
 ```
 
-The matrix must pass 84/84 (grow it with every feature — count goes up, never
+`playwright` is pinned exactly and `package-lock.json` is committed — CI runs
+`npm ci`, so a silent upstream upgrade can't break an unrelated PR. The pin
+(1.56.1) matches the chromium build preinstalled in agent sandboxes, so `npm
+test` runs there without downloading a browser. `npm run smoke` is deliberately
+outside `npm run check`: it loads the live GitHub Pages URL and catches
+deploy-only failures (stale deploy, 404 or wrong MIME on an asset) that a
+`file://` matrix structurally cannot see. It is not in CI and needs real
+network — a sandbox that blocks the browser's egress can't run it.
+
+The matrix must pass 85/85 (grow it with every feature — count goes up, never
 down). It covers: boot, course picker + switching + persistence, per-course paths,
 per-course daily budgets, course-scoped and both-course sessions, course-scoped vs
 whole-belt readiness, FSRS values against hand-computed expectations, wrong-answer
