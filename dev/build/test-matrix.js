@@ -697,6 +697,184 @@ async function answerCurrentRight() {
   }) && await (async () => { await page.reload(); await sleep(600);
     return page.evaluate(() => window.__HKD.view === 'courses' && !window.__HKD.activeCourse()); })());
 
+  /* ---- 19b. the dojang: collectibles ----
+     The load-bearing rule is that ki pays for WORK, never for being right.
+     Paying more for correct answers would reintroduce a punishment mechanic
+     and give a student a reason to lie on the self-graded drill. */
+  ok('dojang: a wrong answer earns exactly what a right one earns', await page.evaluate(() => {
+    const H = window.__HKD, S = H.S;
+    const day = { reviews: 10, newItems: 0, ms: 1000, correct: 10, total: 10 };
+    const allRight = { ...day, correct: 10 };
+    const allWrong = { ...day, correct: 0 };
+    const keep = S.days;
+    S.days = { '2026-01-01': allRight };
+    const a = H.kiEarned();
+    S.days = { '2026-01-01': allWrong };
+    const b = H.kiEarned();
+    S.days = keep;
+    return a === b && a > 0;
+  }));
+  ok('dojang: grinding past the daily cap stops paying', await page.evaluate(() => {
+    const H = window.__HKD, S = H.S;
+    const keep = S.days;
+    S.days = { '2026-01-02': { reviews: H.KI_DAY_CAP_REVIEWS, newItems: 0, ms: 0, correct: 0, total: 0 } };
+    const atCap = H.kiEarned();
+    S.days = { '2026-01-02': { reviews: H.KI_DAY_CAP_REVIEWS * 4, newItems: 0, ms: 0, correct: 0, total: 0 } };
+    const wayOver = H.kiEarned();
+    S.days = keep;
+    return atCap === wayOver;
+  }));
+  // The real path, end to end: get an answer wrong in a live session and the
+  // balance still goes up.
+  await page.evaluate(() => {
+    const H = window.__HKD, S = H.S;
+    S.settings.dailyNew = 0;
+    S.settings.activeCourseId = 'art';                      // the technique lives here
+    S.dojang = { spent: 0, refunded: 0, owned: {}, opened: 0, pityRare: 0, pityLeg: 0, seen: {}, last: null };
+    S.introduced['x-ap-chagi'] = Date.now();
+    S.cards['x-ap-chagi|t-id'] = { S: 2, D: 5, due: Date.now() - 1000, last: Date.now() - 86400000, reps: 2, lapses: 0, state: 'review' };
+    H.save(); H.view = 'today'; H.render();
+  });
+  await sleep(250);
+  const canStart = !!(await page.$('[data-act="start"]'));
+  ok('dojang: a due card is waiting to be answered', canStart);
+  if (canStart) await page.click('[data-act="start"]');
+  await sleep(450);
+  const kiBefore = await page.evaluate(() => window.__HKD.kiBalance());
+  let answeredWrong = false;
+  for (let i = 0; canStart && i < 6; i++) {
+    const t = await page.evaluate(() => window.__HKD.liveEx && window.__HKD.liveEx.type);
+    if (await page.$('[data-act="learned"]')) { await page.click('[data-act="learned"]'); await sleep(150); continue; }
+    if (t === 'mc') {
+      answeredWrong = await page.evaluate(() => {
+        const ans = window.__HKD.liveEx.answer;
+        const bad = [...document.querySelectorAll('.opt')].find(o => o.textContent.trim() !== ans);
+        if (!bad) return false;
+        bad.click(); return true;
+      });
+      await sleep(300);
+      break;
+    }
+    await answerCurrentRight();
+  }
+  ok('dojang: getting it wrong still pays — earning is for work, not correctness',
+    answeredWrong && (await page.evaluate(() => window.__HKD.kiBalance())) > kiBefore);
+  if (await page.$('[data-act="quit"]')) { await page.click('[data-act="quit"]'); await sleep(300); }
+  if (await page.evaluate(() => window.__HKD.view === 'done')) { await page.click('[data-view="today"]'); await sleep(200); }
+
+  ok('dojang: opening a pack costs ki and yields a character', await page.evaluate(() => {
+    const H = window.__HKD, S = H.S;
+    S.days['2026-02-01'] = { reviews: 60, newItems: 0, ms: 0, correct: 0, total: 0 };
+    S.days['2026-02-02'] = { reviews: 60, newItems: 0, ms: 0, correct: 0, total: 0 };
+    const before = H.kiBalance();
+    if (before < H.PACK_COST) return false;
+    H.openPacks(1);
+    const d = H.djState();
+    return H.kiBalance() <= before - H.PACK_COST + 300 &&   // cost taken (a dupe may refund)
+      d.opened === 1 && Object.keys(d.owned).length === 1;
+  }));
+  ok('dojang: a pack you cannot afford does nothing', await page.evaluate(() => {
+    const H = window.__HKD, S = H.S, d = H.djState();
+    const keepSpent = d.spent, keepDays = S.days;
+    S.days = {};                                            // no earnings at all
+    d.spent = 0; d.refunded = 0;
+    const openedBefore = d.opened;
+    H.openPacks(1);
+    const unchanged = d.opened === openedBefore && d.spent === 0;
+    S.days = keepDays; d.spent = keepSpent;
+    return unchanged && H.kiBalance() >= 0;
+  }));
+  ok('dojang: duplicates refund ki instead of being dead weight', await page.evaluate(() => {
+    const H = window.__HKD, d = H.djState();
+    const before = d.refunded || 0;
+    // Own exactly one character, then force pulls until one repeats.
+    let sawDupe = false;
+    for (let i = 0; i < 400 && !sawDupe; i++) { if (H.djPull().dup) sawDupe = true; }
+    return sawDupe && (d.refunded || 0) > before;
+  }));
+  ok('dojang: the pity counter guarantees a rare or better', await page.evaluate(() => {
+    const H = window.__HKD, d = H.djState();
+    d.pityRare = 0; d.pityLeg = 0;
+    let streak = 0, worst = 0;
+    for (let i = 0; i < 600; i++) {
+      const r = H.djPull();
+      if (r.rarity === 'common') { streak++; worst = Math.max(worst, streak); } else streak = 0;
+    }
+    return worst < H.PITY_RARE;                             // never a longer cold run
+  }));
+  ok('dojang: no character performs a technique, and poses stay solo', await page.evaluate(() => {
+    const H = window.__HKD;
+    const SAFE = ['ready', 'guard', 'bow', 'stretch', 'cheer'];
+    return H.DJ_ROSTER.every(c => SAFE.includes(c.pose));
+  }));
+  ok('dojang: the roster is well formed — unique ids, every tier populated', await page.evaluate(() => {
+    const H = window.__HKD;
+    const ids = H.DJ_ROSTER.map(c => c.id);
+    const uniq = new Set(ids).size === ids.length;
+    const tiers = H.DJ_RARITY_ORDER.every(r => H.DJ_ROSTER.some(c => c.r === r));
+    const known = H.DJ_ROSTER.every(c => H.DJ_RARITY_ORDER.includes(c.r) && c.name && c.blurb);
+    return uniq && tiers && known && H.DJ_ROSTER.length >= 25;
+  }));
+
+  await page.evaluate(() => { window.__HKD.djTab = 'room'; window.__HKD.view = 'dojang'; window.__HKD.render(); });
+  await sleep(350);
+  ok('dojang: the room shows one figure per character owned, none stacked', await page.evaluate(() => {
+    const H = window.__HKD;
+    const owned = H.djOwnedList().length;
+    const figs = [...document.querySelectorAll('.dj-liv')];
+    if (figs.length !== owned || !owned) return false;
+    // Distinct slots: no two figures share the same left+bottom.
+    const slots = new Set(figs.map(f => f.style.left + '|' + f.style.bottom));
+    return slots.size === figs.length;
+  }));
+  await page.evaluate(() => { window.__HKD.djTab = 'collection'; window.__HKD.render(); });
+  await sleep(350);
+  ok('dojang: the collection lists every character, unfound ones hidden', await page.evaluate(() => {
+    const H = window.__HKD;
+    const cards = document.querySelectorAll('.dj-card');
+    const locked = document.querySelectorAll('.dj-card.locked');
+    const owned = H.djOwnedList().length;
+    return cards.length === H.DJ_ROSTER.length && locked.length === H.DJ_ROSTER.length - owned;
+  }));
+  ok('dojang: rarity is spelled out, never colour alone', await page.evaluate(() => {
+    const tags = [...document.querySelectorAll('.dj-tag')];
+    const words = ['Common', 'Rare', 'Legendary', 'Mythical'];
+    return tags.length > 0 && tags.every(t => words.some(w => t.textContent.includes(w)));
+  }));
+  ok('dojang: says plainly these are not rank and not curriculum', await page.evaluate(() => {
+    const t = document.body.textContent;
+    return /not rank/i.test(t) && /only Grandmaster Lee awards belts/i.test(t) && /not curriculum/i.test(t);
+  }));
+  await page.screenshot({ path: 'shots/dojang-collection.png', fullPage: true });
+  // innerText, not textContent — the latter includes the inlined <script>, so
+  // it matches every dollar sign in the source and proves nothing.
+  ok('dojang: there is no way to buy anything with real money', await page.evaluate(() =>
+    !/\$|USD|£|€|purchase|checkout|real money|credit card/i.test(document.body.innerText) &&
+    !document.querySelector('[data-dj="buy"],[href*="checkout"],[href*="payment"]')));
+  // Losing a collection to a browser wipe would be miserable, so prove it
+  // rides along in the backup like everything else.
+  await page.evaluate(() => { window.__HKD.view = 'settings'; window.__HKD.render(); });
+  await sleep(250);
+  const djBefore = await page.evaluate(() => JSON.stringify({
+    owned: window.__HKD.djState().owned, spent: window.__HKD.djState().spent, opened: window.__HKD.djState().opened }));
+  const [djDownload] = await Promise.all([page.waitForEvent('download'), page.click('[data-act="export"]')]);
+  const djPath = '/tmp/hapkido-dojang-export.json';
+  await djDownload.saveAs(djPath);
+  await page.evaluate(() => {
+    const H = window.__HKD;
+    H.S.dojang = { spent: 0, refunded: 0, owned: {}, opened: 0, pityRare: 0, pityLeg: 0, seen: {}, last: null };
+    H.save();
+  });
+  await page.click('[data-act="import"]').catch(() => {});
+  await page.setInputFiles('#importfile', djPath); await sleep(700);
+  ok('dojang: a backup carries the collection home', await page.evaluate(before => {
+    const H = window.__HKD;
+    return JSON.stringify({ owned: H.djState().owned, spent: H.djState().spent, opened: H.djState().opened }) === before;
+  }, djBefore), 'collection lost on restore');
+
+  await page.evaluate(() => { window.__HKD.view = 'today'; window.__HKD.render(); });
+  await sleep(200);
+
   /* ---- 20. the DEPLOYED file ----
      Everything above runs against the folder build (external curriculum).
      GitHub Pages serves the single-file build at the repo root, with the

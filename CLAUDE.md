@@ -43,18 +43,34 @@ Working title. Read `HANDOFF.md` for current state and roadmap before doing anyt
   session machinery, storage). NEVER modified.
 - `dev/build/transform.py` — builds the app: takes the Hanbit source, deletes the
   Korean course data, applies anchored string substitutions, appends
-  `course-art.js` + `hapkido-part1..5.js` before BOOT (later function declarations
+  `course-art.js` + `dojang-art.js` + `hapkido-part1..6.js` before BOOT (later function declarations
   override the originals — that's the override mechanism), swaps the mascot SVG
   (`avatar-svg.js`), appends `extra.css`. Writes `dev/hapkido-companion/index.html`
   (folder build, external curriculum) AND repo-root `index.html` (single file,
   curriculum inlined — the deployed one). Every anchor is asserted; a failed
   assert means the source drifted — fix the anchor, don't fumble the region.
-- `dev/build/hapkido-part1..5.js` — the hapkido layer: courses/catalogue/planner
+- `dev/build/hapkido-part1..6.js` — the hapkido layer: courses/catalogue/planner
   (1), exercises/session rendering (2), picker/path/belt/detail views (3), practice/
-  instructor/method/settings (4), done/afterRender/actions/listeners/audio (5).
+  instructor/method/settings (4), done/afterRender/actions/listeners/audio (5),
+  dojang economy/packs/collection (6).
 - `dev/build/course-art.js` — the two course emblems as inline SVG (vector, so the
   single-file build stays small and crisp). `window.HKD_COURSE_ART = {way, art}`
   overrides them per course with a URL or data: URI if real artwork ever arrives.
+- `dev/build/dojang-art.js` — the collectible roster + ONE parametric character
+  SVG (trait slots: skin/hair/uniform/trim/sash/accessory/pose/eyes), so thirty
+  characters cost a few hundred bytes instead of thirty files. Adding a
+  character is a row in `DJ_ROSTER`. **Two rules are load-bearing here:** no
+  character may perform a technique (poses are solo — ready/guard/bow/stretch/
+  cheer; an illustrated lock or throw is safety misinformation, same reason
+  generated technique art is banned), and nothing here is rank — sashes are
+  costume, rarity is never a belt colour, and the screen says so.
+- part6's economy: **기 (ki) pays for WORK, never for being right.** It is
+  derived from `S.days[*].reviews`, which counts every graded answer whatever
+  the grade — so there is nothing to hook and it survives import for free. Only
+  spending is stored. Paying more for correct answers would reintroduce the
+  punishment mechanic invariant 5 forbids AND give a student a reason to lie on
+  the self-graded speaking drill. A daily cap means grinding past a healthy
+  session earns nothing. There is no real-money path and there must never be.
 - `dev/hapkido-companion/data/curriculum.js` — ALL content. Belts (data-driven:
   colors/order/gup/units), courses (name/glyph/accent/blurb/fxGlyphs per track),
   domains (with `track: knowledge|technique`, the ONLY thing deciding which course
@@ -106,7 +122,7 @@ declares them; `domain.track` assigns items. Adding a third = one data entry.
 ```bash
 npm ci                                # once: playwright, exactly as locked
 npm run build                         # rebuilds both index.html files
-npm test                              # 103 checks; needs playwright + chromium
+npm test                              # 119 checks; needs playwright + chromium
 npm run check                         # build + in-sync check + test (what CI runs)
 npm run smoke                         # optional: tests the DEPLOYED site (needs network)
 ```
@@ -120,7 +136,7 @@ deploy-only failures (stale deploy, 404 or wrong MIME on an asset) that a
 `file://` matrix structurally cannot see. It is not in CI and needs real
 network — a sandbox that blocks the browser's egress can't run it.
 
-The matrix must pass 103/103 (grow it with every feature — count goes up, never
+The matrix must pass 119/119 (grow it with every feature — count goes up, never
 down). It covers: boot, course picker + switching + persistence, per-course paths,
 per-course daily budgets, course-scoped and both-course sessions, course-scoped vs
 whole-belt readiness, FSRS values against hand-computed expectations, wrong-answer

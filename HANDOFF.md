@@ -15,7 +15,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   assigns items; a third course is a data entry.
 - **Engine:** Hanbit's FSRS-5 scheduler, session planner, FX/celebration system,
   storage/migration safety — preserved via the transform-override build
-  (`dev/build/`). 103/103 automated checks passing.
+  (`dev/build/`). 119/119 automated checks passing.
 - **Repo:** `npm run build` / `npm test` / `npm run check`, plus a GitHub Actions
   job that rebuilds `index.html` on every PR and fails if the deployed file has
   drifted from the source it is generated from. Dependencies are locked
@@ -52,6 +52,17 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   progress ring and a per-drill breakdown, and session feedback says what the
   drill just answered was worth. Display only — `knowledgeMastered()` and the
   five belt measures are unchanged, and nothing here unlocks practice.
+- **The Dojang (collectibles).** A sixth tab. Training earns 기 (ki); ki buys
+  packs; packs roll 30 characters across Common/Rare/Legendary/Mythical, and
+  whoever you own lives in a room and wanders about. Guardrails that are part
+  of the design, not decoration: ki is earned for **work done, never for being
+  right** (derived from `days[*].reviews`, so a wrong answer pays exactly the
+  same — anything else would punish mistakes and give a reason to lie on the
+  self-graded drill); a daily cap means grinding past a healthy session earns
+  nothing; duplicates refund; pity counters guarantee a Rare within 10 packs
+  and a Legendary within 50; and **there is no real-money path, ever.** No
+  character performs a technique, and nothing here is rank — the screen says
+  so, and tests assert both.
 - **Content:** 106 provisional items across three belts —
   White (53: etiquette, commands, counting, principles, safety, stances,
   falls-knowledge, first strikes, wrist releases), White·Yellow Stripe (30:
@@ -69,7 +80,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 - **Deploy:** GitHub Pages serves root `index.html` (generated single-file), now
   by `git push` to `main` rather than manual upload. **Fully automatic:** the
   `auto-merge` job in `verify.yml` squash-merges a green non-draft `claude/*`
-  PR and Pages republishes itself, so nobody clicks merge. The 103-check matrix
+  PR and Pages republishes itself, so nobody clicks merge. The 119-check matrix
   is therefore the only gate before students see a change — grow it, and keep
   PRs in draft until they are actually finished. The repo had drifted — only
   a hand-uploaded `index.html` was on GitHub, one build behind (still the old
@@ -113,7 +124,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 npm ci                                           # playwright, exactly as locked
 npm run check                                    # build + in-sync check + matrix
 ```
-Confirm 103/103, commit any drift, then pick up item 1 or 3 above with Kevin.
+Confirm 119/119, commit any drift, then pick up item 1 or 3 above with Kevin.
 After a deploy lands, `npm run smoke` checks the live site (needs network).
 When authoring the next belt, remember it wants units in BOTH courses.
 Original Hanbit app must never be modified: `dev/hanbit-korean.BACKUP-2026-07-30.html`
