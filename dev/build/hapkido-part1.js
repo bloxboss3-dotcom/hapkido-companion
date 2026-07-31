@@ -10,6 +10,16 @@
 const DAY = 86400000;
 const STORE_KEY = 'lmaa-hapkido.v1';
 
+/* ---------- courses: two separate schools of study ----------------
+   Data-driven from CURRICULUM.courses. A course is to this app what a
+   language is to a language app: its own path, its own daily budget,
+   its own colour, its own celebrations. The belt is shared, because
+   the belt is the school's — not the app's. */
+const COURSES = ((window.CURRICULUM && CURRICULUM.courses) || [])
+  .slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+const COURSE_BY_ID = {}; COURSES.forEach(c => COURSE_BY_ID[c.id] = c);
+const COURSE_BY_TRACK = {}; COURSES.forEach(c => { if (!COURSE_BY_TRACK[c.track]) COURSE_BY_TRACK[c.track] = c; });
+
 /* ---------- catalogue: flatten CURRICULUM into ITEMS/SEQUENCE ---------- */
 const BELTS = (window.CURRICULUM && CURRICULUM.belts) || [];
 const BELT_BY_ID = {}; BELTS.forEach(b => BELT_BY_ID[b.id] = b);
@@ -118,10 +128,12 @@ const STATUS_META = {
   verified: { l: 'Instructor verified',         cls: 'ver' }
 };
 
-/* One belt's five readiness measures. Never collapsed to one number. */
-function beltStats(belt) {
+/* One belt's five readiness measures. Never collapsed to one number.
+   Pass a course to measure only that course's half of the belt. */
+function beltStats(belt, courseSel) {
   const now = Date.now();
-  const ids = beltItems(belt.id, false);
+  const course = asCourse(courseSel);
+  const ids = beltItems(belt.id, false).filter(id => !course || courseIdOf(ITEMS[id]) === course.id);
   const practiced = new Set(S.practiceLog.map(p => p.itemId));
   let intro = 0, mastered = 0, rsum = 0, rcount = 0,
       practicable = 0, practicedN = 0, vreq = 0, vdone = 0;
@@ -139,10 +151,10 @@ function beltStats(belt) {
   return { total: ids.length, intro, mastered, retention: rcount ? rsum / rcount : null,
            practicable, practiced: practicedN, vreq, vdone };
 }
-function cumulativeStats(belt) {
+function cumulativeStats(belt, courseSel) {
   const prev = BELTS.filter(b => b.order < belt.order);
   const agg = { total: 0, intro: 0, mastered: 0, vreq: 0, vdone: 0 };
-  prev.forEach(b => { const s = beltStats(b);
+  prev.forEach(b => { const s = beltStats(b, courseSel);
     agg.total += s.total; agg.intro += s.intro; agg.mastered += s.mastered;
     agg.vreq += s.vreq; agg.vdone += s.vdone; });
   return agg;
@@ -150,9 +162,11 @@ function cumulativeStats(belt) {
 
 /* ---------- belt gating: schedule only your belt and below.
    FSRS never unlocks a belt, and never unlocks physical practice. */
-function eligibleSequence() {
+function eligibleSequence(courseSel) {
   const ab = activeBelt();
-  return SEQUENCE.filter(id => ITEMS[id].beltOrder <= ab.order);
+  const course = asCourse(courseSel);
+  return SEQUENCE.filter(id => ITEMS[id].beltOrder <= ab.order &&
+    (!course || courseIdOf(ITEMS[id]) === course.id));
 }
 
 /* ---------- milestones (hapkido) ---------- */
@@ -167,11 +181,16 @@ function checkMilestones(key, before, after) {
     sess.celebrations.push({ title: label, sub: r + 'locked into long-term memory', ko: !!item.ko, big: false });
   }
 
-  const held = stats().wordsKnown;
+  // Milestones are counted per course, so each one gets its own journey.
+  const course = courseOf(item);
+  const held = stats(course).wordsKnown;
+  const mkey = course ? 'k:' + course.id + ':' : 'k';
   for (const m of KNOW_MILESTONES) {
-    if (held >= m && !S.milestones['k' + m]) {
-      S.milestones['k' + m] = Date.now();
-      sess.celebrations.push({ title: m + ' ITEMS', sub: 'holding in long-term memory', big: m >= 30 });
+    if (held >= m && !S.milestones[mkey + m]) {
+      S.milestones[mkey + m] = Date.now();
+      sess.celebrations.push({
+        title: m + ' ITEMS',
+        sub: 'holding in ' + (course ? course.nameEnglish.toLowerCase() : 'long-term memory'), big: m >= 30 });
       break;
     }
   }
@@ -192,15 +211,52 @@ function checkMilestones(key, before, after) {
   }
 
   const belt = BELT_BY_ID[item.beltId];
+  if (belt && course) {
+    const ckey = 'b:' + course.id + ':' + belt.id;
+    if (!S.milestones[ckey]) {
+      const cs = beltStats(belt, course);
+      if (cs.total && cs.mastered === cs.total) {
+        S.milestones[ckey] = Date.now();
+        sess.celebrations.push({
+          title: belt.nameEnglish.toUpperCase() + ' · ' + course.shortName.toUpperCase(),
+          sub: 'that whole course finished for this belt', big: true });
+      }
+    }
+  }
   if (belt && !S.milestones['b' + belt.id]) {
     const bs = beltStats(belt);
     if (bs.total && bs.mastered === bs.total) {
       S.milestones['b' + belt.id] = Date.now();
       sess.celebrations.push({
-        title: belt.nameEnglish.toUpperCase() + ' · KNOWLEDGE COMPLETE',
+        title: belt.nameEnglish.toUpperCase() + ' · BOTH COURSES',
         sub: 'every requirement mastered — polish it in class', big: true });
     }
   }
+}
+
+/* ---------- course identity: colour, glyph, celebration particles ----
+   The whole app repaints when you switch course. FX_JAMO is a const in
+   the engine, so its CONTENTS are swapped rather than the binding —
+   the FX system keeps working untouched. */
+function applyCourseIdentity() {
+  const c = activeCourse();
+  const root = document.documentElement;
+  const light = S.settings.theme === 'light';
+  COURSES.forEach(x => root.classList.remove('course-' + x.id));
+  if (!c) { root.style.removeProperty('--accent'); root.style.removeProperty('--accent-dim'); }
+  else {
+    root.classList.add('course-' + c.id);
+    root.style.setProperty('--accent', light ? (c.accentLight || c.accent) : c.accent);
+    root.style.setProperty('--accent-dim', c.accentDim || (light ? c.accent : c.accentLight) || '#2b4d80');
+  }
+  const glyphs = (c && c.fxGlyphs && c.fxGlyphs.length) ? c.fxGlyphs
+    : ['합', '기', '도', '원', '유', '화', '수', '련', '띠', '한'];
+  FX_JAMO.length = 0;
+  glyphs.forEach(g => FX_JAMO.push(g));
+}
+function courseMark(c, size) {
+  if (!c) return '';
+  return `<span class="cmark ko" style="--cacc:${c.accent};${size ? `--csz:${size}px` : ''}">${esc(c.glyph || '')}</span>`;
 }
 
 /* ---------- settings & state shape ---------- */
@@ -219,6 +275,10 @@ function normalizeSettings() {
   ['sound', 'spokenPraise'].forEach(k => { S.settings[k] = !!S.settings[k]; });
   if (!S.milestones || typeof S.milestones !== 'object') S.milestones = {};
   if (!BELT_BY_ID[S.settings.activeBeltId]) S.settings.activeBeltId = BELTS.length ? BELTS[0].id : '';
+  // '' is a legitimate value: it means "hasn't picked a course yet", which
+  // is what puts a returning-from-nothing student on the course picker.
+  if (typeof S.settings.activeCourseId !== 'string' ||
+      (S.settings.activeCourseId && !COURSE_BY_ID[S.settings.activeCourseId])) S.settings.activeCourseId = '';
   if (!Array.isArray(S.practiceLog)) S.practiceLog = [];
   if (!S.verifications || typeof S.verifications !== 'object') S.verifications = {};
   if (!S.instructor || typeof S.instructor !== 'object') S.instructor = { pinHash: null, log: [] };
@@ -229,7 +289,7 @@ function normalizeSettings() {
   S.curriculumVersion = CURRICULUM.meta.version;
 }
 
-/* ---------- two tracks: Knowledge & Customs vs. Techniques ----------
+/* ---------- which course does a thing belong to? ----------
    Driven by domain.track in the curriculum data — fully configurable. */
 function itemTrack(item) {
   const d = DOMAIN_BY_ID[item.domain];
@@ -239,37 +299,82 @@ function unitTrack(u) {
   const ids = SEQUENCE.filter(id => ITEMS[id].unit === u.id);
   return ids.some(id => itemTrack(ITEMS[id]) === 'technique') ? 'technique' : 'knowledge';
 }
+function courseOf(item) { return COURSE_BY_TRACK[itemTrack(item)] || null; }
+function courseIdOf(item) { const c = courseOf(item); return c ? c.id : ''; }
+function courseOfUnit(u) { return COURSE_BY_TRACK[unitTrack(u)] || null; }
 
-function nextNewItems(n, track) {
+/* Everything that takes a "course" accepts a course object, a course id,
+   a bare track name ('knowledge'/'technique'), or nothing for "both". */
+function asCourse(sel) {
+  if (!sel) return null;
+  if (typeof sel === 'object') return sel.id ? sel : null;
+  return COURSE_BY_ID[sel] || COURSE_BY_TRACK[sel] || null;
+}
+function activeCourse() { return COURSE_BY_ID[S.settings.activeCourseId] || null; }
+function otherCourses() {
+  const a = activeCourse();
+  return COURSES.filter(c => !a || c.id !== a.id);
+}
+function courseUnits(courseSel, belt) {
+  const course = asCourse(courseSel);
+  return ((belt || activeBelt()).units || []).filter(u => !course || unitTrack(u) === course.track);
+}
+
+/* Each course carries its own daily new-item budget — studying one
+   never eats the other's allowance, exactly as two language courses
+   would behave. Older saves simply start today's counters at zero. */
+function newToday(courseSel) {
+  const rec = dayRec(todayKey());
+  const course = asCourse(courseSel);
+  if (!course) return rec.newItems || 0;
+  return (rec.newByCourse || {})[course.id] || 0;
+}
+function countNewItem(item) {
+  const rec = dayRec(todayKey());
+  rec.newItems = (rec.newItems || 0) + 1;
+  const c = courseOf(item);
+  if (!c) return;
+  if (!rec.newByCourse) rec.newByCourse = {};
+  rec.newByCourse[c.id] = (rec.newByCourse[c.id] || 0) + 1;
+}
+
+function nextNewItems(n, courseSel) {
   const out = [];
-  const seq = eligibleSequence();
+  const seq = eligibleSequence(courseSel);
   for (const id of seq) {
     if (out.length >= n) break;
     if (S.introduced[id]) continue;
-    if (track && itemTrack(ITEMS[id]) !== track) continue;
     out.push(id);
   }
   return out;
 }
 
-function plan(track) {
+function plan(courseSel) {
   unlockSkills();
+  const course = asCourse(courseSel);
   const now = Date.now();
   let due = dueCards(now);
-  if (track) due = due.filter(k => { const it = cardItem(k); return it && itemTrack(it) === track; });
-  const rec = dayRec(todayKey());
-  const newSlots = Math.max(0, S.settings.dailyNew - rec.newItems);
-  const newIds = nextNewItems(newSlots, track);
+  if (course) due = due.filter(k => { const it = cardItem(k); return it && courseIdOf(it) === course.id; });
+  const newSlots = Math.max(0, S.settings.dailyNew - newToday(course));
+  const newIds = nextNewItems(newSlots, course);
   return {
+    course,
     due: due.slice(0, S.settings.reviewCap),
     dueTotal: due.length,
     newIds,
-    remainingInCourse: eligibleSequence().filter(id => !S.introduced[id] && (!track || itemTrack(ITEMS[id]) === track)).length
+    remainingInCourse: eligibleSequence(course).filter(id => !S.introduced[id]).length
   };
 }
+function planTotal(courseSel) { const p = plan(courseSel); return p.due.length + p.newIds.length; }
 
-function startSession(track) {
-  const p = plan(track);
+/* Note the deliberate asymmetry in defaults: plan/stats/beltStats with
+   no course mean "everything", because that is what the shared Progress
+   and Belt views want. startSession with no course means "the course I
+   am studying", because that is what the big button on the path means —
+   the engine calls it bare. '*' is the explicit everything-session. */
+function startSession(courseSel) {
+  const course = courseSel === '*' ? null : (asCourse(courseSel) || activeCourse());
+  const p = plan(course);
   const steps = [];
   p.due.forEach(k => steps.push({ t: 'card', key: k }));
   shuffle(steps);
@@ -289,7 +394,7 @@ function startSession(track) {
 
   if (!merged.length) {
     view = 'today'; sess = null;
-    showToast(track ? 'Nothing is due on that track right now.' : 'Nothing is due right now.');
+    showToast(course ? 'Nothing is due in ' + course.nameEnglish + ' right now.' : 'Nothing is due right now.');
     render();
     return;
   }
@@ -304,16 +409,21 @@ function startSession(track) {
     plannedNew: p.newIds.length, plannedReviews: p.due.length,
     reveal: null, lastGradeKey: null,
     budgetMs: S.settings.sessionMinutes * 60000, overtime: false,
-    track: track || null
+    courseId: course ? course.id : null,
+    track: course ? course.track : null
   };
   view = 'session';
   render();
 }
 
-/* ---------- stats (Hanbit's, with hapkido item kinds) ---------- */
-function stats() {
+/* ---------- stats (Hanbit's, with hapkido item kinds) ----------
+   Pass a course to get that course's numbers only. Day records,
+   streak and time stay shared: one student, one training habit. */
+function stats(courseSel) {
   const now = Date.now();
-  const keys = Object.keys(S.cards).filter(k => ITEMS[k.split('|')[0]]);
+  const course = asCourse(courseSel);
+  const inCourse = id => !course || courseIdOf(ITEMS[id]) === course.id;
+  const keys = Object.keys(S.cards).filter(k => ITEMS[k.split('|')[0]] && inCourse(k.split('|')[0]));
   let learning = 0, young = 0, mature = 0, rsum = 0, rcount = 0;
   keys.forEach(k => {
     const c = S.cards[k];
@@ -323,7 +433,7 @@ function stats() {
     rsum += currentR(c, now); rcount++;
   });
 
-  const eligible = new Set(eligibleSequence());
+  const eligible = new Set(eligibleSequence(course));
   const introducedItems = Object.keys(S.introduced).filter(id => ITEMS[id] && eligible.has(id));
   const wordsKnown = introducedItems.filter(id => {
     const it = ITEMS[id];
@@ -367,7 +477,7 @@ function stats() {
     measuredR: rtotal ? rcorrect / rtotal : (total ? correct / total : 0),
     reviewsAll: total, wordsKnown,
     introduced: introducedItems.length,
-    courseTotal: eligibleSequence().length,
+    courseTotal: eligible.size,
     forecast, streak, timeToday, totalMs
   };
 }

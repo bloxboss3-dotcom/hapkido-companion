@@ -1,0 +1,47 @@
+name: build & test
+
+# index.html is generated. This proves the deployed file still matches the
+# source it was built from, and that the whole test matrix passes, before
+# anything reaches the branch GitHub Pages serves.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Rebuild both index.html files from source
+        run: python3 dev/build/transform.py
+
+      - name: Deployed index.html must match its source
+        run: |
+          git diff --exit-code -- index.html dev/hapkido-companion/index.html \
+            || { echo "::error::index.html is out of date. Run 'npm run build' and commit the result."; exit 1; }
+
+      - name: Install test dependencies
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Test matrix
+        run: node dev/build/test-matrix.js
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: dev/shots/
+          if-no-files-found: ignore
+          retention-days: 7

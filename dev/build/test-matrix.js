@@ -52,15 +52,37 @@ async function answerCurrentRight() {
   page.on('pageerror', e => pageErrs.push(String(e)));
   page.on('dialog', d => d.accept());
 
-  /* ---- 1. first launch ---- */
+  /* ---- 1. first launch lands on the course picker ---- */
   await page.goto(URL); await sleep(800);
   ok('first launch: no console/page errors', consoleErrs.length === 0 && pageErrs.length === 0, JSON.stringify(consoleErrs.concat(pageErrs)).slice(0, 300));
+  ok('first launch: course picker, one card per course, no tabs yet', await page.evaluate(() => {
+    const n = window.__HKD.COURSES.length;
+    return window.__HKD.view === 'courses' && n === 2 &&
+      document.querySelectorAll('.ccard').length === n &&
+      document.querySelectorAll('nav.tabs').length === 0;
+  }));
+  ok('first launch: picker names both courses and says one belt covers both', await page.evaluate(() =>
+    document.body.textContent.includes('Terminology & Philosophy') &&
+    document.body.textContent.includes('Techniques') &&
+    document.body.textContent.includes('One belt, both courses')));
+  await page.screenshot({ path: 'shots/course-picker.png', fullPage: true });
+
+  await page.click('[data-course="way"]'); await sleep(500);
+  ok('picking a course opens its path and is remembered', await page.evaluate(() =>
+    window.__HKD.view === 'today' && window.__HKD.activeCourse().id === 'way' &&
+    window.__HKD.S.settings.activeCourseId === 'way'));
   ok('first launch: belt banner + provisional badge', await page.evaluate(() =>
     !!document.querySelector('.belt-banner') && document.body.textContent.includes('Provisional — awaiting Grandmaster Lee')));
-  ok('first launch: path shows 10 unit nodes + 10 locked belts', await page.evaluate(() =>
-    document.querySelectorAll('.pnode').length === 20 && document.querySelectorAll('.pnode.lockb').length === 10));
-  ok('first launch: readiness has 5 bars', await page.evaluate(() => document.querySelectorAll('.rrow').length === 5));
-  await page.screenshot({ path: 'shots/path-first.png' });
+  ok('path shows only the chosen course\'s units + 10 locked belts', await page.evaluate(() => {
+    const H = window.__HKD;
+    const lane = document.querySelector('.path[data-course="way"]');
+    const expect = H.courseUnits('way').length;
+    return !!lane && lane.querySelectorAll('.pnode').length === expect && expect > 0 &&
+      document.querySelectorAll('.pnode.lockb').length === 10;
+  }));
+  ok('terminology course shows its 3 knowledge readiness bars', await page.evaluate(() =>
+    document.querySelectorAll('.rrow').length === 3));
+  await page.screenshot({ path: 'shots/path-first.png', fullPage: true });
 
   /* ---- 2. new lesson session (teach → mc → FSRS write) ---- */
   await page.click('[data-act="start"]'); await sleep(500);
@@ -111,7 +133,24 @@ async function answerCurrentRight() {
   ok('quit lands on done screen', await page.evaluate(() => window.__HKD.view === 'done'));
   await page.click('[data-view="today"]'); await sleep(300);
 
-  /* ---- 5. step-sequencing exercise ---- */
+  /* ---- 5. step-sequencing exercise (techniques course) ---- */
+  await page.click('.cswitch'); await sleep(300);
+  await page.click('[data-course="art"]'); await sleep(450);
+  ok('switching course repaints the app in that course\'s colour', await page.evaluate(() => {
+    const H = window.__HKD;
+    const acc = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    return H.activeCourse().id === 'art' && acc === H.COURSE_BY_ID.art.accent &&
+      document.documentElement.classList.contains('course-art');
+  }));
+  ok('switching course swaps the celebration glyphs too', await page.evaluate(() =>
+    window.__HKD.fxGlyphs.join('') === window.__HKD.COURSE_BY_ID.art.fxGlyphs.join('')));
+  ok('techniques path shows only technique units', await page.evaluate(() => {
+    const H = window.__HKD;
+    const lane = document.querySelector('.path[data-course="art"]');
+    return !!lane && lane.querySelectorAll('.pnode').length === H.courseUnits('art').length &&
+      H.courseUnits('art').length > 0 && H.courseUnits('art').length !== H.courseUnits('way').length;
+  }));
+  await page.screenshot({ path: 'shots/path-techniques.png', fullPage: true });
   await page.evaluate(() => {
     const H = window.__HKD, S = H.S;
     S.settings.dailyNew = 0;
@@ -145,7 +184,10 @@ async function answerCurrentRight() {
   if (await page.$('[data-act="quit"]')) { await page.click('[data-act="quit"]'); await sleep(300); }
   if (await page.evaluate(() => window.__HKD.view === 'done')) { await page.click('[data-view="today"]'); await sleep(200); }
 
-  /* ---- 6. self-graded speaking exercise ---- */
+  /* ---- 6. self-graded speaking exercise (back in the terminology course) ---- */
+  await page.evaluate(() => { window.__HKD.switchCourse('way'); }); await sleep(350);
+  ok('switching back restores the other course accent', await page.evaluate(() =>
+    getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() === window.__HKD.COURSE_BY_ID.way.accent));
   await page.evaluate(() => {
     const H = window.__HKD, S = H.S;
     const done = { S: 30, D: 4, due: Date.now() + 20 * 86400000, last: Date.now(), reps: 3, lapses: 0, state: 'review' };
@@ -191,9 +233,24 @@ async function answerCurrentRight() {
   ok('belt gating: active-belt filter matches data (cumulative kept)', gate.a === gate.expA && gate.a > 0 && gate.b === gate.expB && gate.b > gate.a, JSON.stringify(gate));
   ok('cumulative stats derived from curriculum data', gate.cumTotal === gate.expCumTotal && gate.cumV === gate.expCumV, JSON.stringify(gate));
 
-  /* ---- 8. belt page, missing media, invalid media, restricted gating ---- */
+  /* ---- 8. belt page, course scope filter, media, restricted gating ---- */
   await page.click('[data-view="belt"]'); await sleep(300);
   ok('belt page: pills for all 11 belts', await page.evaluate(() => document.querySelectorAll('.belt-pill').length === 11));
+  ok('belt page: scoped to the active course by default', await page.evaluate(() => {
+    const H = window.__HKD;
+    const shown = [...document.querySelectorAll('[data-expand]')].map(e => e.dataset.expand);
+    return shown.length > 0 && shown.every(id => H.courseIdOf(H.ITEMS[id]) === 'way') &&
+      !!document.querySelector('.scopebar');
+  }));
+  ok('belt page: the whole belt always shows five readiness measures', await page.evaluate(() =>
+    document.querySelectorAll('.rrow').length === 5));
+  await page.click('[data-scope="all"]'); await sleep(300);
+  ok('belt page: "Everything" scope shows both courses\' requirements', await page.evaluate(() => {
+    const H = window.__HKD;
+    const shown = [...document.querySelectorAll('[data-expand]')].map(e => e.dataset.expand);
+    return shown.some(id => H.courseIdOf(H.ITEMS[id]) === 'way') &&
+      shown.some(id => H.courseIdOf(H.ITEMS[id]) === 'art');
+  }));
   await page.evaluate(() => { const el = [...document.querySelectorAll('[data-expand]')].find(e => e.dataset.expand === 'x-junbi-seogi'); el.scrollIntoView(); el.click(); });
   await sleep(300);
   ok('missing media: "Demonstration coming soon" placeholder', await page.evaluate(() =>
@@ -305,11 +362,15 @@ async function answerCurrentRight() {
   /* ---- 14. returning user + review session ---- */
   const ret = await page.evaluate(() => ({ hero: (document.querySelector('.hero h2') || {}).textContent, chips: [...document.querySelectorAll('.chip')].map(c => c.textContent) }));
   ok('returning user: Today hero + done-today chip', ret.hero === 'Today' && ret.chips.some(c => c.includes('Done today')), JSON.stringify(ret).slice(0, 200));
-  await page.evaluate(() => { // make two cards due now → review session
-    const S = window.__HKD.S;
+  await page.evaluate(() => { // make two cards of the active course due now → review session
+    const H = window.__HKD, S = H.S, cid = H.activeCourse().id;
     let n = 0;
-    Object.keys(S.cards).forEach(k => { if (n < 2 && S.cards[k].state === 'review') { S.cards[k].due = Date.now() - 3600000; n++; } });
-    window.__HKD.save(); window.__HKD.render();
+    Object.keys(S.cards).forEach(k => {
+      if (n < 2 && S.cards[k].state === 'review' && H.ITEMS[k.split('|')[0]] && H.courseIdOf(H.ITEMS[k.split('|')[0]]) === cid) {
+        S.cards[k].due = Date.now() - 3600000; n++;
+      }
+    });
+    H.save(); H.render();
   });
   await sleep(250);
   ok('review session: due count reflects overdue cards', await page.evaluate(() => window.__HKD.plan().due.length >= 2));
@@ -320,9 +381,11 @@ async function answerCurrentRight() {
 
   /* ---- 15. keyboard: 1-4 answers MC, Enter advances ---- */
   await page.evaluate(() => {
-    const S = window.__HKD.S; S.settings.dailyNew = 0;
-    const k = Object.keys(S.cards).find(x => S.cards[x].state === 'review');
-    S.cards[k].due = Date.now() - 60000; window.__HKD.save(); window.__HKD.render();
+    const H = window.__HKD, S = H.S; S.settings.dailyNew = 0;
+    const cid = H.activeCourse().id;
+    const k = Object.keys(S.cards).find(x => S.cards[x].state === 'review' &&
+      H.ITEMS[x.split('|')[0]] && H.courseIdOf(H.ITEMS[x.split('|')[0]]) === cid);
+    S.cards[k].due = Date.now() - 60000; H.save(); H.render();
   });
   await page.click('[data-act="start"]'); await sleep(400);
   const kbType = await page.evaluate(() => window.__HKD.liveEx && window.__HKD.liveEx.type);
@@ -356,30 +419,120 @@ async function answerCurrentRight() {
     Object.keys(window.__HKD.S.cards).length === 0 && window.__HKD.S.practiceLog.length === 0));
   await page.evaluate(() => localStorage.setItem('lmaa-hapkido.v1', '{broken json!!'));
   await page.reload(); await sleep(600);
-  ok('corrupted save: recovers to fresh app', await page.evaluate(() =>
-    !!document.querySelector('.belt-banner')) && pageErrs.length === 0, JSON.stringify(pageErrs).slice(0, 200));
+  ok('corrupted save: recovers to a fresh, usable app', await page.evaluate(() =>
+    document.querySelectorAll('.ccard').length === 2 && Object.keys(window.__HKD.S.cards).length === 0)
+    && pageErrs.length === 0, JSON.stringify(pageErrs).slice(0, 200));
 
-  /* ---- 18. two-track path + filtered sessions (fresh state after recovery) ---- */
-  ok('path shows Mind and Body lanes', await page.evaluate(() =>
-    document.body.textContent.includes('Mind — knowledge & customs') && document.body.textContent.includes('Body — techniques')));
-  await page.click('[data-act="start-tk"]'); await sleep(450);
+  /* ---- 18. the two courses (fresh state after corruption recovery) ---- */
+  ok('a wiped save lands back on the course picker', await page.evaluate(() =>
+    window.__HKD.view === 'courses' && document.querySelectorAll('.ccard').length === 2));
+
+  await page.click('[data-course="art"]'); await sleep(400);
+  await page.click('[data-act="start"]'); await sleep(500);
   const tkOnly = await page.evaluate(() => {
     const H = window.__HKD;
     const teaches = H.sess.queue.filter(s => s.t === 'teach');
-    return { n: teaches.length, allTk: teaches.every(s => H.itemTrack(H.ITEMS[s.id]) === 'technique'), track: H.sess.track };
+    return { n: teaches.length, all: teaches.every(s => H.courseIdOf(H.ITEMS[s.id]) === 'art'),
+             courseId: H.sess.courseId, head: !!document.querySelector('.sess-course') };
   });
-  ok('Body-only session teaches only technique items', tkOnly.n > 0 && tkOnly.allTk && tkOnly.track === 'technique', JSON.stringify(tkOnly));
-  await page.click('[data-act="quit"]'); await sleep(300);
-  if (await page.evaluate(() => window.__HKD.view === 'done')) { await page.click('[data-view="today"]'); await sleep(200); }
-  await page.evaluate(() => { window.__HKD.S.days = {}; window.__HKD.save(); window.__HKD.render(); }); await sleep(250);
-  await page.click('[data-act="start-kn"]'); await sleep(450);
+  ok('techniques course teaches only technique items', tkOnly.n > 0 && tkOnly.all && tkOnly.courseId === 'art', JSON.stringify(tkOnly));
+  ok('the session says which course it belongs to', tkOnly.head);
+  await page.screenshot({ path: 'shots/session-techniques.png' });
+  await page.click('[data-act="quit"]'); await sleep(350);
+  if (await page.evaluate(() => window.__HKD.view === 'done')) { await page.click('[data-view="today"]'); await sleep(250); }
+
+  // Spend the whole techniques budget for today, then prove the other
+  // course still has its own full allowance — the point of two courses.
+  const budget = await page.evaluate(async () => {
+    const H = window.__HKD;
+    const cap = H.S.settings.dailyNew;
+    H.S.days[new Date().toISOString().slice(0, 10)] = { reviews: 0, newItems: cap, ms: 0, correct: 0, total: 0, newByCourse: { art: cap } };
+    H.save(); H.render();
+    return { cap, artNew: H.plan('art').newIds.length, wayNew: H.plan('way').newIds.length,
+             artUsed: H.newToday('art'), wayUsed: H.newToday('way') };
+  });
+  ok('daily new-item budgets are per course, not shared',
+    budget.cap > 0 && budget.artNew === 0 && budget.wayNew === budget.cap && budget.artUsed === budget.cap && budget.wayUsed === 0,
+    JSON.stringify(budget));
+
+  await page.evaluate(() => { window.__HKD.switchCourse('way'); }); await sleep(350);
+  await page.click('[data-act="start"]'); await sleep(500);
   const knOnly = await page.evaluate(() => {
     const H = window.__HKD;
     const teaches = H.sess.queue.filter(s => s.t === 'teach');
-    return { n: teaches.length, allKn: teaches.every(s => H.itemTrack(H.ITEMS[s.id]) === 'knowledge') };
+    return { n: teaches.length, all: teaches.every(s => H.courseIdOf(H.ITEMS[s.id]) === 'way'), courseId: H.sess.courseId };
   });
-  ok('Mind-only session teaches only knowledge items', knOnly.n > 0 && knOnly.allKn, JSON.stringify(knOnly));
-  await page.click('[data-act="quit"]'); await sleep(300);
+  ok('terminology course teaches only knowledge items', knOnly.n > 0 && knOnly.all && knOnly.courseId === 'way', JSON.stringify(knOnly));
+  await page.click('[data-act="quit"]'); await sleep(350);
+  if (await page.evaluate(() => window.__HKD.view === 'done')) { await page.click('[data-view="today"]'); await sleep(250); }
+
+  // The belt-test review: one session that deliberately crosses both,
+  // versus a course session that deliberately does not.
+  const both = await page.evaluate(() => {
+    const H = window.__HKD;
+    H.S.days = {}; H.S.settings.dailyNew = 0;
+    const due = Date.now() - 3600000;
+    H.S.introduced['t-dojang'] = due; H.S.cards['t-dojang|recog'] = { S: 5, D: 4, due, last: due, reps: 2, lapses: 0, state: 'review' };
+    H.S.introduced['x-ap-chagi'] = due; H.S.cards['x-ap-chagi|t-id'] = { S: 5, D: 4, due, last: due, reps: 2, lapses: 0, state: 'review' };
+    H.save();
+    const courseIds = q => [...new Set(q.filter(s => s.t === 'card').map(s => H.courseIdOf(H.ITEMS[s.key.split('|')[0]])))].sort();
+    H.startSession('*');
+    const all = { n: H.sess.queue.length, courses: courseIds(H.sess.queue), courseId: H.sess.courseId };
+    H.startSession('way');
+    const one = { n: H.sess.queue.length, courses: courseIds(H.sess.queue), courseId: H.sess.courseId };
+    H.sess = null; H.view = 'today'; H.render();
+    return { all, one };
+  });
+  ok('the everything-review session crosses both courses',
+    both.all.courses.join() === 'art,way' && both.all.courseId === null, JSON.stringify(both.all));
+  ok('a course session never pulls in the other course\'s due cards',
+    both.one.courses.join() === 'way' && both.one.courseId === 'way' && both.one.n < both.all.n, JSON.stringify(both.one));
+  await page.evaluate(() => { window.__HKD.view = 'today'; window.__HKD.render(); }); await sleep(250);
+
+  /* ---- 19. a course choice, and each course's progress, survive a reload ---- */
+  await page.evaluate(() => {
+    const H = window.__HKD;
+    H.switchCourse('art');
+    H.S.introduced = {}; H.S.cards = {};              // exactly one item per course
+    H.S.introduced['x-junbi-seogi'] = Date.now();
+    H.S.cards['x-junbi-seogi|t-id'] = H.newCard();
+    H.S.introduced['t-dojang'] = Date.now();
+    H.S.cards['t-dojang|recog'] = H.newCard();
+    H.save();
+  });
+  await sleep(250);
+  await page.reload(); await sleep(700);
+  ok('the chosen course survives a reload (no picker again)', await page.evaluate(() =>
+    window.__HKD.view === 'today' && window.__HKD.activeCourse().id === 'art'));
+  ok('each course keeps its own place independently', await page.evaluate(() => {
+    const H = window.__HKD;
+    return H.stats('art').introduced === 1 && H.stats('way').introduced === 1 && H.stats().introduced === 2;
+  }));
+  ok('course readiness is measured on that course only', await page.evaluate(() => {
+    const H = window.__HKD, belt = H.activeBelt();
+    const a = H.beltStats(belt, 'art'), w = H.beltStats(belt, 'way'), all = H.beltStats(belt);
+    return a.total > 0 && w.total > 0 && a.total + w.total === all.total && a.total !== all.total;
+  }));
+  ok('only the techniques course carries physical requirements', await page.evaluate(() => {
+    const H = window.__HKD, belt = H.activeBelt();
+    return H.beltStats(belt, 'way').vreq === 0 && H.beltStats(belt, 'art').vreq > 0;
+  }));
+  ok('progress tab breaks the numbers out per course', await page.evaluate(() => {
+    window.__HKD.view = 'progress'; window.__HKD.render();
+    return document.querySelectorAll('.cprow').length === 2 && document.body.textContent.includes('Course by course');
+  }));
+  await page.screenshot({ path: 'shots/progress-courses.png', fullPage: true });
+  ok('a backup carries the chosen course', await page.evaluate(() => {
+    const H = window.__HKD;
+    return JSON.parse(JSON.stringify(H.S)).settings.activeCourseId === 'art';
+  }));
+  ok('an unknown course id in a save falls back to the picker, not a crash', await page.evaluate(() => {
+    const H = window.__HKD;
+    H.S.settings.activeCourseId = 'no-such-course';
+    H.save();
+    return true;
+  }) && await (async () => { await page.reload(); await sleep(600);
+    return page.evaluate(() => window.__HKD.view === 'courses' && !window.__HKD.activeCourse()); })());
 
   /* ---- summary ---- */
   const fails = results.filter(r => !r.pass);

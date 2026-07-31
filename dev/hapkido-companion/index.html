@@ -640,8 +640,132 @@ input[type=range] { width: 160px; accent-color: var(--accent); }
   background: color-mix(in srgb, var(--warn) 10%, transparent); }
 .badge-prov.sm { margin: 0; font-size: 9.5px; padding: 2px 8px; }
 
+/* ============================================================
+   COURSES — two separate courses under one belt. The accent
+   colour is swapped on :root at render time, so everything
+   already built out of var(--accent) repaints for free.
+   ============================================================ */
+
+/* The whole page takes a wash of the course colour, so switching reads
+   as walking into a different room rather than flipping a filter. */
+body { background:
+  radial-gradient(135% 78% at 50% 0%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 62%),
+  var(--bg);
+  background-attachment: fixed; }
+header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, var(--bg)) 64%, transparent); }
+@media (prefers-reduced-motion: no-preference) {
+  html { transition: none; }
+  .cbar i, .ccard, .cmark { transition: background-color .35s ease, color .35s ease, border-color .35s ease, width .4s ease; }
+}
+
+/* the course mark: one syllable, in the course's colour */
+.cmark { display: inline-grid; place-items: center; flex: none;
+  width: var(--csz, 26px); height: var(--csz, 26px); border-radius: 9px;
+  font-size: calc(var(--csz, 26px) * .56); font-weight: 700; line-height: 1;
+  color: var(--cacc, var(--accent));
+  background: color-mix(in srgb, var(--cacc, var(--accent)) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cacc, var(--accent)) 45%, transparent); }
+
+/* header switcher */
+.cswitch { display: inline-flex; align-items: center; gap: 7px; padding: 5px 9px 5px 6px;
+  border-radius: 999px; border: 1px solid var(--line); background: var(--bg-card);
+  font-size: 12.5px; font-weight: 600; color: var(--tx-dim); max-width: 46vw; }
+.cswitch .cs-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cswitch .cs-caret { color: var(--tx-faint); font-size: 10px; }
+.cswitch:hover { border-color: var(--accent); color: var(--tx); }
+
+/* the picker */
+.course-pick { padding: 6px 0 20px; }
+.course-pick h1 { font-size: 25px; letter-spacing: -.02em; margin: 10px 0 6px; }
+.course-pick > .sub { max-width: 46em; }
+.ccards { display: grid; gap: 14px; margin: 18px 0 16px; }
+
+.ccard { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: start; width: 100%; text-align: left;
+  padding: 16px; border-radius: var(--radius); border: 1.5px solid var(--line);
+  background: linear-gradient(150deg, color-mix(in srgb, var(--cacc) 13%, var(--bg-card)), var(--bg-card) 68%);
+  transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease; }
+/* the course's own colour wins inside its card, whichever course is live */
+.ccard .cmeta .chip.accent { border-color: var(--cacc); color: var(--cacc); }
+.ccard:hover { transform: translateY(-2px); border-color: var(--cacc); box-shadow: var(--shadow); }
+.ccard.on { border-color: var(--cacc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--cacc) 22%, transparent); }
+.ccard .cart { position: relative; flex: none; width: 76px; height: 76px; border-radius: 16px; overflow: hidden;
+  display: grid; place-items: center; background: color-mix(in srgb, var(--cacc) 12%, var(--bg-raise));
+  border: 1px solid color-mix(in srgb, var(--cacc) 34%, transparent); }
+.ccard .cart img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ccard .cart.emb { padding: 9px; }
+.ccard .cart.emb svg { width: 100%; height: 100%; display: block; }
+.ccard .cart-glyph { position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 30px; font-weight: 700; color: var(--cacc);
+  text-shadow: 0 2px 10px rgba(0,0,0,.55), 0 0 3px rgba(0,0,0,.5); }
+.ccard .cart.plain .cart-glyph { position: static; text-shadow: none; }
+.ccard .cbody { flex: 1; min-width: 0; display: block; }
+.ccard .ctitle { display: block; font-size: 16.5px; font-weight: 700; letter-spacing: -.01em; }
+.ccard .ckor { display: block; font-size: 13px; color: var(--tx-dim); margin-top: 1px; }
+.ccard .ckor i { font-style: normal; font-family: var(--mono); font-size: 10.5px; color: var(--tx-faint); }
+.ccard .cblurb { display: block; font-size: 13px; color: var(--tx-dim); margin-top: 7px; line-height: 1.5; }
+.ccard .cmeta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ccard .cgo { flex: none; align-self: center; font-size: 12px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--cacc); white-space: nowrap; }
+.cbar { display: block; height: 5px; border-radius: 3px; background: var(--line-soft); margin-top: 10px; overflow: hidden; }
+.cbar i { display: block; height: 100%; border-radius: 3px; background: var(--cacc, var(--accent)); transition: width .4s ease; }
+.ccard.mini { padding: 13px; }
+.ccard.mini .cart { width: 54px; height: 54px; border-radius: 13px; }
+.ccard.mini .cart-glyph { font-size: 22px; }
+.ccard.mini .ctitle { font-size: 15px; }
+
+.onebelt { display: flex; gap: 13px; align-items: flex-start; padding: 14px 16px; margin-top: 4px;
+  border-radius: var(--radius); border: 1px dashed var(--line); background: var(--bg-soft); font-size: 13px; }
+.onebelt .faint { display: block; margin-top: 3px; line-height: 1.5; }
+
+/* the course banner on the path */
+.course-banner { display: flex; align-items: center; gap: 12px; padding: 11px 14px; margin-bottom: 12px;
+  border-radius: var(--radius); border: 1px solid color-mix(in srgb, var(--cacc) 38%, transparent);
+  background: linear-gradient(120deg, color-mix(in srgb, var(--cacc) 16%, var(--bg-card)), var(--bg-card) 70%); }
+.cb-name { font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; }
+.cb-sub { font-size: 12px; color: var(--tx-dim); margin-top: 1px; }
+
+/* scope switch on the Belt tab */
+.scopebar { display: flex; gap: 6px; margin-top: 12px; padding: 4px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--bg-soft); }
+.scopebar button { flex: 1; padding: 7px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+  color: var(--tx-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.scopebar button.on { background: var(--bg-card); color: var(--tx); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+
+/* per-course rows on the Progress tab */
+.cprog { display: grid; gap: 9px; }
+.cprow { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; padding: 11px 12px;
+  border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--bg-card); }
+.cprow.on { border-color: var(--cacc); }
+.cprow .cp-body { flex: 1; min-width: 0; }
+.cp-t { display: block; font-size: 14px; font-weight: 650; }
+.cp-now { font-style: normal; font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--cacc); margin-left: 6px; }
+.cp-n { display: block; font-size: 11.5px; color: var(--tx-faint); margin-top: 2px; }
+.cprow .cbar { margin-top: 7px; }
+.cp-due { flex: none; font-size: 11.5px; color: var(--tx-dim); font-variant-numeric: tabular-nums; }
+
+/* which course this session belongs to */
+.sess-course { display: inline-flex; align-items: center; gap: 6px; flex: none; font-size: 11.5px;
+  font-weight: 650; color: var(--tx-dim); max-width: 34vw; }
+.sess-course > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sess-course .cmark { --csz: 20px; border-radius: 7px; }
+.sess-course.both { opacity: .8; }
+
+.btn.sm { padding: 6px 12px; font-size: 12.5px; min-height: 0; }
+
+@media (max-width: 460px) {
+  .cswitch .cs-name { display: none; }
+  .ccard { gap: 12px; padding: 14px; grid-template-columns: auto 1fr; }
+  .ccard .cart { width: 60px; height: 60px; }
+  .ccard .cgo { grid-column: 2; align-self: start; justify-self: start; margin-top: 2px; }
+  .course-pick h1 { font-size: 22px; }
+}
+
 /* ---- belt path ---- */
 .path { margin-top: 6px; position: relative; }
+/* The techniques course walks a squarer path — a second signal beyond
+   colour, so the two courses stay apart for colour-blind students. */
+.path[data-course="art"] .pnode .dot { border-radius: 12px; }
 .pnode { display: flex; gap: 14px; align-items: flex-start; position: relative; padding: 8px 0 20px 4px; cursor: pointer; }
 .pnode::before { content: ''; position: absolute; left: 21px; top: 48px; bottom: -4px; width: 3px; border-radius: 2px; background: var(--line); }
 .pnode:last-child::before { display: none; }
@@ -1919,7 +2043,8 @@ const DEFAULTS = {
     sound: true,
     volume: 0.5,
     spokenPraise: false,
-    activeBeltId: ''        // the belt currently being trained for
+    activeBeltId: '',       // the belt currently being trained for
+    activeCourseId: ''      // '' until the student picks a course
   },
   milestones: {},           // one-time celebrations already fired
   cards: {},                // "itemId|skill" -> FSRS card (KNOWLEDGE only)
@@ -3740,6 +3865,61 @@ function doReset() {
 }
 
 /* ================================================================
+   COURSE EMBLEMS — the two "flags" a student picks between.
+   ----------------------------------------------------------------
+   Vector, not raster, on purpose: the app makes no external requests
+   and ships as one file, so 1.5 KB of SVG that stays crisp at any
+   size beats 60 KB of base64 that does not. `currentColor` means each
+   emblem is painted by its own course accent, in either theme.
+
+   Want to swap in artwork instead (a photo, a school crest, a
+   generated image)? Do NOT edit these. Add a file that sets:
+
+       window.HKD_COURSE_ART = { way: "<url or data: URI>",
+                                 art: "<url or data: URI>" };
+
+   ...and it wins over the emblem below, per course, with no other
+   change. Keep it a data: URI (or a file under assets/) so the app
+   still runs with the network switched off.
+   ================================================================ */
+window.HKD_COURSE_EMBLEM = {
+
+  /* Terminology & Philosophy — an open ink circle over three stacked
+     strokes: lines of writing, fading as they settle into memory. */
+  way: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs><linearGradient id="hkdWayInk" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="currentColor" stop-opacity=".30"/>
+      <stop offset=".42" stop-color="currentColor" stop-opacity="1"/>
+      <stop offset="1" stop-color="currentColor" stop-opacity=".62"/>
+    </linearGradient></defs>
+    <path d="M67 20.6 A34 34 0 1 0 81.9 38.4" fill="none" stroke="url(#hkdWayInk)"
+          stroke-width="7.4" stroke-linecap="round"/>
+    <g stroke="currentColor" stroke-linecap="round" fill="none">
+      <path d="M35 42h30" stroke-width="5.4" opacity=".95"/>
+      <path d="M35 52.5h30" stroke-width="5.4" opacity=".66"/>
+      <path d="M35 63h19" stroke-width="5.4" opacity=".38"/>
+    </g>
+  </svg>`,
+
+  /* Techniques — an open ink circle around two strokes chasing each
+     other: redirection, the thing every hapkido movement is made of. */
+  art: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs><linearGradient id="hkdArtInk" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="currentColor" stop-opacity=".32"/>
+      <stop offset=".46" stop-color="currentColor" stop-opacity="1"/>
+      <stop offset="1" stop-color="currentColor" stop-opacity=".60"/>
+    </linearGradient></defs>
+    <path d="M33 79.4 A34 34 0 1 0 18.1 61.6" fill="none" stroke="url(#hkdArtInk)"
+          stroke-width="7.4" stroke-linecap="round"/>
+    <g stroke="currentColor" stroke-linecap="round" fill="none" stroke-width="6.6">
+      <path d="M50 28.5 C65 33 67.5 50.5 56 59" opacity=".95"/>
+      <path d="M50 71.5 C35 67 32.5 49.5 44 41" opacity=".62"/>
+    </g>
+  </svg>`
+};
+
+
+/* ================================================================
    HAPKIDO LAYER — catalogue, safety, readiness, milestones
    ----------------------------------------------------------------
    Everything below either ADDS hapkido-specific machinery or
@@ -3750,6 +3930,16 @@ function doReset() {
 
 const DAY = 86400000;
 const STORE_KEY = 'lmaa-hapkido.v1';
+
+/* ---------- courses: two separate schools of study ----------------
+   Data-driven from CURRICULUM.courses. A course is to this app what a
+   language is to a language app: its own path, its own daily budget,
+   its own colour, its own celebrations. The belt is shared, because
+   the belt is the school's — not the app's. */
+const COURSES = ((window.CURRICULUM && CURRICULUM.courses) || [])
+  .slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+const COURSE_BY_ID = {}; COURSES.forEach(c => COURSE_BY_ID[c.id] = c);
+const COURSE_BY_TRACK = {}; COURSES.forEach(c => { if (!COURSE_BY_TRACK[c.track]) COURSE_BY_TRACK[c.track] = c; });
 
 /* ---------- catalogue: flatten CURRICULUM into ITEMS/SEQUENCE ---------- */
 const BELTS = (window.CURRICULUM && CURRICULUM.belts) || [];
@@ -3859,10 +4049,12 @@ const STATUS_META = {
   verified: { l: 'Instructor verified',         cls: 'ver' }
 };
 
-/* One belt's five readiness measures. Never collapsed to one number. */
-function beltStats(belt) {
+/* One belt's five readiness measures. Never collapsed to one number.
+   Pass a course to measure only that course's half of the belt. */
+function beltStats(belt, courseSel) {
   const now = Date.now();
-  const ids = beltItems(belt.id, false);
+  const course = asCourse(courseSel);
+  const ids = beltItems(belt.id, false).filter(id => !course || courseIdOf(ITEMS[id]) === course.id);
   const practiced = new Set(S.practiceLog.map(p => p.itemId));
   let intro = 0, mastered = 0, rsum = 0, rcount = 0,
       practicable = 0, practicedN = 0, vreq = 0, vdone = 0;
@@ -3880,10 +4072,10 @@ function beltStats(belt) {
   return { total: ids.length, intro, mastered, retention: rcount ? rsum / rcount : null,
            practicable, practiced: practicedN, vreq, vdone };
 }
-function cumulativeStats(belt) {
+function cumulativeStats(belt, courseSel) {
   const prev = BELTS.filter(b => b.order < belt.order);
   const agg = { total: 0, intro: 0, mastered: 0, vreq: 0, vdone: 0 };
-  prev.forEach(b => { const s = beltStats(b);
+  prev.forEach(b => { const s = beltStats(b, courseSel);
     agg.total += s.total; agg.intro += s.intro; agg.mastered += s.mastered;
     agg.vreq += s.vreq; agg.vdone += s.vdone; });
   return agg;
@@ -3891,9 +4083,11 @@ function cumulativeStats(belt) {
 
 /* ---------- belt gating: schedule only your belt and below.
    FSRS never unlocks a belt, and never unlocks physical practice. */
-function eligibleSequence() {
+function eligibleSequence(courseSel) {
   const ab = activeBelt();
-  return SEQUENCE.filter(id => ITEMS[id].beltOrder <= ab.order);
+  const course = asCourse(courseSel);
+  return SEQUENCE.filter(id => ITEMS[id].beltOrder <= ab.order &&
+    (!course || courseIdOf(ITEMS[id]) === course.id));
 }
 
 /* ---------- milestones (hapkido) ---------- */
@@ -3908,11 +4102,16 @@ function checkMilestones(key, before, after) {
     sess.celebrations.push({ title: label, sub: r + 'locked into long-term memory', ko: !!item.ko, big: false });
   }
 
-  const held = stats().wordsKnown;
+  // Milestones are counted per course, so each one gets its own journey.
+  const course = courseOf(item);
+  const held = stats(course).wordsKnown;
+  const mkey = course ? 'k:' + course.id + ':' : 'k';
   for (const m of KNOW_MILESTONES) {
-    if (held >= m && !S.milestones['k' + m]) {
-      S.milestones['k' + m] = Date.now();
-      sess.celebrations.push({ title: m + ' ITEMS', sub: 'holding in long-term memory', big: m >= 30 });
+    if (held >= m && !S.milestones[mkey + m]) {
+      S.milestones[mkey + m] = Date.now();
+      sess.celebrations.push({
+        title: m + ' ITEMS',
+        sub: 'holding in ' + (course ? course.nameEnglish.toLowerCase() : 'long-term memory'), big: m >= 30 });
       break;
     }
   }
@@ -3933,15 +4132,52 @@ function checkMilestones(key, before, after) {
   }
 
   const belt = BELT_BY_ID[item.beltId];
+  if (belt && course) {
+    const ckey = 'b:' + course.id + ':' + belt.id;
+    if (!S.milestones[ckey]) {
+      const cs = beltStats(belt, course);
+      if (cs.total && cs.mastered === cs.total) {
+        S.milestones[ckey] = Date.now();
+        sess.celebrations.push({
+          title: belt.nameEnglish.toUpperCase() + ' · ' + course.shortName.toUpperCase(),
+          sub: 'that whole course finished for this belt', big: true });
+      }
+    }
+  }
   if (belt && !S.milestones['b' + belt.id]) {
     const bs = beltStats(belt);
     if (bs.total && bs.mastered === bs.total) {
       S.milestones['b' + belt.id] = Date.now();
       sess.celebrations.push({
-        title: belt.nameEnglish.toUpperCase() + ' · KNOWLEDGE COMPLETE',
+        title: belt.nameEnglish.toUpperCase() + ' · BOTH COURSES',
         sub: 'every requirement mastered — polish it in class', big: true });
     }
   }
+}
+
+/* ---------- course identity: colour, glyph, celebration particles ----
+   The whole app repaints when you switch course. FX_JAMO is a const in
+   the engine, so its CONTENTS are swapped rather than the binding —
+   the FX system keeps working untouched. */
+function applyCourseIdentity() {
+  const c = activeCourse();
+  const root = document.documentElement;
+  const light = S.settings.theme === 'light';
+  COURSES.forEach(x => root.classList.remove('course-' + x.id));
+  if (!c) { root.style.removeProperty('--accent'); root.style.removeProperty('--accent-dim'); }
+  else {
+    root.classList.add('course-' + c.id);
+    root.style.setProperty('--accent', light ? (c.accentLight || c.accent) : c.accent);
+    root.style.setProperty('--accent-dim', c.accentDim || (light ? c.accent : c.accentLight) || '#2b4d80');
+  }
+  const glyphs = (c && c.fxGlyphs && c.fxGlyphs.length) ? c.fxGlyphs
+    : ['합', '기', '도', '원', '유', '화', '수', '련', '띠', '한'];
+  FX_JAMO.length = 0;
+  glyphs.forEach(g => FX_JAMO.push(g));
+}
+function courseMark(c, size) {
+  if (!c) return '';
+  return `<span class="cmark ko" style="--cacc:${c.accent};${size ? `--csz:${size}px` : ''}">${esc(c.glyph || '')}</span>`;
 }
 
 /* ---------- settings & state shape ---------- */
@@ -3960,6 +4196,10 @@ function normalizeSettings() {
   ['sound', 'spokenPraise'].forEach(k => { S.settings[k] = !!S.settings[k]; });
   if (!S.milestones || typeof S.milestones !== 'object') S.milestones = {};
   if (!BELT_BY_ID[S.settings.activeBeltId]) S.settings.activeBeltId = BELTS.length ? BELTS[0].id : '';
+  // '' is a legitimate value: it means "hasn't picked a course yet", which
+  // is what puts a returning-from-nothing student on the course picker.
+  if (typeof S.settings.activeCourseId !== 'string' ||
+      (S.settings.activeCourseId && !COURSE_BY_ID[S.settings.activeCourseId])) S.settings.activeCourseId = '';
   if (!Array.isArray(S.practiceLog)) S.practiceLog = [];
   if (!S.verifications || typeof S.verifications !== 'object') S.verifications = {};
   if (!S.instructor || typeof S.instructor !== 'object') S.instructor = { pinHash: null, log: [] };
@@ -3970,7 +4210,7 @@ function normalizeSettings() {
   S.curriculumVersion = CURRICULUM.meta.version;
 }
 
-/* ---------- two tracks: Knowledge & Customs vs. Techniques ----------
+/* ---------- which course does a thing belong to? ----------
    Driven by domain.track in the curriculum data — fully configurable. */
 function itemTrack(item) {
   const d = DOMAIN_BY_ID[item.domain];
@@ -3980,37 +4220,82 @@ function unitTrack(u) {
   const ids = SEQUENCE.filter(id => ITEMS[id].unit === u.id);
   return ids.some(id => itemTrack(ITEMS[id]) === 'technique') ? 'technique' : 'knowledge';
 }
+function courseOf(item) { return COURSE_BY_TRACK[itemTrack(item)] || null; }
+function courseIdOf(item) { const c = courseOf(item); return c ? c.id : ''; }
+function courseOfUnit(u) { return COURSE_BY_TRACK[unitTrack(u)] || null; }
 
-function nextNewItems(n, track) {
+/* Everything that takes a "course" accepts a course object, a course id,
+   a bare track name ('knowledge'/'technique'), or nothing for "both". */
+function asCourse(sel) {
+  if (!sel) return null;
+  if (typeof sel === 'object') return sel.id ? sel : null;
+  return COURSE_BY_ID[sel] || COURSE_BY_TRACK[sel] || null;
+}
+function activeCourse() { return COURSE_BY_ID[S.settings.activeCourseId] || null; }
+function otherCourses() {
+  const a = activeCourse();
+  return COURSES.filter(c => !a || c.id !== a.id);
+}
+function courseUnits(courseSel, belt) {
+  const course = asCourse(courseSel);
+  return ((belt || activeBelt()).units || []).filter(u => !course || unitTrack(u) === course.track);
+}
+
+/* Each course carries its own daily new-item budget — studying one
+   never eats the other's allowance, exactly as two language courses
+   would behave. Older saves simply start today's counters at zero. */
+function newToday(courseSel) {
+  const rec = dayRec(todayKey());
+  const course = asCourse(courseSel);
+  if (!course) return rec.newItems || 0;
+  return (rec.newByCourse || {})[course.id] || 0;
+}
+function countNewItem(item) {
+  const rec = dayRec(todayKey());
+  rec.newItems = (rec.newItems || 0) + 1;
+  const c = courseOf(item);
+  if (!c) return;
+  if (!rec.newByCourse) rec.newByCourse = {};
+  rec.newByCourse[c.id] = (rec.newByCourse[c.id] || 0) + 1;
+}
+
+function nextNewItems(n, courseSel) {
   const out = [];
-  const seq = eligibleSequence();
+  const seq = eligibleSequence(courseSel);
   for (const id of seq) {
     if (out.length >= n) break;
     if (S.introduced[id]) continue;
-    if (track && itemTrack(ITEMS[id]) !== track) continue;
     out.push(id);
   }
   return out;
 }
 
-function plan(track) {
+function plan(courseSel) {
   unlockSkills();
+  const course = asCourse(courseSel);
   const now = Date.now();
   let due = dueCards(now);
-  if (track) due = due.filter(k => { const it = cardItem(k); return it && itemTrack(it) === track; });
-  const rec = dayRec(todayKey());
-  const newSlots = Math.max(0, S.settings.dailyNew - rec.newItems);
-  const newIds = nextNewItems(newSlots, track);
+  if (course) due = due.filter(k => { const it = cardItem(k); return it && courseIdOf(it) === course.id; });
+  const newSlots = Math.max(0, S.settings.dailyNew - newToday(course));
+  const newIds = nextNewItems(newSlots, course);
   return {
+    course,
     due: due.slice(0, S.settings.reviewCap),
     dueTotal: due.length,
     newIds,
-    remainingInCourse: eligibleSequence().filter(id => !S.introduced[id] && (!track || itemTrack(ITEMS[id]) === track)).length
+    remainingInCourse: eligibleSequence(course).filter(id => !S.introduced[id]).length
   };
 }
+function planTotal(courseSel) { const p = plan(courseSel); return p.due.length + p.newIds.length; }
 
-function startSession(track) {
-  const p = plan(track);
+/* Note the deliberate asymmetry in defaults: plan/stats/beltStats with
+   no course mean "everything", because that is what the shared Progress
+   and Belt views want. startSession with no course means "the course I
+   am studying", because that is what the big button on the path means —
+   the engine calls it bare. '*' is the explicit everything-session. */
+function startSession(courseSel) {
+  const course = courseSel === '*' ? null : (asCourse(courseSel) || activeCourse());
+  const p = plan(course);
   const steps = [];
   p.due.forEach(k => steps.push({ t: 'card', key: k }));
   shuffle(steps);
@@ -4030,7 +4315,7 @@ function startSession(track) {
 
   if (!merged.length) {
     view = 'today'; sess = null;
-    showToast(track ? 'Nothing is due on that track right now.' : 'Nothing is due right now.');
+    showToast(course ? 'Nothing is due in ' + course.nameEnglish + ' right now.' : 'Nothing is due right now.');
     render();
     return;
   }
@@ -4045,16 +4330,21 @@ function startSession(track) {
     plannedNew: p.newIds.length, plannedReviews: p.due.length,
     reveal: null, lastGradeKey: null,
     budgetMs: S.settings.sessionMinutes * 60000, overtime: false,
-    track: track || null
+    courseId: course ? course.id : null,
+    track: course ? course.track : null
   };
   view = 'session';
   render();
 }
 
-/* ---------- stats (Hanbit's, with hapkido item kinds) ---------- */
-function stats() {
+/* ---------- stats (Hanbit's, with hapkido item kinds) ----------
+   Pass a course to get that course's numbers only. Day records,
+   streak and time stay shared: one student, one training habit. */
+function stats(courseSel) {
   const now = Date.now();
-  const keys = Object.keys(S.cards).filter(k => ITEMS[k.split('|')[0]]);
+  const course = asCourse(courseSel);
+  const inCourse = id => !course || courseIdOf(ITEMS[id]) === course.id;
+  const keys = Object.keys(S.cards).filter(k => ITEMS[k.split('|')[0]] && inCourse(k.split('|')[0]));
   let learning = 0, young = 0, mature = 0, rsum = 0, rcount = 0;
   keys.forEach(k => {
     const c = S.cards[k];
@@ -4064,7 +4354,7 @@ function stats() {
     rsum += currentR(c, now); rcount++;
   });
 
-  const eligible = new Set(eligibleSequence());
+  const eligible = new Set(eligibleSequence(course));
   const introducedItems = Object.keys(S.introduced).filter(id => ITEMS[id] && eligible.has(id));
   const wordsKnown = introducedItems.filter(id => {
     const it = ITEMS[id];
@@ -4108,7 +4398,7 @@ function stats() {
     measuredR: rtotal ? rcorrect / rtotal : (total ? correct / total : 0),
     reviewsAll: total, wordsKnown,
     introduced: introducedItems.length,
-    courseTotal: eligibleSequence().length,
+    courseTotal: eligible.size,
     forecast, streak, timeToday, totalMs
   };
 }
@@ -4268,6 +4558,39 @@ COMMENTARY.sequencing = [
   'Sequence locked. In class you can think about feel, not what comes next.',
   'That is the whole technique, in order, from memory.'
 ];
+
+/* ---------- session shell: same as the engine's, plus the course you
+   are actually in. A session belongs to one course unless you asked
+   for the everything-review. ---------- */
+function renderSession() {
+  const step = currentStep();
+  if (!step) return shell(renderDone());
+
+  const total = sess.queue.length;
+  const done = sess.pos;
+  const tier = comboTier(sess.combo);
+  const c = sess.courseId ? COURSE_BY_ID[sess.courseId] : null;
+  const head = `
+  <div class="sess-head">
+    <button class="iconbtn" data-act="quit" title="End session">✕</button>
+    ${c ? `<span class="sess-course" title="${esc(c.nameEnglish)}">${courseMark(c)}<span>${esc(c.shortName)}</span></span>`
+        : (COURSES.length ? '<span class="sess-course both"><span>Both courses</span></span>' : '')}
+    <div class="bar"><i style="width:${Math.round(done / Math.max(1, total) * 100)}%"></i></div>
+    ${sess.combo >= 2 ? `<span class="combo-chip t${tier}">${tier >= 3 ? '🔥' : ''} ${sess.combo} streak</span>` : ''}
+    <span class="count">${done} / ${total}</span>
+  </div>`;
+
+  if (sess.askStop) {
+    return `<div id="app-inner" class="session-wrap">${head}
+      <div class="card"><h2>You have hit ${S.settings.sessionMinutes} minutes</h2>
+      <p class="sub">This is the point where extra reviews start paying less per minute, and where a second short session tomorrow beats pushing on today. ${sess.queue.length - sess.pos} cards are still queued — they will simply be waiting.</p>
+      <div class="row"><button class="btn primary" data-act="stopnow">Stop here</button><button class="btn" data-act="keepgoing">Keep going</button></div>
+      </div></div>`;
+  }
+
+  if (step.t === 'teach') return `<div class="session-wrap">${head}${renderTeach(ITEMS[step.id])}</div>`;
+  return `<div class="session-wrap">${head}${renderExercise(step)}</div>`;
+}
 
 /* ---------- session rendering (mc / build-steps / self) ---------- */
 function renderExercise(step) {
@@ -4496,6 +4819,7 @@ function renderTeach(item) {
    ================================================================ */
 
 let beltView = null;          // belt being viewed on the Belt tab
+let beltScope = 'course';     // 'course' (the active one) | 'all'
 let practiceItemId = null;    // item open in the practice-log view
 let practiceState = null;     // transient checklist state
 let instrUnlocked = false;    // instructor mode session flag (never persisted)
@@ -4533,15 +4857,21 @@ function mediaSlot(item) {
 function render() {
   const app = document.getElementById('app');
   document.documentElement.classList.toggle('light', S.settings.theme === 'light');
+  applyCourseIdentity();
   applyFxSettings();
+
+  // No course picked yet? Then the picker is the app. Nothing to study
+  // until a student says which of the two they are here for.
+  if (COURSES.length && !activeCourse() && view !== 'courses') view = 'courses';
 
   if (view === 'session') { app.innerHTML = renderSession(); afterRender(); return; }
   if (view === 'done') { app.innerHTML = shell(renderDone()); afterRender(); return; }
 
   let body = '';
   if (view === 'today') body = renderPath();
+  else if (view === 'courses') body = renderCourses();
   else if (view === 'belt') body = renderBelt();
-  else if (view === 'progress') body = renderProgress();
+  else if (view === 'progress') body = renderCourseProgress() + renderProgress();
   else if (view === 'method') body = renderMethod();
   else if (view === 'settings') body = renderSettings();
   else if (view === 'practice') body = renderPractice();
@@ -4552,20 +4882,90 @@ function render() {
 }
 
 function shell(body) {
+  const course = activeCourse();
+  const picking = COURSES.length && !course;
   const tabs = [['today', 'Path'], ['belt', 'Belt'], ['progress', 'Progress'], ['method', 'Method'], ['settings', 'Settings']];
+  const switcher = course
+    ? `<button class="cswitch" data-view="courses" title="Switch course" aria-label="Switch course — currently ${esc(course.nameEnglish)}">
+         ${courseMark(course)}<span class="cs-name">${esc(course.shortName)}</span><span class="cs-caret">▾</span>
+       </button>`
+    : '';
   return `
   <header class="top">
     <div class="brand"><span class="mark ko">합</span><span>Hapkido Companion<br><small>working title · provisional curriculum</small></span></div>
     <div class="spacer"></div>
+    ${switcher}
     <button class="iconbtn" data-act="theme" title="Light / dark">${S.settings.theme === 'dark' ? '☀' : '☾'}</button>
   </header>
-  <nav class="tabs">${tabs.map(([k, l]) => `<button data-view="${k}" class="${view === k ? 'on' : ''}">${l}</button>`).join('')}</nav>
+  ${picking ? '' : `<nav class="tabs">${tabs.map(([k, l]) => `<button data-view="${k}" class="${view === k ? 'on' : ''}">${l}</button>`).join('')}</nav>`}
   ${storageOk ? '' : `<div class="notice" style="margin-bottom:14px">
     <b>This browser will not let the app save.</b> Nothing you study here will survive closing the tab.
     That usually means a private window, or the page is running inside another app. Open <code>index.html</code>
     directly in Chrome, Edge, Firefox or Safari and bookmark it — then progress sticks. Export in Settings still works either way.
   </div>`}
   ${body}`;
+}
+
+/* ---------- the course picker — two courses, one belt ---------- */
+function courseArt(c) {
+  const raster = (window.HKD_COURSE_ART || {})[c.id];
+  if (raster) return `<span class="cart"><img src="${esc(raster)}" alt="" loading="lazy"></span>`;
+  const emblem = (window.HKD_COURSE_EMBLEM || {})[c.id];   // local, trusted markup
+  if (emblem) return `<span class="cart emb" style="color:${c.accent}">${emblem}</span>`;
+  return `<span class="cart plain"><span class="cart-glyph ko">${esc(c.glyph || '')}</span></span>`;
+}
+
+function courseSummary(c) {
+  const st = stats(c);
+  const p = plan(c);
+  const total = eligibleSequence(c).length;
+  const all = SEQUENCE.filter(id => courseIdOf(ITEMS[id]) === c.id).length;
+  return { st, p, total, all, due: p.due.length + p.newIds.length,
+           frac: total ? st.introduced / total : 0 };
+}
+
+function renderCourseCard(c, opts) {
+  const o = opts || {};
+  const s = courseSummary(c);
+  const active = activeCourse() && activeCourse().id === c.id;
+  const started = s.st.introduced > 0;
+  return `<button class="ccard${active ? ' on' : ''}${o.mini ? ' mini' : ''}" data-course="${c.id}" style="--cacc:${c.accent};--cacd:${c.accentDim}">
+    ${courseArt(c)}
+    <span class="cbody">
+      <span class="ctitle">${esc(c.nameEnglish)}</span>
+      <span class="ckor ko">${esc(c.nameKorean)}${S.settings.showRomanization && c.rom ? ` <i>${esc(c.rom)}</i>` : ''}</span>
+      ${o.mini ? '' : `<span class="cblurb">${esc(c.blurb)}</span>`}
+      <span class="cmeta">
+        <span class="chip">${s.all} items</span>
+        <span class="chip">${started ? s.st.introduced + ' learned' : 'not started'}</span>
+        ${s.due ? `<span class="chip accent">${s.due} due today</span>` : '<span class="chip">all clear today</span>'}
+      </span>
+      <span class="cbar"><i style="width:${Math.round(Math.min(1, s.frac) * 100)}%"></i></span>
+    </span>
+    <span class="cgo">${active ? 'Studying' : started ? 'Continue' : 'Start'}</span>
+  </button>`;
+}
+
+function renderCourses() {
+  const course = activeCourse();
+  const belt = activeBelt();
+  return `
+  <div class="course-pick">
+    <h1>${course ? 'Switch course' : 'Choose your course'}</h1>
+    <p class="sub">Two separate courses, the way a language app teaches two separate languages —
+      each with its own path, its own daily pace and its own celebrations.
+      ${course ? 'Switching loses nothing: each course keeps its own place.' : 'Pick either one. You can switch whenever you like, and the other will be waiting exactly where you left it.'}</p>
+    <div class="ccards">${COURSES.map(c => renderCourseCard(c)).join('')}</div>
+    <div class="onebelt">
+      ${beltBand(belt, true)}
+      <div>
+        <b>One belt, both courses.</b>
+        <span class="faint">Whichever you study, it counts toward the same rank — ${esc(belt.nameEnglish)} right now.
+        The app only ever reports how prepared you are. Grandmaster Lee awards the belt, at the school, in person.</span>
+      </div>
+    </div>
+    ${course ? `<div class="row" style="justify-content:center;margin-top:6px"><button class="btn ghost" data-view="today">Stay in ${esc(course.shortName)}</button></div>` : ''}
+  </div>`;
 }
 
 /* ---------- the belt path (home) ---------- */
@@ -4586,19 +4986,20 @@ function unitState(u) {
 
 function renderPath() {
   const belt = activeBelt();
-  const p = plan();
-  const st = stats();
+  const course = activeCourse();
+  const p = plan(course);
+  const st = stats(course);
   const rec = dayRec(todayKey());
   const total = p.due.length + p.newIds.length;
   const first = st.introduced === 0;
   const doneToday = rec.reviews;
 
-  const units = belt.units || [];
+  const units = courseUnits(course, belt);
   const check = '<svg viewBox="0 0 26 26" style="width:15px;height:15px"><path d="M4 14l6 6L22 6" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const lock = '<svg class="lockico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
   const nodec = belt.stripe || (belt.dark ? belt.color : 'var(--accent)');
 
-  // Two lanes: mind and body, each with its own numbering and its own glowing next step.
+  // One lane — this course's. Its own numbering, its own glowing next step.
   const renderLane = laneUnits => {
     const states = laneUnits.map(u => unitState(u));
     let activeIdx = states.findIndex(s => !s.done);
@@ -4615,11 +5016,9 @@ function renderPath() {
       </div>`;
     }).join('');
   };
-  const knUnits = units.filter(u => unitTrack(u) === 'knowledge');
-  const tkUnits = units.filter(u => unitTrack(u) === 'technique');
 
   const nextBelts = BELTS.filter(b => b.order > belt.order).map(b => {
-    const has = SEQUENCE.some(id => ITEMS[id].beltId === b.id);
+    const has = SEQUENCE.some(id => ITEMS[id].beltId === b.id && (!course || courseIdOf(ITEMS[id]) === course.id));
     return `<div class="pnode lockb">
       <div class="dot">${lock}</div>
       <div class="pinfo">
@@ -4629,7 +5028,23 @@ function renderPath() {
     </div>`;
   }).join('');
 
+  const others = otherCourses().filter(c => eligibleSequence(c).length);
+  const otherBlock = others.length ? `<div class="card othercourse">
+    <h3 style="margin-top:0">Your other course</h3>
+    <p class="sub">Waiting exactly where you left it. Studying it costs this one nothing — each course keeps its own daily pace.</p>
+    ${others.map(c => renderCourseCard(c, { mini: true })).join('')}
+  </div>` : '';
+
   return `
+  ${course ? `<div class="course-banner" style="--cacc:${course.accent};--cacd:${course.accentDim}">
+    ${courseMark(course, 30)}
+    <div style="flex:1">
+      <div class="cb-name">${esc(course.nameEnglish)}</div>
+      <div class="cb-sub"><span class="ko">${esc(course.nameKorean)}</span>${S.settings.showRomanization && course.rom ? ` <span class="faint" style="font-family:var(--mono);font-size:11px">${esc(course.rom)}</span>` : ''} · ${esc(course.tagline)}</div>
+    </div>
+    <button class="btn ghost sm" data-view="courses">Switch</button>
+  </div>` : ''}
+
   <div class="belt-banner" style="--belt:${belt.color}">
     <div class="row" style="gap:14px">
       ${beltBand(belt, true)}
@@ -4642,11 +5057,11 @@ function renderPath() {
   </div>
 
   <div class="card hero" style="margin-top:14px">
-    <h2>${first ? 'Begin your White Belt journey' : 'Today'}</h2>
+    <h2>${first ? (course ? esc(course.firstStep || ('Begin ' + course.nameEnglish)) : 'Begin your journey') : 'Today'}</h2>
     <p class="sub">${first
-      ? 'Etiquette, commands, and your first movements. Ten short units stand between you and being genuinely ready for class.'
+      ? (course ? esc(course.blurb) + ' ' : '') + `${units.length} short unit${units.length === 1 ? '' : 's'} at ${esc(belt.nameEnglish)}, and none of it is busywork — it is what your instructors expect you to know.`
       : total === 0
-        ? 'Nothing is due. That is the schedule working, not a failure — come back tomorrow rather than grinding ahead.'
+        ? 'Nothing is due in this course. That is the schedule working, not a failure — come back tomorrow rather than grinding ahead.'
         : 'Reviews come first, new material is threaded through them.'}</p>
     <div class="plan">
       <span class="chip accent">Due <b>${p.due.length}</b>${p.dueTotal > p.due.length ? ` <span class="faint">of ${p.dueTotal}</span>` : ''}</span>
@@ -4656,32 +5071,32 @@ function renderPath() {
       ${st.streak ? `<span class="chip">Streak <b>${st.streak}</b> ${st.streak === 1 ? 'day' : 'days'}</span>` : ''}
     </div>
     <button class="btn primary big" data-act="start" ${total === 0 ? 'disabled' : ''}>
-      ${total === 0 ? 'All clear for today' : (first ? 'Start Unit 1 — Entering the Dojang' : `Train ${total} card${total === 1 ? '' : 's'}`)}
+      ${total === 0 ? 'All clear for today' : (first ? `Start Unit 1 — ${esc((units[0] || {}).title || 'the first unit')}` : `Train ${total} card${total === 1 ? '' : 's'}`)}
     </button>
     ${(() => {
-      const pk = plan('knowledge'), pt = plan('technique');
-      const nk = pk.due.length + pk.newIds.length, nt = pt.due.length + pt.newIds.length;
-      return `<div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
-        <button class="btn ghost" data-act="start-kn" ${nk ? '' : 'disabled'}>Mind only <b>${nk}</b></button>
-        <button class="btn ghost" data-act="start-tk" ${nt ? '' : 'disabled'}>Body only <b>${nt}</b></button>
-      </div>`;
+      const both = planTotal();
+      return both > total ? `<div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost" data-act="start-both">Everything due · both courses <b>${both}</b></button>
+        <span class="faint" style="font-size:12px">for the week before a belt test</span>
+      </div>` : '';
     })()}
     ${total === 0 && p.remainingInCourse > 0 ? `<div style="margin-top:10px"><button class="btn ghost" data-act="extra">Learn ${Math.min(5, p.remainingInCourse)} extra new items anyway</button></div>` : ''}
   </div>
 
   <div class="card" style="margin-top:14px">
-    <h3 style="margin-top:0">Mind — knowledge &amp; customs</h3>
-    <div class="path">${renderLane(knUnits) || '<p class="sub">Nothing here yet.</p>'}</div>
-    <h3>Body — techniques</h3>
-    <div class="path">${renderLane(tkUnits) || '<p class="sub">Nothing here yet.</p>'}</div>
+    <h3 style="margin-top:0">${course ? esc(course.nameEnglish) : 'Your path'} <span class="faint" style="font-weight:400;font-size:12.5px">· ${esc(belt.nameEnglish)}</span></h3>
+    <div class="path" data-course="${course ? esc(course.id) : ''}">${renderLane(units) || '<p class="sub">This belt has no units for this course yet.</p>'}</div>
     <h3>The road ahead</h3>
     <div class="path">${nextBelts}</div>
   </div>
 
   <div class="card">
-    <h3 style="margin-top:0">Belt readiness — five measures, never one number</h3>
-    ${renderReadiness(belt)}
+    <h3 style="margin-top:0">${course ? esc(course.shortName) + ' readiness' : 'Belt readiness'} <span class="faint" style="font-weight:400;font-size:12.5px">· ${esc(belt.nameEnglish)}</span></h3>
+    ${renderReadiness(belt, course)}
+    <p class="sub" style="margin:10px 0 0"><button class="btn ghost sm" data-view="belt">See all five belt measures</button></p>
   </div>
+
+  ${otherBlock}
 
   ${first ? `<div class="card"><h3 style="margin-top:0">How this app fits your training</h3>
     <div class="prose">
@@ -4691,9 +5106,15 @@ function renderPath() {
   `;
 }
 
-function renderReadiness(belt) {
-  const bs = beltStats(belt);
-  const cum = cumulativeStats(belt);
+/* The five measures. Course-scoped on the path, whole-belt on the Belt
+   tab — where all five always show, because that is the honest picture
+   of a rank. A course with no physical requirements simply has no
+   physical bars to draw. */
+function renderReadiness(belt, courseSel) {
+  const course = asCourse(courseSel);
+  const bs = beltStats(belt, course);
+  const cum = cumulativeStats(belt, course);
+  const physical = !course || bs.practicable > 0 || bs.vreq > 0;
   const row = (label, valText, frac) => `<div class="rrow">
     <div class="rl"><span>${label}</span><span>${valText}</span></div>
     <div class="bar"><i class="${frac >= 1 ? 'good' : ''}" style="width:${Math.round(Math.min(1, frac) * 100)}%"></i></div>
@@ -4702,10 +5123,35 @@ function renderReadiness(belt) {
     ${row('Knowledge retention', bs.retention == null ? '—' : pct(bs.retention), bs.retention || 0)}
     ${row('Curriculum exposure', `${bs.intro}/${bs.total}`, bs.total ? bs.intro / bs.total : 0)}
     ${row('Knowledge mastered', `${bs.mastered}/${bs.total}`, bs.total ? bs.mastered / bs.total : 0)}
-    ${row('Practice logged (solo-safe)', bs.practicable ? `${bs.practiced}/${bs.practicable}` : '—', bs.practicable ? bs.practiced / bs.practicable : 0)}
-    ${row('Instructor verification', bs.vreq ? `${bs.vdone}/${bs.vreq}` : '—', bs.vreq ? bs.vdone / bs.vreq : 0)}
+    ${physical ? row('Practice logged (solo-safe)', bs.practicable ? `${bs.practiced}/${bs.practicable}` : '—', bs.practicable ? bs.practiced / bs.practicable : 0) : ''}
+    ${physical ? row('Instructor verification', bs.vreq ? `${bs.vdone}/${bs.vreq}` : '—', bs.vreq ? bs.vdone / bs.vreq : 0) : ''}
     ${cum.total ? row('Previous belts (cumulative)', `${cum.mastered}/${cum.total} mastered · ${cum.vdone}/${cum.vreq} verified`, cum.total ? cum.mastered / cum.total : 0) : ''}
-    <p class="sub" style="margin:10px 0 0">Practice entries are your own honest log. Verification comes only from an instructor, in person. The belt itself comes from Grandmaster Lee — the app only reports preparation.</p>`;
+    <p class="sub" style="margin:10px 0 0">${physical
+      ? 'Practice entries are your own honest log. Verification comes only from an instructor, in person.'
+      : 'This course is knowledge, so these are knowledge measures. Practice and verification live in the techniques course.'}
+      The belt itself comes from Grandmaster Lee — the app only reports preparation.</p>`;
+}
+
+/* ---------- per-course numbers above the shared Progress tab ---------- */
+function renderCourseProgress() {
+  if (!COURSES.length) return '';
+  return `<div class="card" style="margin-bottom:14px">
+    <h2 style="margin-top:0">Course by course</h2>
+    <p class="sub">Two courses, measured separately. The forecast, consistency grid and card tables below cover everything you study — one habit, one calendar.</p>
+    <div class="cprog">${COURSES.map(c => {
+      const s = courseSummary(c);
+      const active = activeCourse() && activeCourse().id === c.id;
+      return `<button class="cprow${active ? ' on' : ''}" data-course="${c.id}" style="--cacc:${c.accent}">
+        ${courseMark(c)}
+        <span class="cp-body">
+          <span class="cp-t">${esc(c.nameEnglish)}${active ? ' <i class="cp-now">studying</i>' : ''}</span>
+          <span class="cp-n">${s.st.introduced}/${s.total} met at ${esc(activeBelt().nameEnglish)} · ${s.st.wordsKnown} holding · ${s.st.mature} mature</span>
+          <span class="cbar"><i style="width:${Math.round(Math.min(1, s.frac) * 100)}%"></i></span>
+        </span>
+        <span class="cp-due">${s.due ? s.due + ' due' : 'clear'}</span>
+      </button>`;
+    }).join('')}</div>
+  </div>`;
 }
 
 /* ---------- belt tab ---------- */
@@ -4713,7 +5159,12 @@ function renderBelt() {
   const active = activeBelt();
   const viewing = BELT_BY_ID[beltView] || active;
   const preview = viewing.order > active.order;
-  const ids = beltItems(viewing.id, true);
+  const course = beltScope === 'all' ? null : activeCourse();
+  const ids = beltItems(viewing.id, true).filter(id => !course || courseIdOf(ITEMS[id]) === course.id);
+  const scopeBar = COURSES.length ? `<div class="scopebar">
+    ${COURSES.map(c => `<button class="${beltScope !== 'all' && activeCourse() && activeCourse().id === c.id ? 'on' : ''}" data-scope="${c.id}">${esc(c.shortName)}</button>`).join('')}
+    <button class="${beltScope === 'all' ? 'on' : ''}" data-scope="all">Everything</button>
+  </div>` : '';
 
   const pills = `<div class="belt-pills">${BELTS.map(b =>
     `<button class="belt-pill ${b.id === viewing.id ? 'on' : ''}" style="--belt:${b.color}" data-beltsel="${b.id}">${beltBand(b)} ${esc(b.nameEnglish.replace(' Belt', ''))}</button>`).join('')}</div>`;
@@ -4731,11 +5182,15 @@ function renderBelt() {
   </div>`;
 
   if (!ids.length) {
-    return `${pills}${banner}
+    const anyAtAll = beltItems(viewing.id, true).length;
+    return `${pills}${banner}${scopeBar}
     <div class="card" style="margin-top:14px;text-align:center;padding:34px 20px">
       <div style="font-size:26px;margin-bottom:8px">🥋</div>
-      <b>This belt is waiting for Grandmaster Lee's curriculum.</b>
-      <p class="sub" style="margin:8px 0 0">When his requirements are entered in <code>data/curriculum.js</code>, this page fills in automatically — the engine never changes. Rank always comes from testing at the school.</p>
+      ${anyAtAll
+        ? `<b>Nothing from ${esc((course || {}).nameEnglish || 'this course')} at this belt.</b>
+           <p class="sub" style="margin:8px 0 0">This belt has ${anyAtAll} requirement${anyAtAll === 1 ? '' : 's'} in the other course — switch the filter above to “Everything” to see them.</p>`
+        : `<b>This belt is waiting for Grandmaster Lee's curriculum.</b>
+           <p class="sub" style="margin:8px 0 0">When his requirements are entered in <code>data/curriculum.js</code>, this page fills in automatically — the engine never changes. Rank always comes from testing at the school.</p>`}
     </div>`;
   }
 
@@ -4767,11 +5222,12 @@ function renderBelt() {
   const cum = cumulativeStats(viewing);
   const cumCard = cum.total ? `<div class="card" style="margin-top:14px">
     <h2>Also on your test — previous belts</h2>
-    <p class="sub">Testing is cumulative: earlier material stays live. ${cum.mastered}/${cum.total} mastered, ${cum.vdone}/${cum.vreq} verified.</p>
+    <p class="sub">Testing is cumulative: earlier material stays live, from both courses. ${cum.mastered}/${cum.total} mastered, ${cum.vdone}/${cum.vreq} verified.</p>
   </div>` : '';
 
-  return `${pills}${banner}
-    ${preview ? '' : `<div class="card" style="margin-top:14px"><h3 style="margin-top:0">Readiness</h3>${renderReadiness(viewing)}</div>`}
+  return `${pills}${banner}${scopeBar}
+    ${preview ? '' : `<div class="card" style="margin-top:14px"><h3 style="margin-top:0">Readiness — five measures, never one number</h3>
+      <p class="sub" style="margin-top:0">The whole belt, both courses. A rank is not half a rank.</p>${renderReadiness(viewing)}</div>`}
     ${units}${cumCard}`;
 }
 
@@ -5070,7 +5526,8 @@ function renderSettings() {
    ================================================================ */
 
 function renderDone() {
-  const st = stats();
+  const doneCourse = sess && sess.courseId ? COURSE_BY_ID[sess.courseId] : null;
+  const st = stats(doneCourse);
   const rec = dayRec(todayKey());
   const acc = sess && sess.answered ? sess.correct / sess.answered : 0;
   const mins = sess ? (Date.now() - sess.started) / 60000 : 0;
@@ -5102,9 +5559,9 @@ function renderDone() {
       ${romFor(headline) ? `<div class="faint" style="font-size:11px;font-family:var(--mono);letter-spacing:.08em">${esc(romFor(headline))}</div>` : ''}
       <div class="dh-lab">${esc(headSub)}</div>
     </div>
-    <p class="sub" style="text-align:center;margin-top:14px">${Math.round(mins)} min · ${sess ? sess.answered : 0} answers${sess && sess.newSeen ? ` · ${sess.newSeen} new` : ''}${best >= 3 ? ` · best streak ${best}` : ''}</p>
+    <p class="sub" style="text-align:center;margin-top:14px">${doneCourse ? esc(doneCourse.nameEnglish) + ' · ' : (sess && COURSES.length ? 'Both courses · ' : '')}${Math.round(mins)} min · ${sess ? sess.answered : 0} answers${sess && sess.newSeen ? ` · ${sess.newSeen} new` : ''}${best >= 3 ? ` · best streak ${best}` : ''}</p>
     <div class="grid four" style="margin-top:6px">
-      <div class="stat"><div class="n">${st.wordsKnown}</div><div class="l">Items holding</div></div>
+      <div class="stat"><div class="n">${st.wordsKnown}</div><div class="l">${doneCourse ? esc(doneCourse.shortName) + ' holding' : 'Items holding'}</div></div>
       <div class="stat"><div class="n">${best}</div><div class="l">Best streak</div></div>
       <div class="stat"><div class="n">${st.forecast[1] || 0}</div><div class="l">Due tomorrow</div></div>
       <div class="stat"><div class="n">${fmtMin(rec.ms)}</div><div class="l">Time today</div></div>
@@ -5119,6 +5576,10 @@ function renderDone() {
     <div class="row" style="margin-top:8px">
       <button class="btn" data-view="today">Back to the path</button>
       <button class="btn ghost" data-act="start">Another round</button>
+      ${(() => {
+        const other = otherCourses().find(c => planTotal(c) > 0);
+        return other ? `<button class="btn ghost" data-course="${other.id}">Switch to ${esc(other.shortName)} <b>${planTotal(other)}</b></button>` : '';
+      })()}
     </div>
   </div>`;
 }
@@ -5190,6 +5651,76 @@ function afterRender() {
     }, 500);
     scheduleFx(() => Mascot.show(view === 'session' || view === 'done'), 4600);
   }
+}
+
+/* ---------- course switching ----------
+   Switching is free and loses nothing: each course keeps its own place,
+   its own daily budget and its own milestones. */
+function switchCourse(id, opts) {
+  const c = COURSE_BY_ID[id];
+  if (!c) return;
+  const wasFirstChoice = !activeCourse();
+  if (activeCourse() && activeCourse().id === c.id && !(opts && opts.force)) {
+    view = 'today'; render(); return;
+  }
+  S.settings.activeCourseId = c.id;
+  beltScope = 'course';
+  sess = null;
+  view = 'today';
+  save();
+  Sfx.play('tap');
+  render();
+  if (wasFirstChoice) {
+    scheduleFx(() => { Mascot.show(true); Mascot.mood('happy', 2200); Mascot.say('시작!', 2000); }, 260);
+    scheduleFx(() => Mascot.show(false), 3000);
+  } else {
+    showToast(c.nameEnglish + ' — picked up where you left off.');
+  }
+}
+
+/* Per-course daily budgets: a new item counts against its own course
+   only. Overrides the engine's single global counter. */
+function learnedStep() {
+  const step = currentStep();
+  if (!step || step.t !== 'teach') return;
+  const item = ITEMS[step.id];
+  if (!S.introduced[step.id]) {
+    S.introduced[step.id] = Date.now();
+    countNewItem(item);
+    sess.newSeen++;
+  }
+  const first = ladderFor(item)[0];
+  const key = ck(step.id, first);
+  if (!S.cards[key]) S.cards[key] = newCard();
+  sess.queue[sess.pos] = { t: 'card', key: key };
+  liveEx = null;
+  composer.reset();
+  sess.build = [];
+  save();
+  render();
+}
+
+/* "Learn extra anyway" stays inside the course you are studying. */
+function startExtra() {
+  const course = activeCourse();
+  const ids = nextNewItems(5, course);
+  if (!ids.length) {
+    showToast(course ? 'You have already met every ' + course.shortName.toLowerCase() + ' item at this belt.'
+                     : 'You have already seen every item in the course.');
+    return;
+  }
+  cancelFx();
+  resetTransient();
+  sess = {
+    queue: ids.map(id => ({ t: 'teach', id })), pos: 0, combo: 0, bestCombo: 0, lastTier: 0,
+    justMissed: false, pendingFx: null, celebrations: [],
+    started: Date.now(), answered: 0, correct: 0,
+    againKeys: new Set(), newSeen: 0, plannedNew: ids.length, plannedReviews: 0,
+    reveal: null, lastGradeKey: null, budgetMs: Infinity, overtime: true,
+    courseId: course ? course.id : null, track: course ? course.track : null
+  };
+  view = 'session';
+  render();
 }
 
 /* ---------- hapkido actions ---------- */
@@ -5275,11 +5806,21 @@ function doImport(file) {
 }
 
 /* ---------- extra event wiring (new data-attributes only) ---------- */
-const HKD_ACTS = new Set(['selfreveal', 'psave', 'pback', 'instructor', 'pinset', 'pinsubmit', 'instrexit', 'start-kn', 'start-tk']);
+const HKD_ACTS = new Set(['selfreveal', 'psave', 'pback', 'instructor', 'pinset', 'pinsubmit', 'instrexit', 'start-both']);
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-selfgrade],[data-beltsel],[data-practice],[data-pcheck],[data-prate],[data-verify],[data-gotounit],[data-instrbelt],[data-act]');
+  const t = e.target.closest('[data-selfgrade],[data-beltsel],[data-practice],[data-pcheck],[data-prate],[data-verify],[data-gotounit],[data-instrbelt],[data-course],[data-scope],[data-act]');
   if (!t) return;
+
+  if (t.dataset.course) { switchCourse(t.dataset.course); return; }
+  if (t.dataset.scope) {
+    Sfx.play('tap');
+    if (t.dataset.scope === 'all') beltScope = 'all';
+    else if (activeCourse() && activeCourse().id === t.dataset.scope) beltScope = 'course';
+    else { S.settings.activeCourseId = t.dataset.scope; beltScope = 'course'; save(); }
+    render();
+    return;
+  }
 
   if (t.dataset.instrbelt) {
     if (!instrUnlocked) return;
@@ -5300,8 +5841,7 @@ document.addEventListener('click', e => {
 
   const act = t.dataset.act;
   if (!act || !HKD_ACTS.has(act)) return;
-  if (act === 'start-kn') { startSession('knowledge'); return; }
-  if (act === 'start-tk') { startSession('technique'); return; }
+  if (act === 'start-both') { startSession('*'); return; }
   if (act === 'selfreveal') { if (sess && liveEx && liveEx.type === 'self') { sess.selfOpen = true; render(); } return; }
   if (act === 'psave') { savePractice(); return; }
   if (act === 'pback') { practiceItemId = null; practiceState = null; view = 'belt'; render(); return; }
@@ -5419,8 +5959,11 @@ window.__HKD = {
   get view() { return view; }, set view(v) { view = v; },
   get instrUnlocked() { return instrUnlocked; }, set instrUnlocked(v) { instrUnlocked = !!v; },
   set beltView(v) { beltView = v; }, set practiceItemId(v) { practiceItemId = v; practiceState = null; },
-  save, render, plan, stats, beltStats, cumulativeStats, activeBelt, ladderFor, knowledgeMastered,
-  itemStatus, eligibleSequence, newCard, ck, ITEMS, SEQUENCE, BELTS, schedule, retrievability, itemTrack
+  get beltScope() { return beltScope; }, set beltScope(v) { beltScope = v; },
+  get fxGlyphs() { return FX_JAMO.slice(); },
+  save, render, plan, planTotal, stats, beltStats, cumulativeStats, activeBelt, ladderFor, knowledgeMastered,
+  itemStatus, eligibleSequence, newCard, ck, ITEMS, SEQUENCE, BELTS, schedule, retrievability, itemTrack,
+  COURSES, COURSE_BY_ID, activeCourse, switchCourse, courseOf, courseIdOf, courseUnits, newToday, startSession
 };
 
 

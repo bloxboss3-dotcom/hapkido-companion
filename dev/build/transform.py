@@ -82,7 +82,8 @@ DEFAULTS_NEW = '''const DEFAULTS = {
     sound: true,
     volume: 0.5,
     spokenPraise: false,
-    activeBeltId: ''        // the belt currently being trained for
+    activeBeltId: '',       // the belt currently being trained for
+    activeCourseId: ''      // '' until the student picks a course
   },
   milestones: {},           // one-time celebrations already fired
   cards: {},                // "itemId|skill" -> FSRS card (KNOWLEDGE only)
@@ -114,7 +115,8 @@ avatar = (BUILD / 'avatar-svg.js').read_text(encoding='utf-8')
 s = repl_region(s, 'const MASCOT_SVG = `', '</svg>`;', avatar, 'mascot-svg')
 
 # ---------- 8. splice in the hapkido layer before BOOT ----------
-parts = '\n\n'.join((BUILD / f'hapkido-part{i}.js').read_text(encoding='utf-8') for i in range(1, 6))
+parts = (BUILD / 'course-art.js').read_text(encoding='utf-8') + '\n\n' + \
+        '\n\n'.join((BUILD / f'hapkido-part{i}.js').read_text(encoding='utf-8') for i in range(1, 6))
 M_BOOT = '/* ---------------------------------------------------------------\n   12. BOOT'
 assert M_BOOT in s, 'BOOT MARKER MISSING'
 s = s.replace(M_BOOT, parts + '\n\n' + M_BOOT, 1)

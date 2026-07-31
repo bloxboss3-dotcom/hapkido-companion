@@ -3,7 +3,8 @@
    ================================================================ */
 
 function renderDone() {
-  const st = stats();
+  const doneCourse = sess && sess.courseId ? COURSE_BY_ID[sess.courseId] : null;
+  const st = stats(doneCourse);
   const rec = dayRec(todayKey());
   const acc = sess && sess.answered ? sess.correct / sess.answered : 0;
   const mins = sess ? (Date.now() - sess.started) / 60000 : 0;
@@ -35,9 +36,9 @@ function renderDone() {
       ${romFor(headline) ? `<div class="faint" style="font-size:11px;font-family:var(--mono);letter-spacing:.08em">${esc(romFor(headline))}</div>` : ''}
       <div class="dh-lab">${esc(headSub)}</div>
     </div>
-    <p class="sub" style="text-align:center;margin-top:14px">${Math.round(mins)} min · ${sess ? sess.answered : 0} answers${sess && sess.newSeen ? ` · ${sess.newSeen} new` : ''}${best >= 3 ? ` · best streak ${best}` : ''}</p>
+    <p class="sub" style="text-align:center;margin-top:14px">${doneCourse ? esc(doneCourse.nameEnglish) + ' · ' : (sess && COURSES.length ? 'Both courses · ' : '')}${Math.round(mins)} min · ${sess ? sess.answered : 0} answers${sess && sess.newSeen ? ` · ${sess.newSeen} new` : ''}${best >= 3 ? ` · best streak ${best}` : ''}</p>
     <div class="grid four" style="margin-top:6px">
-      <div class="stat"><div class="n">${st.wordsKnown}</div><div class="l">Items holding</div></div>
+      <div class="stat"><div class="n">${st.wordsKnown}</div><div class="l">${doneCourse ? esc(doneCourse.shortName) + ' holding' : 'Items holding'}</div></div>
       <div class="stat"><div class="n">${best}</div><div class="l">Best streak</div></div>
       <div class="stat"><div class="n">${st.forecast[1] || 0}</div><div class="l">Due tomorrow</div></div>
       <div class="stat"><div class="n">${fmtMin(rec.ms)}</div><div class="l">Time today</div></div>
@@ -52,6 +53,10 @@ function renderDone() {
     <div class="row" style="margin-top:8px">
       <button class="btn" data-view="today">Back to the path</button>
       <button class="btn ghost" data-act="start">Another round</button>
+      ${(() => {
+        const other = otherCourses().find(c => planTotal(c) > 0);
+        return other ? `<button class="btn ghost" data-course="${other.id}">Switch to ${esc(other.shortName)} <b>${planTotal(other)}</b></button>` : '';
+      })()}
     </div>
   </div>`;
 }
@@ -123,6 +128,76 @@ function afterRender() {
     }, 500);
     scheduleFx(() => Mascot.show(view === 'session' || view === 'done'), 4600);
   }
+}
+
+/* ---------- course switching ----------
+   Switching is free and loses nothing: each course keeps its own place,
+   its own daily budget and its own milestones. */
+function switchCourse(id, opts) {
+  const c = COURSE_BY_ID[id];
+  if (!c) return;
+  const wasFirstChoice = !activeCourse();
+  if (activeCourse() && activeCourse().id === c.id && !(opts && opts.force)) {
+    view = 'today'; render(); return;
+  }
+  S.settings.activeCourseId = c.id;
+  beltScope = 'course';
+  sess = null;
+  view = 'today';
+  save();
+  Sfx.play('tap');
+  render();
+  if (wasFirstChoice) {
+    scheduleFx(() => { Mascot.show(true); Mascot.mood('happy', 2200); Mascot.say('시작!', 2000); }, 260);
+    scheduleFx(() => Mascot.show(false), 3000);
+  } else {
+    showToast(c.nameEnglish + ' — picked up where you left off.');
+  }
+}
+
+/* Per-course daily budgets: a new item counts against its own course
+   only. Overrides the engine's single global counter. */
+function learnedStep() {
+  const step = currentStep();
+  if (!step || step.t !== 'teach') return;
+  const item = ITEMS[step.id];
+  if (!S.introduced[step.id]) {
+    S.introduced[step.id] = Date.now();
+    countNewItem(item);
+    sess.newSeen++;
+  }
+  const first = ladderFor(item)[0];
+  const key = ck(step.id, first);
+  if (!S.cards[key]) S.cards[key] = newCard();
+  sess.queue[sess.pos] = { t: 'card', key: key };
+  liveEx = null;
+  composer.reset();
+  sess.build = [];
+  save();
+  render();
+}
+
+/* "Learn extra anyway" stays inside the course you are studying. */
+function startExtra() {
+  const course = activeCourse();
+  const ids = nextNewItems(5, course);
+  if (!ids.length) {
+    showToast(course ? 'You have already met every ' + course.shortName.toLowerCase() + ' item at this belt.'
+                     : 'You have already seen every item in the course.');
+    return;
+  }
+  cancelFx();
+  resetTransient();
+  sess = {
+    queue: ids.map(id => ({ t: 'teach', id })), pos: 0, combo: 0, bestCombo: 0, lastTier: 0,
+    justMissed: false, pendingFx: null, celebrations: [],
+    started: Date.now(), answered: 0, correct: 0,
+    againKeys: new Set(), newSeen: 0, plannedNew: ids.length, plannedReviews: 0,
+    reveal: null, lastGradeKey: null, budgetMs: Infinity, overtime: true,
+    courseId: course ? course.id : null, track: course ? course.track : null
+  };
+  view = 'session';
+  render();
 }
 
 /* ---------- hapkido actions ---------- */
@@ -208,11 +283,21 @@ function doImport(file) {
 }
 
 /* ---------- extra event wiring (new data-attributes only) ---------- */
-const HKD_ACTS = new Set(['selfreveal', 'psave', 'pback', 'instructor', 'pinset', 'pinsubmit', 'instrexit', 'start-kn', 'start-tk']);
+const HKD_ACTS = new Set(['selfreveal', 'psave', 'pback', 'instructor', 'pinset', 'pinsubmit', 'instrexit', 'start-both']);
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-selfgrade],[data-beltsel],[data-practice],[data-pcheck],[data-prate],[data-verify],[data-gotounit],[data-instrbelt],[data-act]');
+  const t = e.target.closest('[data-selfgrade],[data-beltsel],[data-practice],[data-pcheck],[data-prate],[data-verify],[data-gotounit],[data-instrbelt],[data-course],[data-scope],[data-act]');
   if (!t) return;
+
+  if (t.dataset.course) { switchCourse(t.dataset.course); return; }
+  if (t.dataset.scope) {
+    Sfx.play('tap');
+    if (t.dataset.scope === 'all') beltScope = 'all';
+    else if (activeCourse() && activeCourse().id === t.dataset.scope) beltScope = 'course';
+    else { S.settings.activeCourseId = t.dataset.scope; beltScope = 'course'; save(); }
+    render();
+    return;
+  }
 
   if (t.dataset.instrbelt) {
     if (!instrUnlocked) return;
@@ -233,8 +318,7 @@ document.addEventListener('click', e => {
 
   const act = t.dataset.act;
   if (!act || !HKD_ACTS.has(act)) return;
-  if (act === 'start-kn') { startSession('knowledge'); return; }
-  if (act === 'start-tk') { startSession('technique'); return; }
+  if (act === 'start-both') { startSession('*'); return; }
   if (act === 'selfreveal') { if (sess && liveEx && liveEx.type === 'self') { sess.selfOpen = true; render(); } return; }
   if (act === 'psave') { savePractice(); return; }
   if (act === 'pback') { practiceItemId = null; practiceState = null; view = 'belt'; render(); return; }
@@ -352,6 +436,9 @@ window.__HKD = {
   get view() { return view; }, set view(v) { view = v; },
   get instrUnlocked() { return instrUnlocked; }, set instrUnlocked(v) { instrUnlocked = !!v; },
   set beltView(v) { beltView = v; }, set practiceItemId(v) { practiceItemId = v; practiceState = null; },
-  save, render, plan, stats, beltStats, cumulativeStats, activeBelt, ladderFor, knowledgeMastered,
-  itemStatus, eligibleSequence, newCard, ck, ITEMS, SEQUENCE, BELTS, schedule, retrievability, itemTrack
+  get beltScope() { return beltScope; }, set beltScope(v) { beltScope = v; },
+  get fxGlyphs() { return FX_JAMO.slice(); },
+  save, render, plan, planTotal, stats, beltStats, cumulativeStats, activeBelt, ladderFor, knowledgeMastered,
+  itemStatus, eligibleSequence, newCard, ck, ITEMS, SEQUENCE, BELTS, schedule, retrievability, itemTrack,
+  COURSES, COURSE_BY_ID, activeCourse, switchCourse, courseOf, courseIdOf, courseUnits, newToday, startSession
 };

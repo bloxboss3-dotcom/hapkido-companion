@@ -5,6 +5,15 @@ A training companion for students of the school, built on the Hanbit engine
 **Everything curriculum-related is provisional and awaiting Grandmaster Lee's
 approval** — the UI says so on every screen that needs it.
 
+## Two courses
+
+Students pick between **Terminology & Philosophy** and **Techniques** on first
+launch, and can switch any time from the header. Each course keeps its own path,
+its own daily pace, its own colour and its own celebrations; both count toward
+the same belt. Courses are declared in `data/curriculum.js` under `courses`, and
+an item joins one purely through its domain's `track` — so moving a whole domain
+between courses is a one-word edit.
+
 ## Run it
 
 Unzip, then double-click `index.html`. No server, no build step, no network.
@@ -28,6 +37,12 @@ Open `data/curriculum.js`:
   stripe, units). The provisional 10-gup ladder is a placeholder for the school's
   real Hapkido ladder.
 - **Move a technique between belts**: change its `beltId` and `unit`. Nothing else.
+- **Move material between courses**: change the `track` on its entry in `domains`
+  (`knowledge` or `technique`). Every item in that domain moves course, path lane
+  and session with it.
+- **Rename or recolour a course**: edit `courses` (name, Korean name, glyph,
+  tagline, blurb, accent colours, celebration glyphs). Adding a third course means
+  adding an entry here and giving some domains its track.
 - **Add media**: put the file in `assets/videos/` and set e.g.
   `media: { videoFullSpeed: "assets/videos/wb-rel-01_full_front.mp4" }`.
   Missing or broken files show a polished "Demonstration coming soon" state.

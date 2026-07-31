@@ -21,13 +21,52 @@ window.CURRICULUM = {
     school: "Lee's Martial Arts Academy (branding placeholder)",
     appName: "Hapkido Companion",
     workingTitle: true,
-    version: "0.3.0-provisional",
+    version: "0.5.0-provisional",
     approvalStatus: "provisional",          // provisional | approved
     approvedBy: null, approvedDate: null,
     audience: "current-students",
     minAgeTarget: 13,
     romanizationPolicy: "Revised Romanization until Grandmaster Lee sets house spellings"
   },
+
+  /* ---------------- COURSES ---------------------------------------
+     Two separate courses, the way a language app teaches two separate
+     languages. Each one has its own path, its own daily new-item
+     budget, its own colour, its own celebrations — and a student picks
+     which one they are studying (and can switch any time).
+
+       track  — which domains belong to it (see `domains` below).
+       glyph  — the syllable shown in the course mark. Together with the
+                app mark they spell 합·기·도.
+       accent — the colour the WHOLE app takes while this course is
+                active. Keep it clear of the feedback palette: green is
+                "correct", amber is "wrong", salmon is "danger".
+
+     Adding a third course later = add an entry here, give its domains
+     that track, and nothing in the engine changes.
+     ---------------------------------------------------------------- */
+  courses: [
+    { id: "way", order: 1, track: "knowledge",
+      nameEnglish: "Terminology & Philosophy",
+      shortName: "Terminology",
+      nameKorean: "용어와 철학", rom: "yong-eo-wa cheol-hak",
+      glyph: "도",
+      tagline: "The words and the why",
+      blurb: "Every Korean word you will hear in line, the etiquette around it, and the ideas the art is built on — 원, 유, 화, and why we tap.",
+      firstStep: "Start with the room you train in",
+      accent: "#6ea8fe", accentLight: "#2563eb", accentDim: "#2b4d80",
+      fxGlyphs: ["도", "예", "말", "글", "원", "유", "화", "심", "한"] },
+    { id: "art", order: 2, track: "technique",
+      nameEnglish: "Techniques",
+      shortName: "Techniques",
+      nameKorean: "기술", rom: "gi-sul",
+      glyph: "기",
+      tagline: "The shape of every movement",
+      blurb: "Stances, falls, kicks, strikes, releases and locks — named, sequenced and understood in your head, so class time goes to your body.",
+      firstStep: "Start with how you stand",
+      accent: "#b18cff", accentLight: "#6d3ce0", accentDim: "#463079",
+      fxGlyphs: ["기", "술", "차", "막", "낙", "법", "손", "발", "합"] }
+  ],
 
   /* ---------------- BELTS (provisional 10-gup example) ------------- */
   belts: [
@@ -95,7 +134,9 @@ window.CURRICULUM = {
 
   /* ---------------- DOMAINS (configurable; optional per belt) ------
      track: 'knowledge' (terminology, customs, mind) or 'technique'
-     (the physical art). Drives the two-lane path and filtered sessions. */
+     (the physical art). This is the ONLY thing that decides which
+     course an item belongs to — move a domain's track and every item
+     in it moves course, path lane and session with no engine change. */
   domains: [
     { id: "etiquette",   track: "knowledge", nameEnglish: "Etiquette & School Procedures", nameKorean: "예절" },
     { id: "terminology", track: "knowledge", nameEnglish: "Korean Terminology",            nameKorean: "용어" },

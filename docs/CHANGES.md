@@ -1,5 +1,31 @@
 # Changes vs. Hanbit (`hanbit-korean.html`)
 
+## v0.5.0-provisional — two courses
+
+The two-lane path became **two separate courses**, the way a language app teaches
+two separate languages. `CURRICULUM.courses` declares them and `domain.track`
+assigns every item, so a third course is a data entry, not an engine change.
+
+- **道 Terminology & Philosophy** (73 items) and **技 Techniques** (33 items). A
+  first launch asks which one you are here for; the choice is remembered, and
+  switching (header chip, path banner, Belt tab filter, Progress rows, or the
+  done screen) never costs the other course its place.
+- Picking a course repaints the app: accent colour, celebration particles, path
+  node shape, hero copy, session header, milestone wording. The techniques course
+  also walks a squarer path, so the two stay distinguishable without colour.
+- Each course carries **its own daily new-item budget** (`days[k].newByCourse`),
+  its own path numbering, its own readiness bars and its own milestones. A
+  knowledge course shows knowledge measures only; the physical bars belong to the
+  course that has physical requirements.
+- **The belt stays shared.** The Belt tab still shows all five measures for the
+  whole belt, both courses, because a rank is not half a rank — and one
+  "everything due · both courses" session exists for the week before a test.
+- Course emblems ship as inline SVG (crisp, ~1.5 KB, offline); `HKD_COURSE_ART`
+  swaps in real artwork per course later without touching anything else.
+- Repo: `package.json` scripts, a GitHub Actions job that rebuilds `index.html`
+  and fails if the deployed file drifted from its source, and a test matrix grown
+  from 59 to **80 checks**, all passing.
+
 ## v0.2.0-provisional additions
 
 Two-track path: every domain carries `track: knowledge | technique`; the home

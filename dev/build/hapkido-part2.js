@@ -153,6 +153,39 @@ COMMENTARY.sequencing = [
   'That is the whole technique, in order, from memory.'
 ];
 
+/* ---------- session shell: same as the engine's, plus the course you
+   are actually in. A session belongs to one course unless you asked
+   for the everything-review. ---------- */
+function renderSession() {
+  const step = currentStep();
+  if (!step) return shell(renderDone());
+
+  const total = sess.queue.length;
+  const done = sess.pos;
+  const tier = comboTier(sess.combo);
+  const c = sess.courseId ? COURSE_BY_ID[sess.courseId] : null;
+  const head = `
+  <div class="sess-head">
+    <button class="iconbtn" data-act="quit" title="End session">✕</button>
+    ${c ? `<span class="sess-course" title="${esc(c.nameEnglish)}">${courseMark(c)}<span>${esc(c.shortName)}</span></span>`
+        : (COURSES.length ? '<span class="sess-course both"><span>Both courses</span></span>' : '')}
+    <div class="bar"><i style="width:${Math.round(done / Math.max(1, total) * 100)}%"></i></div>
+    ${sess.combo >= 2 ? `<span class="combo-chip t${tier}">${tier >= 3 ? '🔥' : ''} ${sess.combo} streak</span>` : ''}
+    <span class="count">${done} / ${total}</span>
+  </div>`;
+
+  if (sess.askStop) {
+    return `<div id="app-inner" class="session-wrap">${head}
+      <div class="card"><h2>You have hit ${S.settings.sessionMinutes} minutes</h2>
+      <p class="sub">This is the point where extra reviews start paying less per minute, and where a second short session tomorrow beats pushing on today. ${sess.queue.length - sess.pos} cards are still queued — they will simply be waiting.</p>
+      <div class="row"><button class="btn primary" data-act="stopnow">Stop here</button><button class="btn" data-act="keepgoing">Keep going</button></div>
+      </div></div>`;
+  }
+
+  if (step.t === 'teach') return `<div class="session-wrap">${head}${renderTeach(ITEMS[step.id])}</div>`;
+  return `<div class="session-wrap">${head}${renderExercise(step)}</div>`;
+}
+
 /* ---------- session rendering (mc / build-steps / self) ---------- */
 function renderExercise(step) {
   if (!liveEx || liveEx.key !== step.key || liveEx._pos !== sess.pos) {

@@ -3,6 +3,7 @@
    ================================================================ */
 
 let beltView = null;          // belt being viewed on the Belt tab
+let beltScope = 'course';     // 'course' (the active one) | 'all'
 let practiceItemId = null;    // item open in the practice-log view
 let practiceState = null;     // transient checklist state
 let instrUnlocked = false;    // instructor mode session flag (never persisted)
@@ -40,15 +41,21 @@ function mediaSlot(item) {
 function render() {
   const app = document.getElementById('app');
   document.documentElement.classList.toggle('light', S.settings.theme === 'light');
+  applyCourseIdentity();
   applyFxSettings();
+
+  // No course picked yet? Then the picker is the app. Nothing to study
+  // until a student says which of the two they are here for.
+  if (COURSES.length && !activeCourse() && view !== 'courses') view = 'courses';
 
   if (view === 'session') { app.innerHTML = renderSession(); afterRender(); return; }
   if (view === 'done') { app.innerHTML = shell(renderDone()); afterRender(); return; }
 
   let body = '';
   if (view === 'today') body = renderPath();
+  else if (view === 'courses') body = renderCourses();
   else if (view === 'belt') body = renderBelt();
-  else if (view === 'progress') body = renderProgress();
+  else if (view === 'progress') body = renderCourseProgress() + renderProgress();
   else if (view === 'method') body = renderMethod();
   else if (view === 'settings') body = renderSettings();
   else if (view === 'practice') body = renderPractice();
@@ -59,20 +66,90 @@ function render() {
 }
 
 function shell(body) {
+  const course = activeCourse();
+  const picking = COURSES.length && !course;
   const tabs = [['today', 'Path'], ['belt', 'Belt'], ['progress', 'Progress'], ['method', 'Method'], ['settings', 'Settings']];
+  const switcher = course
+    ? `<button class="cswitch" data-view="courses" title="Switch course" aria-label="Switch course — currently ${esc(course.nameEnglish)}">
+         ${courseMark(course)}<span class="cs-name">${esc(course.shortName)}</span><span class="cs-caret">▾</span>
+       </button>`
+    : '';
   return `
   <header class="top">
     <div class="brand"><span class="mark ko">합</span><span>Hapkido Companion<br><small>working title · provisional curriculum</small></span></div>
     <div class="spacer"></div>
+    ${switcher}
     <button class="iconbtn" data-act="theme" title="Light / dark">${S.settings.theme === 'dark' ? '☀' : '☾'}</button>
   </header>
-  <nav class="tabs">${tabs.map(([k, l]) => `<button data-view="${k}" class="${view === k ? 'on' : ''}">${l}</button>`).join('')}</nav>
+  ${picking ? '' : `<nav class="tabs">${tabs.map(([k, l]) => `<button data-view="${k}" class="${view === k ? 'on' : ''}">${l}</button>`).join('')}</nav>`}
   ${storageOk ? '' : `<div class="notice" style="margin-bottom:14px">
     <b>This browser will not let the app save.</b> Nothing you study here will survive closing the tab.
     That usually means a private window, or the page is running inside another app. Open <code>index.html</code>
     directly in Chrome, Edge, Firefox or Safari and bookmark it — then progress sticks. Export in Settings still works either way.
   </div>`}
   ${body}`;
+}
+
+/* ---------- the course picker — two courses, one belt ---------- */
+function courseArt(c) {
+  const raster = (window.HKD_COURSE_ART || {})[c.id];
+  if (raster) return `<span class="cart"><img src="${esc(raster)}" alt="" loading="lazy"></span>`;
+  const emblem = (window.HKD_COURSE_EMBLEM || {})[c.id];   // local, trusted markup
+  if (emblem) return `<span class="cart emb" style="color:${c.accent}">${emblem}</span>`;
+  return `<span class="cart plain"><span class="cart-glyph ko">${esc(c.glyph || '')}</span></span>`;
+}
+
+function courseSummary(c) {
+  const st = stats(c);
+  const p = plan(c);
+  const total = eligibleSequence(c).length;
+  const all = SEQUENCE.filter(id => courseIdOf(ITEMS[id]) === c.id).length;
+  return { st, p, total, all, due: p.due.length + p.newIds.length,
+           frac: total ? st.introduced / total : 0 };
+}
+
+function renderCourseCard(c, opts) {
+  const o = opts || {};
+  const s = courseSummary(c);
+  const active = activeCourse() && activeCourse().id === c.id;
+  const started = s.st.introduced > 0;
+  return `<button class="ccard${active ? ' on' : ''}${o.mini ? ' mini' : ''}" data-course="${c.id}" style="--cacc:${c.accent};--cacd:${c.accentDim}">
+    ${courseArt(c)}
+    <span class="cbody">
+      <span class="ctitle">${esc(c.nameEnglish)}</span>
+      <span class="ckor ko">${esc(c.nameKorean)}${S.settings.showRomanization && c.rom ? ` <i>${esc(c.rom)}</i>` : ''}</span>
+      ${o.mini ? '' : `<span class="cblurb">${esc(c.blurb)}</span>`}
+      <span class="cmeta">
+        <span class="chip">${s.all} items</span>
+        <span class="chip">${started ? s.st.introduced + ' learned' : 'not started'}</span>
+        ${s.due ? `<span class="chip accent">${s.due} due today</span>` : '<span class="chip">all clear today</span>'}
+      </span>
+      <span class="cbar"><i style="width:${Math.round(Math.min(1, s.frac) * 100)}%"></i></span>
+    </span>
+    <span class="cgo">${active ? 'Studying' : started ? 'Continue' : 'Start'}</span>
+  </button>`;
+}
+
+function renderCourses() {
+  const course = activeCourse();
+  const belt = activeBelt();
+  return `
+  <div class="course-pick">
+    <h1>${course ? 'Switch course' : 'Choose your course'}</h1>
+    <p class="sub">Two separate courses, the way a language app teaches two separate languages —
+      each with its own path, its own daily pace and its own celebrations.
+      ${course ? 'Switching loses nothing: each course keeps its own place.' : 'Pick either one. You can switch whenever you like, and the other will be waiting exactly where you left it.'}</p>
+    <div class="ccards">${COURSES.map(c => renderCourseCard(c)).join('')}</div>
+    <div class="onebelt">
+      ${beltBand(belt, true)}
+      <div>
+        <b>One belt, both courses.</b>
+        <span class="faint">Whichever you study, it counts toward the same rank — ${esc(belt.nameEnglish)} right now.
+        The app only ever reports how prepared you are. Grandmaster Lee awards the belt, at the school, in person.</span>
+      </div>
+    </div>
+    ${course ? `<div class="row" style="justify-content:center;margin-top:6px"><button class="btn ghost" data-view="today">Stay in ${esc(course.shortName)}</button></div>` : ''}
+  </div>`;
 }
 
 /* ---------- the belt path (home) ---------- */
@@ -93,19 +170,20 @@ function unitState(u) {
 
 function renderPath() {
   const belt = activeBelt();
-  const p = plan();
-  const st = stats();
+  const course = activeCourse();
+  const p = plan(course);
+  const st = stats(course);
   const rec = dayRec(todayKey());
   const total = p.due.length + p.newIds.length;
   const first = st.introduced === 0;
   const doneToday = rec.reviews;
 
-  const units = belt.units || [];
+  const units = courseUnits(course, belt);
   const check = '<svg viewBox="0 0 26 26" style="width:15px;height:15px"><path d="M4 14l6 6L22 6" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const lock = '<svg class="lockico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
   const nodec = belt.stripe || (belt.dark ? belt.color : 'var(--accent)');
 
-  // Two lanes: mind and body, each with its own numbering and its own glowing next step.
+  // One lane — this course's. Its own numbering, its own glowing next step.
   const renderLane = laneUnits => {
     const states = laneUnits.map(u => unitState(u));
     let activeIdx = states.findIndex(s => !s.done);
@@ -122,11 +200,9 @@ function renderPath() {
       </div>`;
     }).join('');
   };
-  const knUnits = units.filter(u => unitTrack(u) === 'knowledge');
-  const tkUnits = units.filter(u => unitTrack(u) === 'technique');
 
   const nextBelts = BELTS.filter(b => b.order > belt.order).map(b => {
-    const has = SEQUENCE.some(id => ITEMS[id].beltId === b.id);
+    const has = SEQUENCE.some(id => ITEMS[id].beltId === b.id && (!course || courseIdOf(ITEMS[id]) === course.id));
     return `<div class="pnode lockb">
       <div class="dot">${lock}</div>
       <div class="pinfo">
@@ -136,7 +212,23 @@ function renderPath() {
     </div>`;
   }).join('');
 
+  const others = otherCourses().filter(c => eligibleSequence(c).length);
+  const otherBlock = others.length ? `<div class="card othercourse">
+    <h3 style="margin-top:0">Your other course</h3>
+    <p class="sub">Waiting exactly where you left it. Studying it costs this one nothing — each course keeps its own daily pace.</p>
+    ${others.map(c => renderCourseCard(c, { mini: true })).join('')}
+  </div>` : '';
+
   return `
+  ${course ? `<div class="course-banner" style="--cacc:${course.accent};--cacd:${course.accentDim}">
+    ${courseMark(course, 30)}
+    <div style="flex:1">
+      <div class="cb-name">${esc(course.nameEnglish)}</div>
+      <div class="cb-sub"><span class="ko">${esc(course.nameKorean)}</span>${S.settings.showRomanization && course.rom ? ` <span class="faint" style="font-family:var(--mono);font-size:11px">${esc(course.rom)}</span>` : ''} · ${esc(course.tagline)}</div>
+    </div>
+    <button class="btn ghost sm" data-view="courses">Switch</button>
+  </div>` : ''}
+
   <div class="belt-banner" style="--belt:${belt.color}">
     <div class="row" style="gap:14px">
       ${beltBand(belt, true)}
@@ -149,11 +241,11 @@ function renderPath() {
   </div>
 
   <div class="card hero" style="margin-top:14px">
-    <h2>${first ? 'Begin your White Belt journey' : 'Today'}</h2>
+    <h2>${first ? (course ? esc(course.firstStep || ('Begin ' + course.nameEnglish)) : 'Begin your journey') : 'Today'}</h2>
     <p class="sub">${first
-      ? 'Etiquette, commands, and your first movements. Ten short units stand between you and being genuinely ready for class.'
+      ? (course ? esc(course.blurb) + ' ' : '') + `${units.length} short unit${units.length === 1 ? '' : 's'} at ${esc(belt.nameEnglish)}, and none of it is busywork — it is what your instructors expect you to know.`
       : total === 0
-        ? 'Nothing is due. That is the schedule working, not a failure — come back tomorrow rather than grinding ahead.'
+        ? 'Nothing is due in this course. That is the schedule working, not a failure — come back tomorrow rather than grinding ahead.'
         : 'Reviews come first, new material is threaded through them.'}</p>
     <div class="plan">
       <span class="chip accent">Due <b>${p.due.length}</b>${p.dueTotal > p.due.length ? ` <span class="faint">of ${p.dueTotal}</span>` : ''}</span>
@@ -163,32 +255,32 @@ function renderPath() {
       ${st.streak ? `<span class="chip">Streak <b>${st.streak}</b> ${st.streak === 1 ? 'day' : 'days'}</span>` : ''}
     </div>
     <button class="btn primary big" data-act="start" ${total === 0 ? 'disabled' : ''}>
-      ${total === 0 ? 'All clear for today' : (first ? 'Start Unit 1 — Entering the Dojang' : `Train ${total} card${total === 1 ? '' : 's'}`)}
+      ${total === 0 ? 'All clear for today' : (first ? `Start Unit 1 — ${esc((units[0] || {}).title || 'the first unit')}` : `Train ${total} card${total === 1 ? '' : 's'}`)}
     </button>
     ${(() => {
-      const pk = plan('knowledge'), pt = plan('technique');
-      const nk = pk.due.length + pk.newIds.length, nt = pt.due.length + pt.newIds.length;
-      return `<div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
-        <button class="btn ghost" data-act="start-kn" ${nk ? '' : 'disabled'}>Mind only <b>${nk}</b></button>
-        <button class="btn ghost" data-act="start-tk" ${nt ? '' : 'disabled'}>Body only <b>${nt}</b></button>
-      </div>`;
+      const both = planTotal();
+      return both > total ? `<div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost" data-act="start-both">Everything due · both courses <b>${both}</b></button>
+        <span class="faint" style="font-size:12px">for the week before a belt test</span>
+      </div>` : '';
     })()}
     ${total === 0 && p.remainingInCourse > 0 ? `<div style="margin-top:10px"><button class="btn ghost" data-act="extra">Learn ${Math.min(5, p.remainingInCourse)} extra new items anyway</button></div>` : ''}
   </div>
 
   <div class="card" style="margin-top:14px">
-    <h3 style="margin-top:0">Mind — knowledge &amp; customs</h3>
-    <div class="path">${renderLane(knUnits) || '<p class="sub">Nothing here yet.</p>'}</div>
-    <h3>Body — techniques</h3>
-    <div class="path">${renderLane(tkUnits) || '<p class="sub">Nothing here yet.</p>'}</div>
+    <h3 style="margin-top:0">${course ? esc(course.nameEnglish) : 'Your path'} <span class="faint" style="font-weight:400;font-size:12.5px">· ${esc(belt.nameEnglish)}</span></h3>
+    <div class="path" data-course="${course ? esc(course.id) : ''}">${renderLane(units) || '<p class="sub">This belt has no units for this course yet.</p>'}</div>
     <h3>The road ahead</h3>
     <div class="path">${nextBelts}</div>
   </div>
 
   <div class="card">
-    <h3 style="margin-top:0">Belt readiness — five measures, never one number</h3>
-    ${renderReadiness(belt)}
+    <h3 style="margin-top:0">${course ? esc(course.shortName) + ' readiness' : 'Belt readiness'} <span class="faint" style="font-weight:400;font-size:12.5px">· ${esc(belt.nameEnglish)}</span></h3>
+    ${renderReadiness(belt, course)}
+    <p class="sub" style="margin:10px 0 0"><button class="btn ghost sm" data-view="belt">See all five belt measures</button></p>
   </div>
+
+  ${otherBlock}
 
   ${first ? `<div class="card"><h3 style="margin-top:0">How this app fits your training</h3>
     <div class="prose">
@@ -198,9 +290,15 @@ function renderPath() {
   `;
 }
 
-function renderReadiness(belt) {
-  const bs = beltStats(belt);
-  const cum = cumulativeStats(belt);
+/* The five measures. Course-scoped on the path, whole-belt on the Belt
+   tab — where all five always show, because that is the honest picture
+   of a rank. A course with no physical requirements simply has no
+   physical bars to draw. */
+function renderReadiness(belt, courseSel) {
+  const course = asCourse(courseSel);
+  const bs = beltStats(belt, course);
+  const cum = cumulativeStats(belt, course);
+  const physical = !course || bs.practicable > 0 || bs.vreq > 0;
   const row = (label, valText, frac) => `<div class="rrow">
     <div class="rl"><span>${label}</span><span>${valText}</span></div>
     <div class="bar"><i class="${frac >= 1 ? 'good' : ''}" style="width:${Math.round(Math.min(1, frac) * 100)}%"></i></div>
@@ -209,10 +307,35 @@ function renderReadiness(belt) {
     ${row('Knowledge retention', bs.retention == null ? '—' : pct(bs.retention), bs.retention || 0)}
     ${row('Curriculum exposure', `${bs.intro}/${bs.total}`, bs.total ? bs.intro / bs.total : 0)}
     ${row('Knowledge mastered', `${bs.mastered}/${bs.total}`, bs.total ? bs.mastered / bs.total : 0)}
-    ${row('Practice logged (solo-safe)', bs.practicable ? `${bs.practiced}/${bs.practicable}` : '—', bs.practicable ? bs.practiced / bs.practicable : 0)}
-    ${row('Instructor verification', bs.vreq ? `${bs.vdone}/${bs.vreq}` : '—', bs.vreq ? bs.vdone / bs.vreq : 0)}
+    ${physical ? row('Practice logged (solo-safe)', bs.practicable ? `${bs.practiced}/${bs.practicable}` : '—', bs.practicable ? bs.practiced / bs.practicable : 0) : ''}
+    ${physical ? row('Instructor verification', bs.vreq ? `${bs.vdone}/${bs.vreq}` : '—', bs.vreq ? bs.vdone / bs.vreq : 0) : ''}
     ${cum.total ? row('Previous belts (cumulative)', `${cum.mastered}/${cum.total} mastered · ${cum.vdone}/${cum.vreq} verified`, cum.total ? cum.mastered / cum.total : 0) : ''}
-    <p class="sub" style="margin:10px 0 0">Practice entries are your own honest log. Verification comes only from an instructor, in person. The belt itself comes from Grandmaster Lee — the app only reports preparation.</p>`;
+    <p class="sub" style="margin:10px 0 0">${physical
+      ? 'Practice entries are your own honest log. Verification comes only from an instructor, in person.'
+      : 'This course is knowledge, so these are knowledge measures. Practice and verification live in the techniques course.'}
+      The belt itself comes from Grandmaster Lee — the app only reports preparation.</p>`;
+}
+
+/* ---------- per-course numbers above the shared Progress tab ---------- */
+function renderCourseProgress() {
+  if (!COURSES.length) return '';
+  return `<div class="card" style="margin-bottom:14px">
+    <h2 style="margin-top:0">Course by course</h2>
+    <p class="sub">Two courses, measured separately. The forecast, consistency grid and card tables below cover everything you study — one habit, one calendar.</p>
+    <div class="cprog">${COURSES.map(c => {
+      const s = courseSummary(c);
+      const active = activeCourse() && activeCourse().id === c.id;
+      return `<button class="cprow${active ? ' on' : ''}" data-course="${c.id}" style="--cacc:${c.accent}">
+        ${courseMark(c)}
+        <span class="cp-body">
+          <span class="cp-t">${esc(c.nameEnglish)}${active ? ' <i class="cp-now">studying</i>' : ''}</span>
+          <span class="cp-n">${s.st.introduced}/${s.total} met at ${esc(activeBelt().nameEnglish)} · ${s.st.wordsKnown} holding · ${s.st.mature} mature</span>
+          <span class="cbar"><i style="width:${Math.round(Math.min(1, s.frac) * 100)}%"></i></span>
+        </span>
+        <span class="cp-due">${s.due ? s.due + ' due' : 'clear'}</span>
+      </button>`;
+    }).join('')}</div>
+  </div>`;
 }
 
 /* ---------- belt tab ---------- */
@@ -220,7 +343,12 @@ function renderBelt() {
   const active = activeBelt();
   const viewing = BELT_BY_ID[beltView] || active;
   const preview = viewing.order > active.order;
-  const ids = beltItems(viewing.id, true);
+  const course = beltScope === 'all' ? null : activeCourse();
+  const ids = beltItems(viewing.id, true).filter(id => !course || courseIdOf(ITEMS[id]) === course.id);
+  const scopeBar = COURSES.length ? `<div class="scopebar">
+    ${COURSES.map(c => `<button class="${beltScope !== 'all' && activeCourse() && activeCourse().id === c.id ? 'on' : ''}" data-scope="${c.id}">${esc(c.shortName)}</button>`).join('')}
+    <button class="${beltScope === 'all' ? 'on' : ''}" data-scope="all">Everything</button>
+  </div>` : '';
 
   const pills = `<div class="belt-pills">${BELTS.map(b =>
     `<button class="belt-pill ${b.id === viewing.id ? 'on' : ''}" style="--belt:${b.color}" data-beltsel="${b.id}">${beltBand(b)} ${esc(b.nameEnglish.replace(' Belt', ''))}</button>`).join('')}</div>`;
@@ -238,11 +366,15 @@ function renderBelt() {
   </div>`;
 
   if (!ids.length) {
-    return `${pills}${banner}
+    const anyAtAll = beltItems(viewing.id, true).length;
+    return `${pills}${banner}${scopeBar}
     <div class="card" style="margin-top:14px;text-align:center;padding:34px 20px">
       <div style="font-size:26px;margin-bottom:8px">🥋</div>
-      <b>This belt is waiting for Grandmaster Lee's curriculum.</b>
-      <p class="sub" style="margin:8px 0 0">When his requirements are entered in <code>data/curriculum.js</code>, this page fills in automatically — the engine never changes. Rank always comes from testing at the school.</p>
+      ${anyAtAll
+        ? `<b>Nothing from ${esc((course || {}).nameEnglish || 'this course')} at this belt.</b>
+           <p class="sub" style="margin:8px 0 0">This belt has ${anyAtAll} requirement${anyAtAll === 1 ? '' : 's'} in the other course — switch the filter above to “Everything” to see them.</p>`
+        : `<b>This belt is waiting for Grandmaster Lee's curriculum.</b>
+           <p class="sub" style="margin:8px 0 0">When his requirements are entered in <code>data/curriculum.js</code>, this page fills in automatically — the engine never changes. Rank always comes from testing at the school.</p>`}
     </div>`;
   }
 
@@ -274,11 +406,12 @@ function renderBelt() {
   const cum = cumulativeStats(viewing);
   const cumCard = cum.total ? `<div class="card" style="margin-top:14px">
     <h2>Also on your test — previous belts</h2>
-    <p class="sub">Testing is cumulative: earlier material stays live. ${cum.mastered}/${cum.total} mastered, ${cum.vdone}/${cum.vreq} verified.</p>
+    <p class="sub">Testing is cumulative: earlier material stays live, from both courses. ${cum.mastered}/${cum.total} mastered, ${cum.vdone}/${cum.vreq} verified.</p>
   </div>` : '';
 
-  return `${pills}${banner}
-    ${preview ? '' : `<div class="card" style="margin-top:14px"><h3 style="margin-top:0">Readiness</h3>${renderReadiness(viewing)}</div>`}
+  return `${pills}${banner}${scopeBar}
+    ${preview ? '' : `<div class="card" style="margin-top:14px"><h3 style="margin-top:0">Readiness — five measures, never one number</h3>
+      <p class="sub" style="margin-top:0">The whole belt, both courses. A rank is not half a rank.</p>${renderReadiness(viewing)}</div>`}
     ${units}${cumCard}`;
 }
 

@@ -3,11 +3,22 @@
 Built in Claude Cowork over one intensive stretch; continuing in Claude Code from
 this repo. Read `CLAUDE.md` first — especially the invariants.
 
-## Where things stand — v0.4.0-provisional (deployed)
+## Where things stand — v0.5.0-provisional (deployed)
 
+- **Two courses.** The headline change. Terminology & Philosophy (73 items) and
+  Techniques (33 items) are now separate courses the way a language app has
+  separate languages: a picker on first launch, a header switcher, and per-course
+  paths, daily budgets, readiness bars, colours, celebration glyphs and
+  milestones. The belt is deliberately shared — the Belt tab still shows all five
+  measures for the whole belt, and one "everything due" session crosses both for
+  the week before a test. Courses live in `CURRICULUM.courses`; `domain.track`
+  assigns items; a third course is a data entry.
 - **Engine:** Hanbit's FSRS-5 scheduler, session planner, FX/celebration system,
   storage/migration safety — preserved via the transform-override build
-  (`dev/build/`). 59/59 automated checks passing.
+  (`dev/build/`). 80/80 automated checks passing.
+- **Repo:** `npm run build` / `npm test` / `npm run check`, plus a GitHub Actions
+  job that rebuilds `index.html` on every PR and fails if the deployed file has
+  drifted from the source it is generated from.
 - **Content:** 106 provisional items across three belts —
   White (53: etiquette, commands, counting, principles, safety, stances,
   falls-knowledge, first strikes, wrist releases), White·Yellow Stripe (30:
@@ -16,26 +27,30 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   three joint locks** + lock theory/ethics, body-part terms, back/axe kicks,
   knife hand, bigger grabs, weak-side roll). Belts 4-11 are empty shells
   ("Awaiting Grandmaster Lee's curriculum").
-- **Features:** two-lane path (Mind/Body) with filtered sessions; five-bar belt
-  readiness; practice logs (solo-safe only); PIN instructor mode (verify with
+- **Features:** two-course model (above); five-bar belt readiness; practice logs
+  (solo-safe only); PIN instructor mode (verify with
   initials/date/note/curriculum-version, belt advancement, gaps, overdue,
   export/import); romanization-under-Hangul everywhere (toggleable); belt-wearing
   avatar with moods; step-sequencing, spot-the-mistake, self-graded speaking
   exercises; missing/broken media fallbacks; real-audio hook (`HKD_AUDIO`).
-- **Deploy:** GitHub Pages serves root `index.html` (generated single-file).
-  Kevin has been uploading it manually — switching to git push is the point of
-  moving to Claude Code.
+- **Deploy:** GitHub Pages serves root `index.html` (generated single-file), now
+  by `git push` to `main` rather than manual upload. The repo had drifted — only
+  a hand-uploaded `index.html` was on GitHub, one build behind (still the old
+  tiger mascot); the whole source tree is committed now and CI guards the drift.
 
 ## Known open items, in rough priority
 
 1. **Voice quality.** Live TTS is mediocre. Paths: (a) users install enhanced
    device voices (Settings copy already guides this; auto-ranking picks them up);
-   (b) Higgsfield neural clips — plumbing ready, cost ~0.1 credit/clip (~6 total),
-   BLOCKED: workspace out of credits as of July 31; Kevin may top up or approve
-   free-trial generations; any generated Korean needs a pronunciation sanity-check
-   before shipping (label as stand-in regardless); (c) **the real fix:** Grandmaster
-   Lee records the terms (one voice memo, ~3 min) → split into clips → `data/audio.js`
-   as `window.HKD_AUDIO = {"차렷": "data:audio/mp3;base64,..."}` or asset paths.
+   (b) generated neural clips — plumbing ready via `HKD_AUDIO`; any generated
+   Korean needs a pronunciation sanity-check before shipping (label as stand-in
+   regardless); (c) **the real fix:** Grandmaster Lee records the terms (one voice
+   memo, ~3 min) → split into clips → `data/audio.js` as
+   `window.HKD_AUDIO = {"차렷": "data:audio/mp3;base64,..."}` or asset paths.
+   NOTE for agent sessions: this sandbox's network policy blocks the CDNs that
+   image/audio generators return assets on, so generated media cannot be pulled
+   into the repo from here — generate elsewhere and drop the file in, or keep
+   authoring vector art locally (see `dev/build/course-art.js`).
 2. **Grandmaster Lee's questionnaire** (`docs/grandmaster-lee-curriculum-intake.md`)
    — when answered, replace the provisional ladder/requirements (data-only change),
    flip approvalStatus per item as he approves, and re-badge the UI accordingly.
@@ -54,13 +69,14 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
    customization, per-student profiles (explicitly out of scope: cloud/accounts —
    don't build unless Kevin asks).
 
-## First session in Claude Code — suggested opening moves
+## Opening moves for the next session
 
 ```bash
-pip install playwright && playwright install chromium   # if not present
-python3 dev/build/transform.py && node dev/build/test-matrix.js
+npm install && npx playwright install chromium   # if not present
+npm run check                                    # build + in-sync check + matrix
 ```
-Confirm 59/59, commit any drift, then pick up item 1 or 3 above with Kevin.
+Confirm 80/80, commit any drift, then pick up item 1 or 3 above with Kevin.
+When authoring the next belt, remember it wants units in BOTH courses.
 Original Hanbit app must never be modified: `dev/hanbit-korean.BACKUP-2026-07-30.html`
 is the pristine source (sha256 c964c277…8b86).
 
