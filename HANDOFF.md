@@ -15,7 +15,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   assigns items; a third course is a data entry.
 - **Engine:** Hanbit's FSRS-5 scheduler, session planner, FX/celebration system,
   storage/migration safety — preserved via the transform-override build
-  (`dev/build/`). 80/80 automated checks passing.
+  (`dev/build/`). 84/84 automated checks passing.
 - **Repo:** `npm run build` / `npm test` / `npm run check`, plus a GitHub Actions
   job that rebuilds `index.html` on every PR and fails if the deployed file has
   drifted from the source it is generated from.
@@ -75,7 +75,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 npm install && npx playwright install chromium   # if not present
 npm run check                                    # build + in-sync check + matrix
 ```
-Confirm 80/80, commit any drift, then pick up item 1 or 3 above with Kevin.
+Confirm 84/84, commit any drift, then pick up item 1 or 3 above with Kevin.
 When authoring the next belt, remember it wants units in BOTH courses.
 Original Hanbit app must never be modified: `dev/hanbit-korean.BACKUP-2026-07-30.html`
 is the pristine source (sha256 c964c277…8b86).

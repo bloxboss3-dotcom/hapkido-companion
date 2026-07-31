@@ -60,6 +60,10 @@ Working title. Read `HANDOFF.md` for current state and roadmap before doing anyt
   domains (with `track: knowledge|technique`, the ONLY thing deciding which course
   an item belongs to), items (term/concept/technique). Ladder rungs auto-skip when
   an item lacks the data (no stepSequence → no sequencing rung).
+- `window.__HKD` — debug/test handle used by the test harness. Keep it working.
+- `window.HKD_AUDIO` — maps exact Korean text → audio URL/data URI; `speak()`
+  prefers it over TTS. This is where Grandmaster Lee's recordings plug in
+  (planned: `data/audio.js`).
 
 ## The two courses (the app's main shape)
 
@@ -81,21 +85,17 @@ declares them; `domain.track` assigns items. Adding a third = one data entry.
   shared `b<beltId>` when both courses of a belt are complete.
 - Colour rule: a course accent must stay clear of the feedback palette — `--good` is
   "correct", `--warn` is "wrong", `--bad` is "danger". Blue and violet are taken.
-- `window.__HKD` — debug/test handle used by the test harness. Keep it working.
-- `window.HKD_AUDIO` — maps exact Korean text → audio URL/data URI; `speak()`
-  prefers it over TTS. This is where Grandmaster Lee's recordings plug in
-  (planned: `data/audio.js`).
 
 ## Build & test — required before every deploy
 
 ```bash
 npm install                           # once: playwright
 npm run build                         # rebuilds both index.html files
-npm test                              # 80 checks; needs playwright + chromium
+npm test                              # 84 checks; needs playwright + chromium
 npm run check                         # build + in-sync check + test (what CI runs)
 ```
 
-The matrix must pass 80/80 (grow it with every feature — count goes up, never
+The matrix must pass 84/84 (grow it with every feature — count goes up, never
 down). It covers: boot, course picker + switching + persistence, per-course paths,
 per-course daily budgets, course-scoped and both-course sessions, course-scoped vs
 whole-belt readiness, FSRS values against hand-computed expectations, wrong-answer

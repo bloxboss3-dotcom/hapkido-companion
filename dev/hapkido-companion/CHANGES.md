@@ -24,7 +24,7 @@ assigns every item, so a third course is a data entry, not an engine change.
   swaps in real artwork per course later without touching anything else.
 - Repo: `package.json` scripts, a GitHub Actions job that rebuilds `index.html`
   and fails if the deployed file drifted from its source, and a test matrix grown
-  from 59 to **80 checks**, all passing.
+  from 59 to **84 checks**, all passing.
 
 ## v0.2.0-provisional additions
 

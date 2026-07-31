@@ -534,6 +534,34 @@ async function answerCurrentRight() {
   }) && await (async () => { await page.reload(); await sleep(600);
     return page.evaluate(() => window.__HKD.view === 'courses' && !window.__HKD.activeCourse()); })());
 
+  /* ---- 20. the DEPLOYED file ----
+     Everything above runs against the folder build (external curriculum).
+     GitHub Pages serves the single-file build at the repo root, with the
+     curriculum inlined — a different file, and the one students open. It
+     gets its own clean context and its own smoke pass. */
+  const deployed = 'file://' + path.resolve('..', 'index.html');
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const dp = await ctx.newPage();
+  const dErrs = [];
+  dp.on('console', m => { if (m.type() === 'error') dErrs.push(m.text()); });
+  dp.on('pageerror', e => dErrs.push(String(e)));
+  await dp.goto(deployed); await sleep(800);
+  ok('deployed single file: boots with the curriculum inlined, no errors', await dp.evaluate(() =>
+    !!window.CURRICULUM && window.CURRICULUM.items.length > 0 && !!window.__HKD) && dErrs.length === 0,
+    JSON.stringify(dErrs).slice(0, 200));
+  ok('deployed single file: makes no network requests of any kind', await dp.evaluate(() =>
+    performance.getEntriesByType('resource').filter(r => !r.name.startsWith('data:')).length === 0),
+    JSON.stringify(await dp.evaluate(() => performance.getEntriesByType('resource').map(r => r.name).slice(0, 5))));
+  ok('deployed single file: course picker offers both courses', await dp.evaluate(() =>
+    document.querySelectorAll('.ccard').length === 2 && document.querySelectorAll('.cart svg').length === 2));
+  await dp.click('[data-course="art"]'); await sleep(450);
+  await dp.click('[data-act="start"]'); await sleep(550);
+  ok('deployed single file: a course session runs', await dp.evaluate(() =>
+    window.__HKD.sess && window.__HKD.sess.courseId === 'art' && !!document.querySelector('.session-wrap')) && dErrs.length === 0,
+    JSON.stringify(dErrs).slice(0, 200));
+  await dp.screenshot({ path: 'shots/deployed.png' });
+  await ctx.close();
+
   /* ---- summary ---- */
   const fails = results.filter(r => !r.pass);
   console.log('\n==== ' + results.filter(r => r.pass).length + '/' + results.length + ' passed ====');
