@@ -15,7 +15,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   assigns items; a third course is a data entry.
 - **Engine:** Hanbit's FSRS-5 scheduler, session planner, FX/celebration system,
   storage/migration safety — preserved via the transform-override build
-  (`dev/build/`). 96/96 automated checks passing.
+  (`dev/build/`). 103/103 automated checks passing.
 - **Repo:** `npm run build` / `npm test` / `npm run check`, plus a GitHub Actions
   job that rebuilds `index.html` on every PR and fails if the deployed file has
   drifted from the source it is generated from. Dependencies are locked
@@ -37,6 +37,21 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   asserts each exists. Nothing here is needed for the app to *run*: it still
   works with the network off, and the only load-time request is the manifest,
   same-origin. Nothing external is ever contacted.
+- **Step sequencing reads as a result, not a wall of text.** A wrong order now
+  marks the student's own answer — green tick for right place, red with the
+  position it belongs in ("→ 3"), a "3 of 5 in the right place" tally — and the
+  correct list underneath fades what was already right. The tile pool is
+  dropped once checked (it was a third copy of the same sentences). Colour is
+  never the only signal; every step carries an aria-label. Grading was fixed
+  too: the flat 14s "easy" threshold, inherited from 3.2s multiple choice, made
+  the longest exercise in the app effectively unable to earn the longer
+  interval, so it kept coming back to be re-read. It now scales with the
+  reading load.
+- **Drills are weighted by effort** (`SKILL_WEIGHT`): ordering the steps is
+  ~44% of a technique, recognition drills 11% each. An item detail shows a
+  progress ring and a per-drill breakdown, and session feedback says what the
+  drill just answered was worth. Display only — `knowledgeMastered()` and the
+  five belt measures are unchanged, and nothing here unlocks practice.
 - **Content:** 106 provisional items across three belts —
   White (53: etiquette, commands, counting, principles, safety, stances,
   falls-knowledge, first strikes, wrist releases), White·Yellow Stripe (30:
@@ -54,7 +69,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 - **Deploy:** GitHub Pages serves root `index.html` (generated single-file), now
   by `git push` to `main` rather than manual upload. **Fully automatic:** the
   `auto-merge` job in `verify.yml` squash-merges a green non-draft `claude/*`
-  PR and Pages republishes itself, so nobody clicks merge. The 96-check matrix
+  PR and Pages republishes itself, so nobody clicks merge. The 103-check matrix
   is therefore the only gate before students see a change — grow it, and keep
   PRs in draft until they are actually finished. The repo had drifted — only
   a hand-uploaded `index.html` was on GitHub, one build behind (still the old
@@ -98,7 +113,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 npm ci                                           # playwright, exactly as locked
 npm run check                                    # build + in-sync check + matrix
 ```
-Confirm 96/96, commit any drift, then pick up item 1 or 3 above with Kevin.
+Confirm 103/103, commit any drift, then pick up item 1 or 3 above with Kevin.
 After a deploy lands, `npm run smoke` checks the live site (needs network).
 When authoring the next belt, remember it wants units in BOTH courses.
 Original Hanbit app must never be modified: `dev/hanbit-korean.BACKUP-2026-07-30.html`

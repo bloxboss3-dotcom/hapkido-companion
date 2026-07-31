@@ -81,6 +81,52 @@ function ladderFor(item) {
   return ['recog'];
 }
 
+/* ---------- how much of an item each rung is worth ----------
+   Rungs are not equal work. Ordering the steps means reading every step,
+   finding each in a shuffled pool and placing them — several times the effort
+   of a four-option recognition question, and the exercise students feel the
+   cost of. Weighting it as one-of-five made the longest drill in the app look
+   like the cheapest.
+
+   Spotting mistakes and key points sit in between: real recall, less reading.
+   Everything else defaults to 1. On a full technique ladder this puts
+   sequencing at ~44% — by far the largest single slice, without letting one
+   drill outweigh safety recognition and the key points combined. */
+const SKILL_WEIGHT = { 't-steps': 4, 't-error': 1.5, 't-points': 1.5 };
+const skillWeight = sk => SKILL_WEIGHT[sk] || 1;
+
+/* A rung's completion, 0..1. Half credit at most until the card actually
+   holds, so the bar moves while you work without ever claiming you are done
+   before the scheduler agrees. */
+function rungProgress(card) {
+  if (!card || card.state === 'new') return 0;
+  if (isHolding(card)) return 1;
+  const toward = Math.min(1, Math.min((card.reps || 0) / 2, (card.S || 0) / 3));
+  return 0.5 * Math.max(0, toward);
+}
+
+/* Weighted share of one rung within its item, 0..1 (for "this drill is 44%
+   of this technique"). */
+function skillShare(item, skill) {
+  const l = ladderFor(item);
+  const total = l.reduce((n, sk) => n + skillWeight(sk), 0);
+  return total && l.includes(skill) ? skillWeight(skill) / total : 0;
+}
+
+/* How far through an item's knowledge you are, weighted by rung effort.
+   Reports preparation only — it never awards rank and never unlocks
+   physical practice. */
+function itemProgress(item) {
+  const l = ladderFor(item);
+  let done = 0, total = 0;
+  l.forEach(sk => {
+    const w = skillWeight(sk);
+    total += w;
+    done += w * rungProgress(S.cards[ck(item.id, sk)]);
+  });
+  return total ? done / total : 0;
+}
+
 const SKILL_LABEL = {
   recog: 'Meaning', listen: 'By ear', recallKO: 'Korean term', speak: 'Say it in Korean',
   'c-recog': 'Recognize it', 'c-example': 'Pick the example', 'c-unsafe': 'Spot the unsafe call', 'c-scenario': 'Apply it',

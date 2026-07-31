@@ -311,6 +311,20 @@ function renderFeedback(ex) {
     if (item.note) extra.push(`<div class="note">${esc(item.note)}</div>`);
   }
   if (ex.why) extra.push(`<div class="why">${esc(ex.why)}</div>`);
+  // Show what this drill was worth. The long exercises are worth the most, so
+  // the effort is visible instead of every rung looking interchangeable.
+  const rungs = ladderFor(item);
+  if (rungs.length > 1 && ex.skill) {
+    const share = Math.round(skillShare(item, ex.skill) * 100);
+    const prog = Math.round(itemProgress(item) * 100);
+    const kindWord = item.kind === 'technique' ? 'technique' : item.kind === 'concept' ? 'idea' : 'term';
+    if (share > 0) {
+      extra.push(`<div class="drill-share">
+        <div class="ds-top"><span>${esc(SKILL_LABEL[ex.skill] || '')} — <b>${share}%</b> of this ${kindWord}</span>
+        <span class="ds-prog">${prog}% learned</span></div>
+        <div class="bar"><i class="${prog >= 100 ? 'good' : ''}" style="width:${prog}%"></i></div></div>`);
+    }
+  }
   if (item.kind === 'technique' && isRestricted(item) && (ex.skill === 't-steps' || r.result !== 'right')) {
     extra.push(`<div class="why">Remember: ${esc(item.name)} is practiced physically only ${item.safetyClass === 'partnerWithCare' ? 'with a partner in class' : 'under instructor supervision'}.</div>`);
   }

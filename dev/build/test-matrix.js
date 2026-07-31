@@ -237,6 +237,13 @@ async function answerCurrentRight() {
       document.querySelectorAll('.fb-steps.marked li.had').length === 3));
     ok('sequencing: the tile pool is dropped once checked, not left as a third list',
       await page.evaluate(() => !document.querySelector('.build-pool')));
+    // The effort has to be visible: this drill is the biggest slice of the item.
+    ok('sequencing: feedback says what the drill was worth', await page.evaluate(() => {
+      const el = document.querySelector('.drill-share');
+      if (!el) return false;
+      const t = el.textContent.replace(/\s+/g, ' ');
+      return /Order the steps/.test(t) && /44% of this technique/.test(t) && /% learned/.test(t);
+    }));
     await page.click('[data-act="next"]'); await sleep(200);
   }
   ok('sequencing: wrong-order marking exercised', seqFound);
@@ -259,6 +266,83 @@ async function answerCurrentRight() {
     // 14s, and more than a short three-step item — but still bounded.
     return long > 14000 && long > short * 1.5 && long < 40000 && short < 14000;
   }));
+
+  /* ---- drills are weighted by how much work they are ----
+     Ordering the steps is several times the effort of a recognition question,
+     so it is several times the slice. */
+  ok('weighting: ordering the steps is the largest slice of a technique', await page.evaluate(() => {
+    const H = window.__HKD, it = H.ITEMS['x-ap-chagi'];
+    const l = H.ladderFor(it);
+    const shares = l.map(sk => H.skillShare(it, sk));
+    const steps = H.skillShare(it, 't-steps');
+    const total = shares.reduce((a, b) => a + b, 0);
+    return Math.abs(total - 1) < 1e-9 &&                       // shares are a real split
+      steps === Math.max(...shares) &&                         // the biggest one
+      steps > 0.4 && steps < 0.5 &&                            // ~44%
+      steps > H.skillShare(it, 't-id') * 3;                    // dwarfs a quick recognition drill
+  }));
+  ok('weighting: finishing the sequence moves an item further than a quick drill', await page.evaluate(() => {
+    const H = window.__HKD, S = H.S, id = 'x-ap-chagi';
+    const it = H.ITEMS[id];
+    const held = { S: 30, D: 4, due: Date.now() + 20 * 86400000, last: Date.now(), reps: 3, lapses: 0, state: 'review' };
+    const saved = { ...S.cards };
+    H.ladderFor(it).forEach(sk => { delete S.cards[H.ck(id, sk)]; });
+    const zero = H.itemProgress(it);
+    S.cards[H.ck(id, 't-id')] = { ...held };
+    const afterQuick = H.itemProgress(it);
+    delete S.cards[H.ck(id, 't-id')];
+    S.cards[H.ck(id, 't-steps')] = { ...held };
+    const afterSteps = H.itemProgress(it);
+    S.cards = saved;                                            // leave state as found
+    return zero === 0 && afterSteps > afterQuick * 3 && afterSteps > 0.4;
+  }));
+  ok('weighting: a rung only counts fully once the card actually holds', await page.evaluate(() => {
+    const H = window.__HKD;
+    const fresh = H.rungProgress(H.newCard());
+    const started = H.rungProgress({ S: 1, D: 5, due: Date.now(), last: Date.now(), reps: 1, lapses: 0, state: 'learning' });
+    const holding = H.rungProgress({ S: 30, D: 4, due: Date.now(), last: Date.now(), reps: 3, lapses: 0, state: 'review' });
+    return fresh === 0 && started > 0 && started <= 0.5 && holding === 1;
+  }));
+  ok('weighting: terms stay evenly weighted — only the long drills are reweighted', await page.evaluate(() => {
+    const H = window.__HKD;
+    const term = H.SEQUENCE.map(id => H.ITEMS[id]).find(i => i.kind === 'term' && H.ladderFor(i).length > 1);
+    if (!term) return false;
+    const shares = H.ladderFor(term).map(sk => H.skillShare(term, sk));
+    return shares.every(s => Math.abs(s - shares[0]) < 1e-9);
+  }));
+
+  /* ---- the breakdown is visible on the item, not just in the model ---- */
+  await page.evaluate(() => {
+    const H = window.__HKD, S = H.S;
+    const held = { S: 30, D: 4, due: Date.now() + 20 * 86400000, last: Date.now(), reps: 3, lapses: 0, state: 'review' };
+    S.cards[H.ck('x-ap-chagi', 't-id')] = { ...held };
+    S.cards[H.ck('x-ap-chagi', 't-situation')] = { ...held };
+    H.save(); H.view = 'belt'; H.render();
+  });
+  await sleep(300);
+  await page.click('[data-expand="x-ap-chagi"]'); await sleep(350);
+  ok('weighting: the technique shows a progress ring and a per-drill breakdown', await page.evaluate(() => {
+    const box = document.querySelector('.drills');
+    if (!box || !box.querySelector('.pring-fg')) return false;
+    const rows = [...box.querySelectorAll('.drill-rows li')];
+    const n = window.__HKD.ladderFor(window.__HKD.ITEMS['x-ap-chagi']).length;
+    if (rows.length !== n) return false;
+    const shares = rows.map(r => parseInt(r.querySelector('.dr-share').textContent, 10));
+    const labels = rows.map(r => r.querySelector('.dr-name').textContent.trim());
+    // Rounded shares still read as a whole, and sequencing is visibly biggest.
+    return Math.abs(shares.reduce((a, b) => a + b, 0) - 100) <= 2 &&
+      labels.includes('Order the steps') &&
+      shares[labels.indexOf('Order the steps')] === Math.max(...shares) &&
+      /\d+% learned/.test(box.querySelector('.drills-pct').textContent);
+  }));
+  ok('weighting: the ring reports preparation, never rank', await page.evaluate(() => {
+    const t = document.querySelector('.drills').textContent;
+    return /preparation, not rank/i.test(t) && !/belt|rank(ed)?\s+up|promot/i.test(t.replace(/not rank/i, ''));
+  }));
+  await page.screenshot({ path: 'shots/drill-weighting.png' });
+  await page.click('[data-expand="x-ap-chagi"]'); await sleep(200);
+  await page.evaluate(() => { window.__HKD.view = 'today'; window.__HKD.render(); });
+  await sleep(200);
   await page.evaluate(() => { if (window.__HKD.sess) { } });
   if (await page.$('[data-act="quit"]')) { await page.click('[data-act="quit"]'); await sleep(300); }
   if (await page.evaluate(() => window.__HKD.view === 'done')) { await page.click('[data-view="today"]'); await sleep(200); }
