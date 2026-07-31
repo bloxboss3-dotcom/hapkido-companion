@@ -123,6 +123,10 @@ DEFAULTS_NEW = '''const DEFAULTS = {
   verifications: {},        // itemId -> {by, date, note, curriculumVersion}; instructor mode only
   instructor: { pinHash: null, lastBy: '', log: [] },
   verifySeen: 0,            // for the "verified in class" celebration
+  // Collectibles. Only SPENDING is stored — ki earned is derived from the
+  // work already in days[], so it can never drift from what was actually done
+  // and survives export/import with no extra handling.
+  dojang: { spent: 0, refunded: 0, owned: {}, opened: 0, pityRare: 0, pityLeg: 0, seen: {}, last: null },
   curriculumVersion: '',
   created: Date.now(),
   version: 2
@@ -145,7 +149,8 @@ s = repl_region(s, 'const MASCOT_SVG = `', '</svg>`;', avatar, 'mascot-svg')
 
 # ---------- 8. splice in the hapkido layer before BOOT ----------
 parts = (BUILD / 'course-art.js').read_text(encoding='utf-8') + '\n\n' + \
-        '\n\n'.join((BUILD / f'hapkido-part{i}.js').read_text(encoding='utf-8') for i in range(1, 6))
+        (BUILD / 'dojang-art.js').read_text(encoding='utf-8') + '\n\n' + \
+        '\n\n'.join((BUILD / f'hapkido-part{i}.js').read_text(encoding='utf-8') for i in range(1, 7))
 M_BOOT = '/* ---------------------------------------------------------------\n   12. BOOT'
 assert M_BOOT in s, 'BOOT MARKER MISSING'
 s = s.replace(M_BOOT, parts + '\n\n' + M_BOOT, 1)

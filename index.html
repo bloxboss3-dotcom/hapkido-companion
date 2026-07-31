@@ -883,6 +883,64 @@ header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, va
 
 @media (max-width: 340px) { .dr-name { width: 38%; } }
 
+/* ---- the dojang: collectibles ----
+   Rarity colour is decoration only — every tier is spelled out in words next
+   to it, so nothing here depends on telling colours apart. */
+.dj-head .dj-bal { display: flex; align-items: center; gap: 6px; background: var(--bg-raise); border: 1px solid var(--line); border-radius: 999px; padding: 6px 13px; font-size: 15px; flex: none; }
+.dj-head .dj-bal .ko { color: var(--accent); font-weight: 700; }
+.dj-pity { font-size: 12px; margin-top: 10px; }
+.dj-tabs { display: flex; gap: 6px; margin: 14px 0 12px; overflow-x: auto; scrollbar-width: none; }
+.dj-tabs::-webkit-scrollbar { display: none; }
+.dj-tabs button { background: none; border: 1px solid transparent; color: var(--tx-dim); border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.dj-tabs button.on { background: var(--bg-card); color: var(--tx); border-color: var(--line); }
+
+.dj-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: var(--rc, var(--tx-dim)); }
+.dj-tag.sm { font-size: 10.5px; }
+.dj-pips { letter-spacing: 1px; font-size: 8px; }
+
+.dj-svg { width: 100%; height: 100%; display: block; }
+.dj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 9px; }
+.dj-group { margin-bottom: 16px; }
+.dj-group-h { display: flex; justify-content: space-between; align-items: center; margin: 0 2px 8px; font-size: 12px; color: var(--tx-faint); }
+.dj-card { position: relative; background: var(--bg-card); border: 1px solid var(--line-soft); border-top: 2px solid var(--rc, var(--line)); border-radius: var(--radius-sm); padding: 8px 8px 9px; text-align: center; }
+.dj-card.locked { opacity: .5; border-top-color: var(--line); }
+.dj-art { height: 76px; display: flex; align-items: flex-end; justify-content: center; }
+.dj-unknown { font-size: 30px; color: var(--tx-faint); font-weight: 700; align-self: center; }
+.dj-name { font-size: 12px; font-weight: 600; margin-top: 5px; }
+.dj-count { position: absolute; top: 6px; right: 7px; font-family: var(--mono); font-size: 10.5px; color: var(--tx-dim); background: var(--bg-raise); border-radius: 999px; padding: 1px 6px; }
+.dj-blurb { font-size: 10.5px; color: var(--tx-faint); line-height: 1.35; margin-top: 5px; }
+
+.dj-reveal-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.dj-reveal-card { flex: 1 1 104px; max-width: 132px; background: var(--bg-raise); border: 1px solid var(--rc); border-radius: var(--radius-sm); padding: 9px 8px; text-align: center; }
+.dj-newtag { font-size: 10.5px; font-weight: 700; color: var(--good); margin-top: 4px; }
+.dj-dupe { font-size: 10.5px; color: var(--tx-faint); margin-top: 4px; }
+
+.dj-room-wrap { margin-top: 2px; }
+.dj-room { position: relative; border: 1px solid var(--line-soft); border-radius: var(--radius); overflow: hidden;
+  background: linear-gradient(180deg, var(--bg-soft) 0px, var(--bg-soft) 76px, var(--bg-raise) 76px, var(--bg-raise) 100%); }
+.dj-wall { position: absolute; left: 0; right: 0; top: 0; height: 76px; display: flex; align-items: center; justify-content: center; }
+.dj-scroll { font-size: 30px; color: var(--tx-faint); opacity: .26; letter-spacing: 6px; }
+/* Centred on its slot, so the small drift can never reach a neighbour. */
+.dj-liv { position: absolute; width: 62px; margin-left: -31px; transform: scale(var(--s)); transform-origin: bottom center; }
+.dj-liv .dj-svg { height: 66px; }
+.dj-liv-name { display: block; text-align: center; font-size: 9px; color: var(--tx-faint); margin-top: -1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dj-roomnote { font-size: 12px; margin-top: 9px; }
+.dj-empty { text-align: center; }
+
+/* Wandering and bobbing are pure decoration: they only run when the student
+   has not asked for less motion, and never when FX are switched off. */
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.fx-off) .dj-liv { animation: djWander var(--dur, 20s) ease-in-out var(--dl, 0s) infinite alternate; }
+  html:not(.fx-off) .dj-bob { animation: djBob 2.6s ease-in-out infinite; }
+  html:not(.fx-off) .dj-reveal-card { animation: djPop .42s cubic-bezier(.2, 1.3, .4, 1) both; animation-delay: calc(var(--i, 0) * .09s); }
+}
+@keyframes djWander { from { transform: scale(var(--s)) translateX(calc(var(--drift, 3%) * -1)); } to { transform: scale(var(--s)) translateX(var(--drift, 3%)); } }
+@keyframes djBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes djPop { from { opacity: 0; transform: translateY(9px) scale(.9); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 360px) { .dj-grid { grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); } }
+
 /* ---- belt pills ---- */
 .belt-pills { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
 .belt-pills::-webkit-scrollbar { display: none; }
@@ -3272,6 +3330,10 @@ const DEFAULTS = {
   verifications: {},        // itemId -> {by, date, note, curriculumVersion}; instructor mode only
   instructor: { pinHash: null, lastBy: '', log: [] },
   verifySeen: 0,            // for the "verified in class" celebration
+  // Collectibles. Only SPENDING is stored — ki earned is derived from the
+  // work already in days[], so it can never drift from what was actually done
+  // and survives export/import with no extra handling.
+  dojang: { spent: 0, refunded: 0, owned: {}, opened: 0, pityRare: 0, pityLeg: 0, seen: {}, last: null },
   curriculumVersion: '',
   created: Date.now(),
   version: 2
@@ -5136,6 +5198,173 @@ window.HKD_COURSE_EMBLEM = {
 };
 
 
+/* ============================================================
+   THE DOJANG — collectible characters
+   ------------------------------------------------------------
+   Characters are drawn from ONE parametric SVG with trait slots
+   (skin / hair / uniform / trim / sash / accessory / pose / eyes), so a
+   thirty-strong roster costs a few hundred bytes of data instead of thirty
+   hand-drawn files. That matters: the deployed app is a single HTML file.
+
+   Two hard rules live in here, not just in the docs:
+
+   1. NO CHARACTER PERFORMS A TECHNIQUE. Poses are standing, guard, bowing,
+      stretching and celebrating. An illustrated joint lock or throw is
+      safety misinformation with the school's name on it — the same reason
+      generated technique art is banned. Never add a pose that shows one
+      person doing something TO another.
+   2. NOTHING HERE IS RANK. The sashes are costume colours on toys. Only
+      Grandmaster Lee awards belts, and the collection screen says so.
+      Rarity is never shown as a belt colour, and rarity colour is never the
+      only signal — the tier is always spelled out in words.
+   ============================================================ */
+
+const DJ_RARITY = {
+  common:    { label: 'Common',    c: '#94a3b8', pips: 1, refund: 20 },
+  rare:      { label: 'Rare',      c: '#46c9c0', pips: 2, refund: 45 },
+  legendary: { label: 'Legendary', c: '#f0a83c', pips: 3, refund: 110 },
+  mythical:  { label: 'Mythical',  c: '#c77dff', pips: 4, refund: 260 }
+};
+const DJ_RARITY_ORDER = ['common', 'rare', 'legendary', 'mythical'];
+
+/* Skin, hair and cloth palettes. Kept small and warm to match the mascot. */
+const DJ_SKIN = ['#f0c49a', '#e0a878', '#c68642', '#a1673a', '#f7d7b8'];
+const DJ_HAIRC = ['#2b2523', '#4a3428', '#1a1a20', '#6b4a2f', '#8a8f99', '#d9d2c5'];
+
+/* Names are nicknames for toys — deliberately NOT curriculum vocabulary, so
+   nobody mistakes a character for something that will be on a test. */
+const DJ_ROSTER = [
+  // ---- common (12) ----
+  { id: 'sparrow',  name: 'Sparrow',      r: 'common',    skin: 0, hair: 0, hc: 0, uni: 0, trim: 0, sash: 0, acc: 0, pose: 'ready',   eyes: 'open',  blurb: 'First week, front row, tries everything twice.' },
+  { id: 'pebble',   name: 'Pebble',       r: 'common',    skin: 1, hair: 1, hc: 1, uni: 0, trim: 1, sash: 0, acc: 0, pose: 'ready',   eyes: 'happy', blurb: 'Small, steady, never skips the warm-up.' },
+  { id: 'sprout',   name: 'Sprout',       r: 'common',    skin: 4, hair: 2, hc: 0, uni: 0, trim: 0, sash: 1, acc: 0, pose: 'stretch', eyes: 'happy', blurb: 'Grew two inches since the last belt test.' },
+  { id: 'mitten',   name: 'Mitten',       r: 'common',    skin: 0, hair: 3, hc: 3, uni: 1, trim: 0, sash: 0, acc: 0, pose: 'ready',   eyes: 'open',  blurb: 'Keeps losing one glove. Only ever one.' },
+  { id: 'acorn',    name: 'Acorn',        r: 'common',    skin: 2, hair: 0, hc: 2, uni: 0, trim: 2, sash: 1, acc: 0, pose: 'bow',     eyes: 'happy', blurb: 'Bows to the doorway even when nobody is watching.' },
+  { id: 'radish',   name: 'Radish',       r: 'common',    skin: 1, hair: 4, hc: 0, uni: 0, trim: 0, sash: 0, acc: 1, pose: 'ready',   eyes: 'open',  blurb: 'Headband on backwards, entirely on purpose.' },
+  { id: 'puddle',   name: 'Puddle',       r: 'common',    skin: 3, hair: 1, hc: 2, uni: 1, trim: 1, sash: 1, acc: 0, pose: 'ready',   eyes: 'calm',  blurb: 'Falls over a lot. Gets up slightly faster each time.' },
+  { id: 'clover',   name: 'Clover',       r: 'common',    skin: 4, hair: 5, hc: 1, uni: 0, trim: 0, sash: 2, acc: 0, pose: 'stretch', eyes: 'happy', blurb: 'Convinced the stretching is the best part.' },
+  { id: 'biscuit',  name: 'Biscuit',      r: 'common',    skin: 0, hair: 2, hc: 3, uni: 0, trim: 2, sash: 0, acc: 2, pose: 'ready',   eyes: 'open',  blurb: 'Brings snacks. Shares them. Mostly.' },
+  { id: 'thimble',  name: 'Thimble',      r: 'common',    skin: 2, hair: 3, hc: 0, uni: 1, trim: 0, sash: 2, acc: 0, pose: 'bow',     eyes: 'calm',  blurb: 'Quietest one in class, hears everything.' },
+  { id: 'marbles',  name: 'Marbles',      r: 'common',    skin: 1, hair: 0, hc: 1, uni: 0, trim: 1, sash: 1, acc: 1, pose: 'cheer',   eyes: 'happy', blurb: 'Cheers loudest for other people.' },
+  { id: 'juniper',  name: 'Juniper',      r: 'common',    skin: 3, hair: 4, hc: 2, uni: 0, trim: 0, sash: 0, acc: 0, pose: 'guard',   eyes: 'open',  blurb: 'Practises the same stance until it is boring, then again.' },
+
+  // ---- rare (10) ----
+  { id: 'kestrel',  name: 'Kestrel',      r: 'rare',      skin: 0, hair: 5, hc: 0, uni: 2, trim: 3, sash: 3, acc: 0, pose: 'guard',   eyes: 'calm',  blurb: 'Reads the room before the room knows it is being read.' },
+  { id: 'lantern',  name: 'Lantern',      r: 'rare',      skin: 4, hair: 1, hc: 5, uni: 2, trim: 4, sash: 3, acc: 3, pose: 'ready',   eyes: 'happy', blurb: 'Turns up early to switch the lights on.' },
+  { id: 'ripple',   name: 'Ripple',       r: 'rare',      skin: 1, hair: 2, hc: 1, uni: 2, trim: 3, sash: 4, acc: 0, pose: 'stretch', eyes: 'calm',  blurb: 'Redirects everything, including arguments.' },
+  { id: 'ember',    name: 'Ember',        r: 'rare',      skin: 2, hair: 0, hc: 0, uni: 3, trim: 5, sash: 3, acc: 1, pose: 'guard',   eyes: 'open',  blurb: 'Small and extremely difficult to put out.' },
+  { id: 'willow',   name: 'Willow',       r: 'rare',      skin: 3, hair: 5, hc: 4, uni: 2, trim: 4, sash: 4, acc: 0, pose: 'bow',     eyes: 'calm',  blurb: 'Bends the whole way and never breaks.' },
+  { id: 'compass',  name: 'Compass',      r: 'rare',      skin: 0, hair: 3, hc: 2, uni: 3, trim: 3, sash: 3, acc: 2, pose: 'ready',   eyes: 'open',  blurb: 'Always facing the right way. Nobody knows how.' },
+  { id: 'tinder',   name: 'Tinder',       r: 'rare',      skin: 4, hair: 4, hc: 3, uni: 2, trim: 5, sash: 4, acc: 0, pose: 'cheer',   eyes: 'happy', blurb: 'Catches enthusiasm off other people instantly.' },
+  { id: 'quill',    name: 'Quill',        r: 'rare',      skin: 1, hair: 1, hc: 0, uni: 3, trim: 4, sash: 3, acc: 3, pose: 'ready',   eyes: 'calm',  blurb: 'Writes the terminology out by hand. Every week.' },
+  { id: 'otter',    name: 'Otter',        r: 'rare',      skin: 2, hair: 2, hc: 1, uni: 2, trim: 3, sash: 4, acc: 0, pose: 'stretch', eyes: 'happy', blurb: 'Rolls beautifully. Would roll everywhere if allowed.' },
+  { id: 'anvil',    name: 'Anvil',        r: 'rare',      skin: 3, hair: 0, hc: 2, uni: 3, trim: 5, sash: 3, acc: 2, pose: 'guard',   eyes: 'open',  blurb: 'Immovable. Cheerful about it.' },
+
+  // ---- legendary (6) ----
+  { id: 'nightheron', name: 'Night Heron', r: 'legendary', skin: 0, hair: 5, hc: 2, uni: 4, trim: 6, sash: 5, acc: 4, pose: 'guard',   eyes: 'calm',  blurb: 'Stands on one leg for an hour. Nobody has out-waited them.' },
+  { id: 'stonebear',  name: 'Stone Bear',  r: 'legendary', skin: 2, hair: 0, hc: 0, uni: 4, trim: 7, sash: 5, acc: 0, pose: 'ready',   eyes: 'open',  blurb: 'Moves slowly right up until the moment they do not.' },
+  { id: 'pinewind',   name: 'Pine Wind',   r: 'legendary', skin: 4, hair: 2, hc: 5, uni: 5, trim: 6, sash: 6, acc: 3, pose: 'stretch', eyes: 'calm',  blurb: 'Trains outside in weather everyone else complains about.' },
+  { id: 'brasslamp',  name: 'Brass Lamp',  r: 'legendary', skin: 1, hair: 3, hc: 4, uni: 4, trim: 7, sash: 5, acc: 4, pose: 'bow',     eyes: 'calm',  blurb: 'Taught half the room and mentions it to nobody.' },
+  { id: 'riverstone', name: 'River Stone', r: 'legendary', skin: 3, hair: 1, hc: 5, uni: 5, trim: 6, sash: 6, acc: 0, pose: 'ready',   eyes: 'calm',  blurb: 'Smoothed by about forty thousand repetitions.' },
+  { id: 'firstlight', name: 'First Light', r: 'legendary', skin: 4, hair: 4, hc: 5, uni: 4, trim: 7, sash: 5, acc: 3, pose: 'cheer',   eyes: 'happy', blurb: 'Unlocks the door at dawn. Every single morning.' },
+
+  // ---- mythical (2) ----
+  { id: 'cranemaster', name: 'The Crane',  r: 'mythical',  skin: 4, hair: 5, hc: 5, uni: 6, trim: 8, sash: 7, acc: 5, pose: 'guard',   eyes: 'calm',  blurb: 'Older than the building. Balance like a rumour.' },
+  { id: 'quietmtn',    name: 'Quiet Mountain', r: 'mythical', skin: 2, hair: 0, hc: 5, uni: 6, trim: 8, sash: 7, acc: 4, pose: 'bow',   eyes: 'calm',  blurb: 'Says almost nothing. You practise harder anyway.' }
+];
+const DJ_BY_ID = Object.fromEntries(DJ_ROSTER.map(c => [c.id, c]));
+
+/* Cloth palettes — index into these from the roster rows. Uniform and trim
+   are costume only; the sash colours are deliberately NOT the belt ladder's
+   colours, so a toy can never be misread as a rank. */
+const DJ_UNI = ['#eef1f5', '#e4e8ee', '#dfe6f2', '#e8e2f4', '#2b3242', '#26303f', '#1d2331'];
+const DJ_TRIM = ['#c9d2de', '#b9c4d4', '#a9b8cc', '#7f9bc4', '#8f7fc0', '#c98f5a', '#5f7fa8', '#c2a15e', '#9d7fd0'];
+const DJ_SASH = ['#b9c2cf', '#8fa3bd', '#6f86a8', '#3f7fa8', '#4a8f86', '#8a6fb8', '#b4823c', '#6a4fa0'];
+
+/* Hair shapes, drawn to sit on a head of r=13 centred at (32, 25). */
+const DJ_HAIR = [
+  // 0 — short cap with a fringe
+  'M19 26 C19 15 25 10 32 10 C39 10 45 15 45 26 L42 26 C42 20 40 17 37 16 C35 19 33 20 32 20 C31 20 29 19 27 16 C24 17 22 20 22 26 Z',
+  // 1 — bowl cut
+  'M18.5 26 C18.5 14 25 9.5 32 9.5 C39 9.5 45.5 14 45.5 26 L42.5 24.5 C41 21 38 19.5 32 19.5 C26 19.5 23 21 21.5 24.5 Z',
+  // 2 — topknot
+  'M20 25 C20 15 25.5 11 32 11 C38.5 11 44 15 44 25 L41 24 C40 19 37 17 32 17 C27 17 24 19 23 24 Z M32 4.5 a3.6 3.6 0 1 1 0 7.2 a3.6 3.6 0 1 1 0-7.2 Z',
+  // 3 — side part
+  'M19 26 C19 14.5 25 10 32 10 C39.5 10 45 15 45 26 L42 25 C42 19 39.5 16.5 35 16 C31 20 26 21.5 22 21 C21 22.5 20.5 24 20.5 26 Z',
+  // 4 — twin buns
+  'M20 25 C20 15 25.5 11 32 11 C38.5 11 44 15 44 25 L41 24 C40 19 37 17 32 17 C27 17 24 19 23 24 Z M17.5 13.5 a4 4 0 1 1 0 8 a4 4 0 1 1 0-8 Z M46.5 13.5 a4 4 0 1 1 0 8 a4 4 0 1 1 0-8 Z',
+  // 5 — long, tied back
+  'M18.5 27 C18.5 14 25 9.5 32 9.5 C39 9.5 45.5 14 45.5 27 L45.5 34 L42.5 34 L42.5 22 C41 19 38 17.5 32 17.5 C26 17.5 23 19 21.5 22 L21.5 34 L18.5 34 Z'
+];
+
+/* Accessories. None of them are protective gear — nothing here should read as
+   "you are equipped to do the restricted thing". */
+const DJ_ACC = [
+  '',
+  // 1 headband
+  '<path d="M19.5 22 h25 v3.6 h-25 Z" fill="#c85f5f"/><path d="M44 22 l6 2 l-6 2.4 Z" fill="#c85f5f"/>',
+  // 2 round glasses
+  '<g fill="none" stroke="#4a4a55" stroke-width="1.3"><circle cx="26.6" cy="26" r="4.2"/><circle cx="37.4" cy="26" r="4.2"/><path d="M30.8 26 h2.4"/></g>',
+  // 3 small hair clip
+  '<path d="M40.5 15.5 h6 v2.4 h-6 Z" fill="#e8b84b"/>',
+  // 4 shoulder cloak clasp
+  '<circle cx="32" cy="40" r="2.6" fill="#e8c86b"/><circle cx="32" cy="40" r="1.1" fill="#8a6a20"/>',
+  // 5 straw hat
+  '<path d="M13 20 C13 12 22 6.5 32 6.5 C42 6.5 51 12 51 20 Z" fill="#d9b877"/><path d="M13 20 h38 v2.4 h-38 Z" fill="#c2a05e"/>'
+];
+
+const DJ_EYES = {
+  open:  '<ellipse cx="27" cy="26" rx="2.1" ry="2.5" fill="#33210f"/><ellipse cx="37" cy="26" rx="2.1" ry="2.5" fill="#33210f"/><circle cx="27.7" cy="25.1" r=".8" fill="#fff"/><circle cx="37.7" cy="25.1" r=".8" fill="#fff"/>',
+  happy: '<g stroke="#33210f" stroke-width="1.7" stroke-linecap="round" fill="none"><path d="M24.6 27 c1.3-2.3 3.8-2.3 5.1 0"/><path d="M34.6 27 c1.3-2.3 3.8-2.3 5.1 0"/></g>',
+  calm:  '<g stroke="#33210f" stroke-width="1.7" stroke-linecap="round" fill="none"><path d="M24.6 26.2 h5"/><path d="M34.6 26.2 h5"/></g>'
+};
+
+/* Arm shapes per pose. Standing, guard, bow, stretch, cheer — a person doing
+   something on their own. Never one person applying anything to another. */
+function djArms(pose, uni, trim) {
+  const s = `fill="${uni}" stroke="${trim}" stroke-width="1"`;
+  if (pose === 'guard') return `<path d="M20 44 q-3 5 1 9 q3 3 5 0 q1-4-1-7 Z" ${s}/><path d="M44 44 q3 5-1 9 q-3 3-5 0 q-1-4 1-7 Z" ${s}/>`;
+  if (pose === 'bow') return `<path d="M21 45 q-2 7 4 10 h14 q6-3 4-10 q-3 6-11 6 q-8 0-11-6 Z" ${s}/>`;
+  if (pose === 'stretch') return `<path d="M20 44 q-4 -8 -1 -13 q3-2 4 1 q1 5-1 12 Z" ${s}/><path d="M44 44 q3 6-1 11 q-3 2-4-1 q-1-4 2-10 Z" ${s}/>`;
+  if (pose === 'cheer') return `<path d="M20 44 q-5 -7 -2 -12 q3-2 4 1 q1 5-2 11 Z" ${s}/><path d="M44 44 q5 -7 2 -12 q-3-2-4 1 q-1 5 2 11 Z" ${s}/>`;
+  return `<path d="M20 43 q-3 7 -1 13 q2 3 4 1 q1-6 0-14 Z" ${s}/><path d="M44 43 q3 7 1 13 q-2 3-4 1 q-1-6 0-14 Z" ${s}/>`;
+}
+
+/* One character, as an inline SVG string. */
+function djCharSvg(c, opts) {
+  const o = opts || {};
+  const skin = DJ_SKIN[c.skin % DJ_SKIN.length];
+  const hairc = DJ_HAIRC[c.hc % DJ_HAIRC.length];
+  const uni = DJ_UNI[c.uni % DJ_UNI.length];
+  const trim = DJ_TRIM[c.trim % DJ_TRIM.length];
+  const sash = DJ_SASH[c.sash % DJ_SASH.length];
+  const lean = c.pose === 'bow' ? ' transform="rotate(9 32 62)"' : '';
+  return `<svg class="dj-svg${o.cls ? ' ' + o.cls : ''}" viewBox="0 0 64 84" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(c.name)}">
+  <ellipse cx="32" cy="79" rx="15" ry="3.2" fill="#000" opacity=".22"/>
+  <g${lean}>
+    <rect x="25" y="60" width="6" height="17" rx="2.4" fill="${uni}"/>
+    <rect x="33" y="60" width="6" height="17" rx="2.4" fill="${uni}"/>
+    <rect x="23.5" y="74.5" width="8.5" height="3.6" rx="1.6" fill="#3b4250"/>
+    <rect x="32" y="74.5" width="8.5" height="3.6" rx="1.6" fill="#3b4250"/>
+    <path d="M22 42 q10-5 20 0 l3 19 q-13 4-26 0 Z" fill="${uni}" stroke="${trim}" stroke-width="1.1"/>
+    <path d="M32 39 l-7 3 l5 15 Z" fill="${trim}" opacity=".55"/>
+    <path d="M32 39 l7 3 l-5 15 Z" fill="${trim}" opacity=".35"/>
+    ${djArms(c.pose, uni, trim)}
+    <rect x="18.5" y="55" width="27" height="5.2" rx="1.8" fill="${sash}"/>
+    <path d="M40 60 l3.5 7 l-3 .8 Z" fill="${sash}"/>
+    <circle cx="19" cy="27" r="3" fill="${skin}"/><circle cx="45" cy="27" r="3" fill="${skin}"/>
+    <circle cx="32" cy="25" r="13" fill="${skin}"/>
+    <path d="${DJ_HAIR[c.hair % DJ_HAIR.length]}" fill="${hairc}"/>
+    <ellipse cx="25" cy="30" rx="2.6" ry="1.7" fill="#f79fae" opacity=".45"/>
+    <ellipse cx="39" cy="30" rx="2.6" ry="1.7" fill="#f79fae" opacity=".45"/>
+    ${DJ_EYES[c.eyes] || DJ_EYES.open}
+    <path d="M30 32.5 q2 1.8 4 0" stroke="#b5745a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    ${DJ_ACC[c.acc % DJ_ACC.length]}
+  </g>
+</svg>`;
+}
+
+
 /* ================================================================
    HAPKIDO LAYER — catalogue, safety, readiness, milestones
    ----------------------------------------------------------------
@@ -6195,6 +6424,7 @@ function render() {
   else if (view === 'courses') body = renderCourses();
   else if (view === 'belt') body = renderBelt();
   else if (view === 'progress') body = renderCourseProgress() + renderProgress();
+  else if (view === 'dojang') body = renderDojang();
   else if (view === 'method') body = renderMethod();
   else if (view === 'settings') body = renderSettings();
   else if (view === 'practice') body = renderPractice();
@@ -6207,7 +6437,7 @@ function render() {
 function shell(body) {
   const course = activeCourse();
   const picking = COURSES.length && !course;
-  const tabs = [['today', 'Path'], ['belt', 'Belt'], ['progress', 'Progress'], ['method', 'Method'], ['settings', 'Settings']];
+  const tabs = [['today', 'Path'], ['belt', 'Belt'], ['dojang', 'Dojang'], ['progress', 'Progress'], ['method', 'Method'], ['settings', 'Settings']];
   const switcher = course
     ? `<button class="cswitch" data-view="courses" title="Switch course" aria-label="Switch course — currently ${esc(course.nameEnglish)}">
          ${courseMark(course)}<span class="cs-name">${esc(course.shortName)}</span><span class="cs-caret">▾</span>
@@ -7323,6 +7553,304 @@ window.__HKD = {
   COURSES, COURSE_BY_ID, activeCourse, switchCourse, courseOf, courseIdOf, courseUnits, newToday, startSession,
   sequenceFastMs, itemProgress, skillShare, rungProgress, skillWeight
 };
+// The dojang layer adds its own handles in part6 — its consts live after this
+// point, so naming them here would hit the temporal dead zone.
+
+
+/* ============================================================
+   THE DOJANG — economy, packs, and the room they live in
+   ------------------------------------------------------------
+   Design rules that are load-bearing, not decoration:
+
+   * 기 (ki) is earned for WORK DONE, never for being right. It is derived
+     from S.days[*].reviews, which counts every graded answer regardless of
+     grade. Paying more for correct answers would quietly reintroduce the
+     punishment mechanic invariant 5 forbids, and would give a student a
+     reason to lie on the self-graded speaking drill — the one exercise that
+     only works if you are honest with it.
+   * Because it is DERIVED from work already recorded, there is nothing to
+     hook, nothing to double-count, and it survives export/import for free.
+     Only spending is stored.
+   * A daily cap means grinding past a healthy session earns nothing extra.
+     The app already tells you to stop at 20 minutes; the economy agrees.
+   * No real money. Ever. There is no purchase path and there must never be.
+   * Collectibles are toys, not rank. Nothing here unlocks a technique, a
+     belt, or any physical practice.
+   ============================================================ */
+
+const KI_PER_REVIEW = 2;        // every graded answer, right or wrong
+const KI_DAY_CAP_REVIEWS = 60;  // past this in one day, extra reps pay nothing
+const KI_DAY_BONUS = 10;        // for turning up at all
+const KI_PER_MASTERED = 25;     // an item whose whole ladder holds
+const PACK_COST = 100;
+
+/* Weights are per-pull. Pity counters below guarantee the tail. */
+const DJ_WEIGHTS = { common: 60, rare: 28, legendary: 9.5, mythical: 2.5 };
+const PITY_RARE = 10;   // a rare or better at least this often
+const PITY_LEG = 50;    // a legendary or better at least this often
+
+function djState() {
+  if (!S.dojang) S.dojang = { spent: 0, refunded: 0, owned: {}, opened: 0, pityRare: 0, pityLeg: 0, seen: {}, last: null };
+  const d = S.dojang;
+  if (!d.owned) d.owned = {};
+  if (!d.seen) d.seen = {};
+  return d;
+}
+
+/* Ki you have earned, derived entirely from work the app already recorded. */
+function kiEarned() {
+  let n = 0;
+  Object.keys(S.days || {}).forEach(k => {
+    const revs = Math.max(0, (S.days[k] || {}).reviews || 0);
+    if (revs > 0) n += KI_DAY_BONUS;
+    n += Math.min(revs, KI_DAY_CAP_REVIEWS) * KI_PER_REVIEW;
+  });
+  let mastered = 0;
+  SEQUENCE.forEach(id => { if (knowledgeMastered(ITEMS[id])) mastered++; });
+  return n + mastered * KI_PER_MASTERED;
+}
+function kiBalance() {
+  const d = djState();
+  return Math.max(0, kiEarned() + (d.refunded || 0) - (d.spent || 0));
+}
+function djKiToday() {
+  const revs = Math.max(0, (S.days[todayKey()] || {}).reviews || 0);
+  return { revs, capped: revs >= KI_DAY_CAP_REVIEWS };
+}
+
+function djRollRarity() {
+  const d = djState();
+  if (d.pityLeg + 1 >= PITY_LEG) return Math.random() < 0.2 ? 'mythical' : 'legendary';
+  if (d.pityRare + 1 >= PITY_RARE) {
+    const r = Math.random();
+    return r < 0.72 ? 'rare' : r < 0.95 ? 'legendary' : 'mythical';
+  }
+  const total = DJ_RARITY_ORDER.reduce((n, k) => n + DJ_WEIGHTS[k], 0);
+  let roll = Math.random() * total;
+  for (const k of DJ_RARITY_ORDER) { roll -= DJ_WEIGHTS[k]; if (roll <= 0) return k; }
+  return 'common';
+}
+
+/* One pull. Returns {id, rarity, dup, refund}. */
+function djPull() {
+  const d = djState();
+  const rarity = djRollRarity();
+  const pool = DJ_ROSTER.filter(c => c.r === rarity);
+  const c = pool[Math.floor(Math.random() * pool.length)];
+  d.pityRare = (rarity === 'common') ? d.pityRare + 1 : 0;
+  d.pityLeg = (rarity === 'legendary' || rarity === 'mythical') ? 0 : d.pityLeg + 1;
+  const dup = !!d.owned[c.id];
+  d.owned[c.id] = (d.owned[c.id] || 0) + 1;
+  if (!dup) d.seen[c.id] = Date.now();
+  let refund = 0;
+  if (dup) { refund = DJ_RARITY[rarity].refund; d.refunded = (d.refunded || 0) + refund; }
+  return { id: c.id, rarity, dup, refund };
+}
+
+function openPacks(n) {
+  const d = djState();
+  const count = Math.max(1, Math.min(10, n || 1));
+  if (kiBalance() < PACK_COST * count) return;
+  d.spent = (d.spent || 0) + PACK_COST * count;
+  const results = [];
+  for (let i = 0; i < count; i++) { d.opened = (d.opened || 0) + 1; results.push(djPull()); }
+  d.last = { results, t: Date.now() };
+  save();
+  const best = results.reduce((a, b) =>
+    DJ_RARITY_ORDER.indexOf(b.rarity) > DJ_RARITY_ORDER.indexOf(a.rarity) ? b : a, results[0]);
+  if (best && (best.rarity === 'legendary' || best.rarity === 'mythical') && S.settings.fxLevel !== 'off') {
+    try { Sfx.play('milestone'); } catch (e) { /* sound is optional */ }
+  }
+  render();
+}
+
+function djOwnedList() {
+  const d = djState();
+  return DJ_ROSTER.filter(c => d.owned[c.id]);
+}
+function djCollectionStats() {
+  const d = djState();
+  const owned = DJ_ROSTER.filter(c => d.owned[c.id]).length;
+  const byR = {};
+  DJ_RARITY_ORDER.forEach(r => {
+    const all = DJ_ROSTER.filter(c => c.r === r);
+    byR[r] = { owned: all.filter(c => d.owned[c.id]).length, total: all.length };
+  });
+  return { owned, total: DJ_ROSTER.length, byR, opened: d.opened || 0 };
+}
+
+function djHash(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function djRarityTag(r, small) {
+  const m = DJ_RARITY[r];
+  // Rarity is always spelled out — the colour and the pips are extra, never
+  // the only signal.
+  return `<span class="dj-tag${small ? ' sm' : ''}" style="--rc:${m.c}">
+    <span class="dj-pips" aria-hidden="true">${'●'.repeat(m.pips)}</span>${m.label}</span>`;
+}
+
+/* ---------- the room ---------- */
+function renderDojangRoom() {
+  const owned = djOwnedList();
+  const st = djCollectionStats();
+  if (!owned.length) {
+    return `<div class="card dj-empty">
+      <h2>Your dojang is empty</h2>
+      <p class="sub">Train, earn 기, open a pack — whoever turns up moves in and starts training here.</p>
+    </div>`;
+  }
+  // Deterministic even spacing, back rows first. Placing by hash clustered
+  // them into a pile with overlapping names; a slot per character keeps the
+  // room readable no matter how many move in. Drift is small and the figure
+  // is centred on its slot, so nobody wanders into a neighbour or off-screen.
+  const PER_ROW = 4, ROW_H = 76;
+  const rows = Math.ceil(owned.length / PER_ROW);
+  const roomH = 84 + rows * ROW_H;
+  const floor = owned.map((c, i) => {
+    const h = djHash(c.id);
+    const r = Math.floor(i / PER_ROW);
+    const col = i % PER_ROW;
+    const inRow = Math.min(PER_ROW, owned.length - r * PER_ROW);
+    const left = ((col + 0.5) / inRow) * 100;
+    const bottom = 12 + (rows - 1 - r) * ROW_H;
+    const depth = rows > 1 ? r / (rows - 1) : 1;          // 0 = back, 1 = front
+    const scale = (0.76 + 0.24 * depth).toFixed(3);
+    const dur = 15 + h % 11;                               // seconds for a lap
+    const delay = h % 8;
+    const drift = 3 + h % 4;                               // small, in %
+    return `<div class="dj-liv" style="left:${left.toFixed(2)}%;bottom:${bottom}px;z-index:${r + 1};--s:${scale};--dur:${dur}s;--dl:-${delay}s;--drift:${drift}%">
+      <div class="dj-bob">${djCharSvg(c, { cls: 'dj-room' })}</div>
+      <span class="dj-liv-name">${esc(c.name)}</span>
+    </div>`;
+  }).join('');
+  return `<div class="dj-room-wrap">
+    <div class="dj-room" style="height:${roomH}px" aria-label="Your dojang, ${owned.length} characters living here">
+      <div class="dj-wall"><span class="dj-scroll ko">수련</span></div>
+      ${floor}
+    </div>
+    <p class="faint dj-roomnote">${owned.length} of ${st.total} living here. They train, stretch and wander — nobody here demonstrates a technique, and none of them are a rank.</p>
+  </div>`;
+}
+
+/* ---------- the collection grid ---------- */
+function renderDojangCollection() {
+  const d = djState();
+  const st = djCollectionStats();
+  const groups = DJ_RARITY_ORDER.map(r => {
+    const rows = DJ_ROSTER.filter(c => c.r === r).map(c => {
+      const n = d.owned[c.id] || 0;
+      if (!n) {
+        return `<div class="dj-card locked">
+          <div class="dj-art"><div class="dj-unknown" aria-hidden="true">?</div></div>
+          <div class="dj-name">Not found yet</div>
+          ${djRarityTag(r, true)}
+        </div>`;
+      }
+      return `<div class="dj-card" style="--rc:${DJ_RARITY[r].c}">
+        <div class="dj-art">${djCharSvg(c)}</div>
+        <div class="dj-name">${esc(c.name)}</div>
+        ${djRarityTag(r, true)}
+        ${n > 1 ? `<span class="dj-count">×${n}</span>` : ''}
+        <div class="dj-blurb">${esc(c.blurb)}</div>
+      </div>`;
+    }).join('');
+    return `<div class="dj-group">
+      <div class="dj-group-h">${djRarityTag(r)}<span class="faint">${st.byR[r].owned} / ${st.byR[r].total}</span></div>
+      <div class="dj-grid">${rows}</div>
+    </div>`;
+  }).join('');
+  return `<div class="card">
+    <h2>Collection</h2>
+    <p class="sub">${st.owned} of ${st.total} found · ${st.opened} pack${st.opened === 1 ? '' : 's'} opened.
+    These are characters, not curriculum — their names are nobody's vocabulary and will not be on any test.
+    They are also not rank: only Grandmaster Lee awards belts.</p>
+  </div>${groups}`;
+}
+
+/* ---------- the pull reveal ---------- */
+function renderDojangReveal() {
+  const d = djState();
+  if (!d.last || !d.last.results || !d.last.results.length) return '';
+  const cards = d.last.results.map((res, i) => {
+    const c = DJ_BY_ID[res.id];
+    if (!c) return '';
+    return `<div class="dj-reveal-card r-${res.rarity}" style="--rc:${DJ_RARITY[res.rarity].c};--i:${i}">
+      <div class="dj-art">${djCharSvg(c)}</div>
+      <div class="dj-name">${esc(c.name)}</div>
+      ${djRarityTag(res.rarity, true)}
+      ${res.dup ? `<div class="dj-dupe">Already had them — +${res.refund} 기 back</div>`
+              : '<div class="dj-newtag">New!</div>'}
+    </div>`;
+  }).join('');
+  return `<div class="card dj-reveal">
+    <h2>${d.last.results.length > 1 ? 'Your packs' : 'Your pack'}</h2>
+    <div class="dj-reveal-row">${cards}</div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" data-dj="dismiss">Nice</button></div>
+  </div>`;
+}
+
+function renderDojang() {
+  const bal = kiBalance();
+  const today = djKiToday();
+  const canOne = bal >= PACK_COST, canFive = bal >= PACK_COST * 5;
+  const st = djCollectionStats();
+  const tab = djTab === 'collection' ? 'collection' : 'room';
+  return `
+  <div class="card dj-head">
+    <div class="row" style="align-items:center;gap:12px">
+      <div style="flex:1">
+        <h2 style="margin:0">Dojang</h2>
+        <p class="sub" style="margin:4px 0 0">Earned by training — never by being right. Wrong answers pay exactly the same.</p>
+      </div>
+      <div class="dj-bal" title="Your ki"><span class="ko">기</span><b>${bal}</b></div>
+    </div>
+    <div class="row" style="margin-top:12px;flex-wrap:wrap">
+      <button class="btn primary" data-dj="open1" ${canOne ? '' : 'disabled'}>Open a pack · ${PACK_COST} 기</button>
+      <button class="btn" data-dj="open5" ${canFive ? '' : 'disabled'}>Open five · ${PACK_COST * 5} 기</button>
+    </div>
+    ${!canOne ? `<p class="faint" style="margin:9px 0 0;font-size:12.5px">${PACK_COST - bal} 기 to go — about ${Math.max(1, Math.ceil((PACK_COST - bal) / (KI_PER_REVIEW * 12)))} more short session${Math.ceil((PACK_COST - bal) / (KI_PER_REVIEW * 12)) === 1 ? '' : 's'}.</p>` : ''}
+    ${today.capped ? '<p class="faint" style="margin:9px 0 0;font-size:12.5px">You have earned today\'s full 기 — more reviews still count for your scheduling, they just stop paying. Rest is part of it.</p>' : ''}
+    <div class="dj-pity faint">Guaranteed a Rare or better within ${PITY_RARE - djState().pityRare} pack${PITY_RARE - djState().pityRare === 1 ? '' : 's'} · Legendary or better within ${PITY_LEG - djState().pityLeg}.</div>
+  </div>
+  ${renderDojangReveal()}
+  <div class="dj-tabs">
+    <button data-dj="tab-room" class="${tab === 'room' ? 'on' : ''}">The room</button>
+    <button data-dj="tab-collection" class="${tab === 'collection' ? 'on' : ''}">Collection · ${st.owned}/${st.total}</button>
+  </div>
+  ${tab === 'room' ? renderDojangRoom() : renderDojangCollection()}`;
+}
+
+/* Which dojang sub-tab is showing. */
+let djTab = 'room';
+
+/* Debug/test handles. Added here rather than in part5's literal because these
+   consts are declared in this file — naming them earlier hits the TDZ. */
+Object.assign(window.__HKD, {
+  kiEarned, kiBalance, djState, djCollectionStats, openPacks, djPull, djRollRarity, djOwnedList,
+  DJ_ROSTER, DJ_RARITY, DJ_RARITY_ORDER, PACK_COST, PITY_RARE, PITY_LEG,
+  KI_PER_REVIEW, KI_DAY_CAP_REVIEWS, KI_DAY_BONUS
+});
+// Object.assign INVOKES getters and copies the resulting value, so an accessor
+// passed through it would freeze into a stale string and its setter would
+// silently do nothing. defineProperty keeps it live.
+Object.defineProperty(window.__HKD, 'djTab', {
+  get() { return djTab; }, set(v) { djTab = v; }, configurable: true
+});
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-dj]');
+  if (!t) return;
+  const a = t.dataset.dj;
+  if (a === 'open1') openPacks(1);
+  else if (a === 'open5') openPacks(5);
+  else if (a === 'dismiss') { djState().last = null; save(); render(); }
+  else if (a === 'tab-room') { djTab = 'room'; render(); }
+  else if (a === 'tab-collection') { djTab = 'collection'; render(); }
+});
 
 
 /* ---------------------------------------------------------------

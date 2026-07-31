@@ -443,3 +443,5 @@ window.__HKD = {
   COURSES, COURSE_BY_ID, activeCourse, switchCourse, courseOf, courseIdOf, courseUnits, newToday, startSession,
   sequenceFastMs, itemProgress, skillShare, rungProgress, skillWeight
 };
+// The dojang layer adds its own handles in part6 — its consts live after this
+// point, so naming them here would hit the temporal dead zone.

@@ -56,6 +56,7 @@ function render() {
   else if (view === 'courses') body = renderCourses();
   else if (view === 'belt') body = renderBelt();
   else if (view === 'progress') body = renderCourseProgress() + renderProgress();
+  else if (view === 'dojang') body = renderDojang();
   else if (view === 'method') body = renderMethod();
   else if (view === 'settings') body = renderSettings();
   else if (view === 'practice') body = renderPractice();
@@ -68,7 +69,7 @@ function render() {
 function shell(body) {
   const course = activeCourse();
   const picking = COURSES.length && !course;
-  const tabs = [['today', 'Path'], ['belt', 'Belt'], ['progress', 'Progress'], ['method', 'Method'], ['settings', 'Settings']];
+  const tabs = [['today', 'Path'], ['belt', 'Belt'], ['dojang', 'Dojang'], ['progress', 'Progress'], ['method', 'Method'], ['settings', 'Settings']];
   const switcher = course
     ? `<button class="cswitch" data-view="courses" title="Switch course" aria-label="Switch course — currently ${esc(course.nameEnglish)}">
          ${courseMark(course)}<span class="cs-name">${esc(course.shortName)}</span><span class="cs-caret">▾</span>
