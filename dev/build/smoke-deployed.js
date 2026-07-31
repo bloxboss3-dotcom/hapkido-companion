@@ -75,6 +75,34 @@ const launchOpts = proxyServer ? { proxy: { server: proxyServer } } : {};
     icon && /^image\/png/.test(icon.headers()['content-type'] || ''),
     icon ? icon.headers()['content-type'] : 'request failed');
 
+  // Installability over HTTP. A manifest served with the wrong Content-Type,
+  // or an icon that 404s, silently costs the Install prompt — and file://
+  // tests cannot see any of it.
+  let mf = null, manifest = null;
+  try {
+    mf = await page.request.get(URL + 'manifest.webmanifest');
+    manifest = JSON.parse(await mf.text());
+  } catch (e) { /* reported below */ }
+  ok('manifest.webmanifest is served', mf && mf.status() === 200,
+    mf ? 'status ' + mf.status() : 'request failed');
+  // Chrome accepts any JSON-ish type; octet-stream is the sign a host has no
+  // mapping for .webmanifest, which is worth knowing about before students hit it.
+  ok('manifest served with a JSON content-type', mf &&
+    /application\/(manifest\+json|json)/.test(mf.headers()['content-type'] || ''),
+    mf ? mf.headers()['content-type'] : 'request failed');
+  ok('manifest declares a standalone app', manifest && manifest.display === 'standalone' &&
+    !!manifest.name && Array.isArray(manifest.icons) && manifest.icons.length > 0,
+    manifest ? JSON.stringify(manifest).slice(0, 120) : 'unparsed');
+  if (manifest && Array.isArray(manifest.icons)) {
+    for (const ic of manifest.icons) {
+      let r = null;
+      try { r = await page.request.get(URL + ic.src); } catch (e) { /* reported below */ }
+      ok(`manifest icon ${ic.src} is served as an image`,
+        r && r.status() === 200 && /^image\/png/.test(r.headers()['content-type'] || ''),
+        r ? r.status() + ' ' + r.headers()['content-type'] : 'request failed');
+    }
+  }
+
   // A student can start studying, end to end, on the real site.
   await act(async () => { await page.click('[data-course="way"]', { timeout: 5000 }); });
   await sleep(700);

@@ -57,14 +57,27 @@ s = sub1(s, '%ED%95%9C%3C', '%ED%95%A9%3C', 'icon-glyph')  # 한 -> 합
 s = sub1(s, '''<!-- No external requests of any kind: Korean text uses the system font stack
      so the file works with the network switched off and nothing is ever
      fetched, logged or phoned home. -->''',
-         '''<!-- No external requests of any kind: Korean text uses the system font stack
-     so the file works with the network switched off and nothing is ever
-     fetched, logged or phoned home. The single same-origin file referenced
-     below is apple-touch-icon.png, which only iOS requests when a student
-     taps Add to Home Screen — never during normal use. -->''', 'offline-comment')
+         '''<!-- No external requests of any kind: Korean text uses the system font stack,
+     so the app runs with the network switched off and nothing is ever logged
+     or phoned home. The only files referenced are same-origin and local to
+     this folder: the manifest and the icons that let it install to a home
+     screen. Chrome fetches the manifest once on load; iOS fetches an icon
+     only when a student adds the app. Nothing else is ever requested, and
+     none of it is needed for the app to work. -->''', 'offline-comment')
+#
+# The manifest + these meta tags are what make it *install* — added to the
+# home screen it opens in its own window instead of a browser tab. Status bar
+# style is the opaque 'black' on purpose: 'black-translucent' slides content
+# under the iOS status bar, and nothing in this app uses safe-area insets, so
+# that would clip the header.
 s = sub1(s, '%3E%ED%95%A9%3C/text%3E%3C/svg%3E">',
          '%3E%ED%95%A9%3C/text%3E%3C/svg%3E">\n'
-         '<link rel="apple-touch-icon" href="apple-touch-icon.png">', 'apple-touch-icon')
+         '<link rel="apple-touch-icon" href="apple-touch-icon.png">\n'
+         '<link rel="manifest" href="manifest.webmanifest">\n'
+         '<meta name="mobile-web-app-capable" content="yes">\n'
+         '<meta name="apple-mobile-web-app-capable" content="yes">\n'
+         '<meta name="apple-mobile-web-app-status-bar-style" content="black">\n'
+         '<meta name="apple-mobile-web-app-title" content="Hapkido">', 'app-icons-and-manifest')
 s = sub1(s, 'Hanbit needs JavaScript — the whole app, including the scheduler, runs locally in your browser.',
          'This app needs JavaScript — everything, including the scheduler, runs locally in your browser.', 'noscript')
 s = sub1(s, '</head>', '<script src="data/curriculum.js"></script>\n</head>', 'curriculum-script')
@@ -145,15 +158,22 @@ single = s.replace('<script src="data/curriculum.js"></script>',
                    '<script>\n' + cur_path.read_text(encoding='utf-8') + '\n</script>', 1)
 (REPO / 'index.html').write_text(single, encoding='utf-8')
 
-# ---------- place the iOS home-screen icon beside each index.html ----------
-# The icon has to sit next to the file that references it, so the folder build
-# and the deployed root build each get their own copy. Source of truth is the
-# one in dev/hapkido-companion/; asserted so a deleted icon fails the build
-# instead of silently shipping a broken <link>.
-ICON = 'apple-touch-icon.png'
-icon_src = DEV / 'hapkido-companion' / ICON
-assert icon_src.exists(), f'MISSING ICON: {icon_src}'
-shutil.copyfile(icon_src, REPO / ICON)
+# ---------- place the install assets beside each index.html ----------
+# Each has to sit next to the file that references it, so the folder build and
+# the deployed root build each get their own copy. Source of truth is
+# dev/hapkido-companion/; every file is asserted so a deleted asset fails the
+# build instead of silently shipping a broken <link> or an uninstallable app.
+APP_ASSETS = [
+    'manifest.webmanifest',
+    'apple-touch-icon.png',    # 180, iOS home screen
+    'icon-192.png',            # Chrome install minimum
+    'icon-512.png',            # Chrome install / splash
+    'icon-maskable-512.png',   # Android adaptive icon (safe-zone inset)
+]
+for asset in APP_ASSETS:
+    src_path = DEV / 'hapkido-companion' / asset
+    assert src_path.exists(), f'MISSING APP ASSET: {src_path}'
+    shutil.copyfile(src_path, REPO / asset)
 
 # ---------- report ----------
 lines = s.count('\n') + 1

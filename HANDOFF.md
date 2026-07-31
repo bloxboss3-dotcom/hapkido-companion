@@ -15,20 +15,28 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   assigns items; a third course is a data entry.
 - **Engine:** Hanbit's FSRS-5 scheduler, session planner, FX/celebration system,
   storage/migration safety — preserved via the transform-override build
-  (`dev/build/`). 85/85 automated checks passing.
+  (`dev/build/`). 87/87 automated checks passing.
 - **Repo:** `npm run build` / `npm test` / `npm run check`, plus a GitHub Actions
   job that rebuilds `index.html` on every PR and fails if the deployed file has
   drifted from the source it is generated from. Dependencies are locked
   (`package-lock.json`, `playwright` pinned exactly, CI on `npm ci`) so an
   upstream release can't break an unrelated PR. `npm run smoke` optionally
   checks the deployed site — the one failure class `file://` tests can't see.
-- **App icon:** `apple-touch-icon.png` (180×180) so iOS Add-to-Home-Screen shows
-  the app rather than a generic glyph. The enso ink ring is generated art; the
-  합 is composited from a real Korean font (Noto Sans KR), not drawn by the
-  image model — an approximated Hangul glyph is not acceptable on this app.
-  `transform.py` copies it beside both builds and asserts it exists. It is the
-  only file the page references, and only iOS ever fetches it, so the app still
-  works with the network off (you just lose the home-screen icon).
+- **Installs as a real app.** A web app manifest (`display: standalone`) plus the
+  Apple meta tags, so adding it to a home screen opens it in its own window with
+  no browser chrome — on iOS *and* on Android/desktop Chrome, which now offers a
+  proper Install prompt. iOS status-bar style is the opaque `black` on purpose:
+  `black-translucent` slides content under the status bar and nothing in this
+  app uses safe-area insets.
+  Icon set: `apple-touch-icon.png` (180), `icon-192`, `icon-512`, and
+  `icon-maskable-512` (art inset into Android's safe zone so a circular mask
+  can't clip the ring). The enso ink ring is generated art; the 합 is
+  composited from a real Korean font (Noto Sans KR), **not** drawn by the image
+  model — an approximated Hangul glyph is not acceptable on this app.
+  `transform.py` copies all five files plus the manifest beside both builds and
+  asserts each exists. Nothing here is needed for the app to *run*: it still
+  works with the network off, and the only load-time request is the manifest,
+  same-origin. Nothing external is ever contacted.
 - **Content:** 106 provisional items across three belts —
   White (53: etiquette, commands, counting, principles, safety, stances,
   falls-knowledge, first strikes, wrist releases), White·Yellow Stripe (30:
@@ -46,7 +54,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 - **Deploy:** GitHub Pages serves root `index.html` (generated single-file), now
   by `git push` to `main` rather than manual upload. **Fully automatic:** the
   `auto-merge` job in `verify.yml` squash-merges a green non-draft `claude/*`
-  PR and Pages republishes itself, so nobody clicks merge. The 85-check matrix
+  PR and Pages republishes itself, so nobody clicks merge. The 87-check matrix
   is therefore the only gate before students see a change — grow it, and keep
   PRs in draft until they are actually finished. The repo had drifted — only
   a hand-uploaded `index.html` was on GitHub, one build behind (still the old
@@ -90,7 +98,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 npm ci                                           # playwright, exactly as locked
 npm run check                                    # build + in-sync check + matrix
 ```
-Confirm 85/85, commit any drift, then pick up item 1 or 3 above with Kevin.
+Confirm 87/87, commit any drift, then pick up item 1 or 3 above with Kevin.
 After a deploy lands, `npm run smoke` checks the live site (needs network).
 When authoring the next belt, remember it wants units in BOTH courses.
 Original Hanbit app must never be modified: `dev/hanbit-korean.BACKUP-2026-07-30.html`
