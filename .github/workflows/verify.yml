@@ -7,7 +7,11 @@ name: build & test
 on:
   push:
     branches: [main]
+  # ready_for_review is NOT in the default set (opened/synchronize/reopened).
+  # Without it, taking a PR out of draft never re-runs this workflow, so the
+  # auto-merge job below would never get its chance to fire.
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 jobs:
