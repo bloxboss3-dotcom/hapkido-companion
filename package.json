@@ -1,0 +1,16 @@
+{
+  "name": "hapkido-companion",
+  "version": "0.5.0",
+  "private": true,
+  "description": "A belt-rank Hapkido training companion for Lee's Martial Arts Academy: two courses (Terminology & Philosophy, Techniques) on FSRS spaced repetition, offline, no accounts, no tracking.",
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "python3 dev/build/transform.py",
+    "test": "node dev/build/test-matrix.js",
+    "check": "npm run build && git diff --exit-code -- index.html dev/hapkido-companion/index.html && npm test",
+    "serve": "python3 -m http.server 8080"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  }
+}
