@@ -16,18 +16,31 @@ policy**, so nothing below is actually unblocked *yet*. Containers get their
 network policy when they are created; an existing session keeps the one it
 booted with.
 
-Evidence, collected just now from inside the sandbox:
+This was proven end-to-end, not inferred. A real Runway image was generated from
+this session and then could not be pulled in:
+
+1. `generate_image` → task `759ea43e-abd5-4f36-b0e1-196bf73cdb81` → **SUCCEEDED**.
+   The MCP call runs through the harness, so generation is unaffected by the
+   sandbox's policy.
+2. `curl` of the returned asset URL on `dnznrvs05pmza.cloudfront.net` →
+   `curl: (56) CONNECT tunnel failed, response 403`, 0 bytes.
+
+So the credit was spent, the artwork exists, and it is stranded on the other side
+of the proxy. Supporting probes:
 
 | Probe | Result |
 |---|---|
-| `registry.npmjs.org` | ✅ reachable (bypasses the proxy entirely) |
+| `registry.npmjs.org`, `pypi.org` | ✅ reachable (bypass the proxy entirely) |
 | `raw.githubusercontent.com` | ✅ 301 |
-| `d3phaj0sisr2ct.cloudfront.net` (the CDN pattern image/audio generators return assets on) | ❌ `403 CONNECT` — policy denial |
-| `bloxboss3-dotcom.github.io` (our own live site) | ❌ `403 CONNECT` — policy denial |
+| `storage.googleapis.com` | ✅ CONNECT allowed (400 to the bare request) |
+| `dnznrvs05pmza.cloudfront.net` (Runway assets) | ❌ `403 CONNECT` |
+| `bloxboss3-dotcom.github.io` (our own live site) | ❌ `403 CONNECT` |
+| `runway.com`, `example.com` | ❌ `403 CONNECT` |
 
-`$HTTPS_PROXY/__agentproxy/status` reports `"selective": false` locally while the
-gateway still answers `403` to `CONNECT`, which is the signature of a container
-running on a stale policy rather than a misconfigured proxy.
+`example.com` being denied is the tell: this is not one unlucky CDN, it is the
+general internet. `$HTTPS_PROXY/__agentproxy/status` reports `"selective": false`
+locally while the gateway still answers `403` to `CONNECT` — the signature of a
+container running on a stale policy rather than a misconfigured proxy.
 
 **The fix: start a new Claude Code session** (or recreate the environment) now
 that the setting is saved. Then confirm before trusting any of section 1:
@@ -90,6 +103,30 @@ window.HKD_COURSE_ART = { way: "<url or data: URI>", art: "<url or data: URI>" }
 
 Set it and generated art replaces the built-in emblems per course, with no other
 edit anywhere.
+
+**There is already one image generated and paid for.** Recover it in the next
+session without spending another credit — `get_task` re-issues a fresh signed URL
+for a finished task:
+
+```
+get_task("759ea43e-abd5-4f36-b0e1-196bf73cdb81")   # Terminology & Philosophy card art
+```
+
+It is a 1:1 Korean ink-wash (sumukhwa): an unclosed enso brush circle in indigo
+and slate-blue over dark charcoal paper, three fading horizontal strokes beneath
+it. The matching Techniques piece was never generated — the download failure
+stopped the run before the second call.
+
+Pipeline once the URL is reachable, all local after the download:
+
+```bash
+curl -o art/way.png "<url from get_task>"
+# downscale + re-encode without PIL: load it in Playwright, draw to a canvas at
+# the target size, canvas.toDataURL('image/webp', 0.82) → paste into the hook.
+```
+
+Budget ≤ ~40 KB per emblem if inlining as a data: URI; above that, put the files
+in `assets/images/` and reference by path.
 
 Before you do, know what you would be giving up: the current emblems are ~1.5 KB
 of vector that stays crisp at any size, renders in both themes, and is **painted
