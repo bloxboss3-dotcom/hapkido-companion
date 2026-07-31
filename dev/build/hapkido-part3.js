@@ -415,9 +415,43 @@ function renderBelt() {
     ${units}${cumCard}`;
 }
 
+/* Weighted progress for one item, plus what each drill is worth toward it.
+   The long exercises carry the most weight, so ordering the steps visibly
+   moves a technique further than a recognition question does. Reports
+   preparation only — it never awards rank and never unlocks practice. */
+function drillProgressBlock(it) {
+  const l = ladderFor(it);
+  if (l.length < 2) return '';
+  const frac = itemProgress(it);
+  const pct = Math.round(frac * 100);
+  const C = 2 * Math.PI * 18;
+  const rows = l.map(sk => {
+    const share = Math.round(skillShare(it, sk) * 100);
+    const done = Math.round(rungProgress(S.cards[ck(it.id, sk)]) * 100);
+    return `<li><span class="dr-name">${esc(SKILL_LABEL[sk] || sk)}</span>
+      <span class="dr-bar"><i class="${done >= 100 ? 'good' : ''}" style="width:${done}%"></i></span>
+      <span class="dr-share">${share}%</span></li>`;
+  }).join('');
+  return `<div class="drills">
+    <div class="drills-head">
+      <svg class="pring" viewBox="0 0 42 42" aria-hidden="true">
+        <circle class="pring-bg" cx="21" cy="21" r="18"/>
+        <circle class="pring-fg" cx="21" cy="21" r="18"
+          stroke-dasharray="${(C * frac).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 21 21)"/>
+      </svg>
+      <div style="flex:1">
+        <div class="drills-pct">${pct}% learned</div>
+        <div class="faint" style="font-size:11.5px">Knowledge only — this is preparation, not rank. Each drill counts for as much work as it takes.</div>
+      </div>
+    </div>
+    <ul class="drill-rows">${rows}</ul>
+  </div>`;
+}
+
 function renderItemDetail(it) {
-  const prov = it.approvalStatus && it.approvalStatus !== 'approved'
+  const badge = it.approvalStatus && it.approvalStatus !== 'approved'
     ? '<div style="margin:6px 0 10px"><span class="badge-prov sm">Provisional — awaiting Grandmaster Lee</span></div>' : '';
+  const prov = badge + drillProgressBlock(it);
 
   if (it.kind === 'term') {
     return `${prov}<div class="row" style="align-items:center;gap:14px">

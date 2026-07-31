@@ -857,6 +857,32 @@ header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, va
 .fb-steps.marked li.missed { color: var(--tx); font-weight: 600; }
 .fb-steps.marked li.missed::marker { color: var(--bad); font-weight: 700; }
 
+/* ---- weighted drill progress ----
+   Rungs are not equal work, so they are not equal slices. The ring is the
+   item's weighted total; each row shows what that drill is worth and how far
+   through it you are. */
+.drills { border: 1px solid var(--line-soft); background: var(--bg-soft); border-radius: var(--radius-sm); padding: 11px 12px; margin: 6px 0 12px; }
+.drills-head { display: flex; align-items: center; gap: 11px; }
+.pring { width: 42px; height: 42px; flex: none; }
+.pring-bg { fill: none; stroke: var(--line); stroke-width: 5; }
+.pring-fg { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round; transition: stroke-dasharray .5s ease; }
+.drills-pct { font-size: 15px; font-weight: 700; }
+.drill-rows { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.drill-rows li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+.dr-name { flex: none; width: 42%; color: var(--tx-dim); }
+.dr-bar { flex: 1; height: 6px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.dr-bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.dr-bar i.good { background: var(--good); }
+.dr-share { flex: none; width: 34px; text-align: right; font-family: var(--mono); font-size: 11.5px; color: var(--tx-faint); }
+
+/* The same idea inside session feedback: what the drill just answered was worth. */
+.drill-share { margin-top: 10px; }
+.ds-top { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--tx-dim); margin-bottom: 5px; }
+.ds-prog { flex: none; color: var(--tx-faint); font-family: var(--mono); font-size: 11.5px; }
+.drill-share .bar { height: 6px; }
+
+@media (max-width: 340px) { .dr-name { width: 38%; } }
+
 /* ---- belt pills ---- */
 .belt-pills { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
 .belt-pills::-webkit-scrollbar { display: none; }
@@ -4032,6 +4058,52 @@ function ladderFor(item) {
   return ['recog'];
 }
 
+/* ---------- how much of an item each rung is worth ----------
+   Rungs are not equal work. Ordering the steps means reading every step,
+   finding each in a shuffled pool and placing them — several times the effort
+   of a four-option recognition question, and the exercise students feel the
+   cost of. Weighting it as one-of-five made the longest drill in the app look
+   like the cheapest.
+
+   Spotting mistakes and key points sit in between: real recall, less reading.
+   Everything else defaults to 1. On a full technique ladder this puts
+   sequencing at ~44% — by far the largest single slice, without letting one
+   drill outweigh safety recognition and the key points combined. */
+const SKILL_WEIGHT = { 't-steps': 4, 't-error': 1.5, 't-points': 1.5 };
+const skillWeight = sk => SKILL_WEIGHT[sk] || 1;
+
+/* A rung's completion, 0..1. Half credit at most until the card actually
+   holds, so the bar moves while you work without ever claiming you are done
+   before the scheduler agrees. */
+function rungProgress(card) {
+  if (!card || card.state === 'new') return 0;
+  if (isHolding(card)) return 1;
+  const toward = Math.min(1, Math.min((card.reps || 0) / 2, (card.S || 0) / 3));
+  return 0.5 * Math.max(0, toward);
+}
+
+/* Weighted share of one rung within its item, 0..1 (for "this drill is 44%
+   of this technique"). */
+function skillShare(item, skill) {
+  const l = ladderFor(item);
+  const total = l.reduce((n, sk) => n + skillWeight(sk), 0);
+  return total && l.includes(skill) ? skillWeight(skill) / total : 0;
+}
+
+/* How far through an item's knowledge you are, weighted by rung effort.
+   Reports preparation only — it never awards rank and never unlocks
+   physical practice. */
+function itemProgress(item) {
+  const l = ladderFor(item);
+  let done = 0, total = 0;
+  l.forEach(sk => {
+    const w = skillWeight(sk);
+    total += w;
+    done += w * rungProgress(S.cards[ck(item.id, sk)]);
+  });
+  return total ? done / total : 0;
+}
+
 const SKILL_LABEL = {
   recog: 'Meaning', listen: 'By ear', recallKO: 'Korean term', speak: 'Say it in Korean',
   'c-recog': 'Recognize it', 'c-example': 'Pick the example', 'c-unsafe': 'Spot the unsafe call', 'c-scenario': 'Apply it',
@@ -4747,6 +4819,20 @@ function renderFeedback(ex) {
     if (item.note) extra.push(`<div class="note">${esc(item.note)}</div>`);
   }
   if (ex.why) extra.push(`<div class="why">${esc(ex.why)}</div>`);
+  // Show what this drill was worth. The long exercises are worth the most, so
+  // the effort is visible instead of every rung looking interchangeable.
+  const rungs = ladderFor(item);
+  if (rungs.length > 1 && ex.skill) {
+    const share = Math.round(skillShare(item, ex.skill) * 100);
+    const prog = Math.round(itemProgress(item) * 100);
+    const kindWord = item.kind === 'technique' ? 'technique' : item.kind === 'concept' ? 'idea' : 'term';
+    if (share > 0) {
+      extra.push(`<div class="drill-share">
+        <div class="ds-top"><span>${esc(SKILL_LABEL[ex.skill] || '')} — <b>${share}%</b> of this ${kindWord}</span>
+        <span class="ds-prog">${prog}% learned</span></div>
+        <div class="bar"><i class="${prog >= 100 ? 'good' : ''}" style="width:${prog}%"></i></div></div>`);
+    }
+  }
   if (item.kind === 'technique' && isRestricted(item) && (ex.skill === 't-steps' || r.result !== 'right')) {
     extra.push(`<div class="why">Remember: ${esc(item.name)} is practiced physically only ${item.safetyClass === 'partnerWithCare' ? 'with a partner in class' : 'under instructor supervision'}.</div>`);
   }
@@ -5307,9 +5393,43 @@ function renderBelt() {
     ${units}${cumCard}`;
 }
 
+/* Weighted progress for one item, plus what each drill is worth toward it.
+   The long exercises carry the most weight, so ordering the steps visibly
+   moves a technique further than a recognition question does. Reports
+   preparation only — it never awards rank and never unlocks practice. */
+function drillProgressBlock(it) {
+  const l = ladderFor(it);
+  if (l.length < 2) return '';
+  const frac = itemProgress(it);
+  const pct = Math.round(frac * 100);
+  const C = 2 * Math.PI * 18;
+  const rows = l.map(sk => {
+    const share = Math.round(skillShare(it, sk) * 100);
+    const done = Math.round(rungProgress(S.cards[ck(it.id, sk)]) * 100);
+    return `<li><span class="dr-name">${esc(SKILL_LABEL[sk] || sk)}</span>
+      <span class="dr-bar"><i class="${done >= 100 ? 'good' : ''}" style="width:${done}%"></i></span>
+      <span class="dr-share">${share}%</span></li>`;
+  }).join('');
+  return `<div class="drills">
+    <div class="drills-head">
+      <svg class="pring" viewBox="0 0 42 42" aria-hidden="true">
+        <circle class="pring-bg" cx="21" cy="21" r="18"/>
+        <circle class="pring-fg" cx="21" cy="21" r="18"
+          stroke-dasharray="${(C * frac).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 21 21)"/>
+      </svg>
+      <div style="flex:1">
+        <div class="drills-pct">${pct}% learned</div>
+        <div class="faint" style="font-size:11.5px">Knowledge only — this is preparation, not rank. Each drill counts for as much work as it takes.</div>
+      </div>
+    </div>
+    <ul class="drill-rows">${rows}</ul>
+  </div>`;
+}
+
 function renderItemDetail(it) {
-  const prov = it.approvalStatus && it.approvalStatus !== 'approved'
+  const badge = it.approvalStatus && it.approvalStatus !== 'approved'
     ? '<div style="margin:6px 0 10px"><span class="badge-prov sm">Provisional — awaiting Grandmaster Lee</span></div>' : '';
+  const prov = badge + drillProgressBlock(it);
 
   if (it.kind === 'term') {
     return `${prov}<div class="row" style="align-items:center;gap:14px">
@@ -6040,7 +6160,7 @@ window.__HKD = {
   save, render, plan, planTotal, stats, beltStats, cumulativeStats, activeBelt, ladderFor, knowledgeMastered,
   itemStatus, eligibleSequence, newCard, ck, ITEMS, SEQUENCE, BELTS, schedule, retrievability, itemTrack,
   COURSES, COURSE_BY_ID, activeCourse, switchCourse, courseOf, courseIdOf, courseUnits, newToday, startSession,
-  sequenceFastMs
+  sequenceFastMs, itemProgress, skillShare, rungProgress, skillWeight
 };
 
 

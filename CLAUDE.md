@@ -66,6 +66,15 @@ Working title. Read `HANDOFF.md` for current state and roadmap before doing anyt
   builds and asserts each exists, so they must live next to the `index.html`
   that references them. The manifest is the ONLY thing the page fetches at
   load, and it is same-origin — keep it that way; nothing external, ever.
+- `SKILL_WEIGHT` (part1) — drills are NOT equal work, so they are not equal
+  slices. `t-steps` (order the steps) is 4, `t-error`/`t-points` 1.5, everything
+  else 1 — putting sequencing at ~44% of a full technique, because it means
+  reading every step and placing it, several times the effort of a four-option
+  question. `itemProgress()` / `skillShare()` / `rungProgress()` are
+  **display-only**: they drive the ring on an item and the "worth 44%" line in
+  feedback. `knowledgeMastered()` and the five belt measures are deliberately
+  untouched — mastery still means every rung holds, and a rank is still not
+  half a rank. Weight new long drills; never let weighting unlock anything.
 - `window.__HKD` — debug/test handle used by the test harness. Keep it working.
 - `window.HKD_AUDIO` — maps exact Korean text → audio URL/data URI; `speak()`
   prefers it over TTS. This is where Grandmaster Lee's recordings plug in
@@ -97,7 +106,7 @@ declares them; `domain.track` assigns items. Adding a third = one data entry.
 ```bash
 npm ci                                # once: playwright, exactly as locked
 npm run build                         # rebuilds both index.html files
-npm test                              # 96 checks; needs playwright + chromium
+npm test                              # 103 checks; needs playwright + chromium
 npm run check                         # build + in-sync check + test (what CI runs)
 npm run smoke                         # optional: tests the DEPLOYED site (needs network)
 ```
@@ -111,7 +120,7 @@ deploy-only failures (stale deploy, 404 or wrong MIME on an asset) that a
 `file://` matrix structurally cannot see. It is not in CI and needs real
 network — a sandbox that blocks the browser's egress can't run it.
 
-The matrix must pass 96/96 (grow it with every feature — count goes up, never
+The matrix must pass 103/103 (grow it with every feature — count goes up, never
 down). It covers: boot, course picker + switching + persistence, per-course paths,
 per-course daily budgets, course-scoped and both-course sessions, course-scoped vs
 whole-belt readiness, FSRS values against hand-computed expectations, wrong-answer

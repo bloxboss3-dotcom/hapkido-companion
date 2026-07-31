@@ -227,6 +227,32 @@ header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, va
 .fb-steps.marked li.missed { color: var(--tx); font-weight: 600; }
 .fb-steps.marked li.missed::marker { color: var(--bad); font-weight: 700; }
 
+/* ---- weighted drill progress ----
+   Rungs are not equal work, so they are not equal slices. The ring is the
+   item's weighted total; each row shows what that drill is worth and how far
+   through it you are. */
+.drills { border: 1px solid var(--line-soft); background: var(--bg-soft); border-radius: var(--radius-sm); padding: 11px 12px; margin: 6px 0 12px; }
+.drills-head { display: flex; align-items: center; gap: 11px; }
+.pring { width: 42px; height: 42px; flex: none; }
+.pring-bg { fill: none; stroke: var(--line); stroke-width: 5; }
+.pring-fg { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round; transition: stroke-dasharray .5s ease; }
+.drills-pct { font-size: 15px; font-weight: 700; }
+.drill-rows { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.drill-rows li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+.dr-name { flex: none; width: 42%; color: var(--tx-dim); }
+.dr-bar { flex: 1; height: 6px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.dr-bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.dr-bar i.good { background: var(--good); }
+.dr-share { flex: none; width: 34px; text-align: right; font-family: var(--mono); font-size: 11.5px; color: var(--tx-faint); }
+
+/* The same idea inside session feedback: what the drill just answered was worth. */
+.drill-share { margin-top: 10px; }
+.ds-top { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--tx-dim); margin-bottom: 5px; }
+.ds-prog { flex: none; color: var(--tx-faint); font-family: var(--mono); font-size: 11.5px; }
+.drill-share .bar { height: 6px; }
+
+@media (max-width: 340px) { .dr-name { width: 38%; } }
+
 /* ---- belt pills ---- */
 .belt-pills { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
 .belt-pills::-webkit-scrollbar { display: none; }
