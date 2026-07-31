@@ -7,7 +7,11 @@ name: build & test
 on:
   push:
     branches: [main]
+  # ready_for_review is NOT in the default set (opened/synchronize/reopened).
+  # Without it, taking a PR out of draft never re-runs this workflow, so the
+  # auto-merge job below would never get its chance to fire.
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 jobs:
@@ -45,3 +49,55 @@ jobs:
           path: dev/shots/
           if-no-files-found: ignore
           retention-days: 7
+
+  # Deploy is "merge to main" — Pages republishes the root index.html on its
+  # own. This closes the last manual step: an agent PR that has gone green
+  # merges itself, so a change reaches students without anyone clicking merge.
+  #
+  # The gate is `needs: verify`. This job cannot start until the in-sync check
+  # and all 85 matrix checks have passed, so the tests are the only thing
+  # standing between a change and the live site — deliberately, and that is
+  # exactly why the matrix must keep growing with every feature.
+  #
+  # Scope is narrow on purpose:
+  #   - agent branches only (claude/*); a human's PR still merges by hand
+  #   - drafts never merge, so "ready for review" stays the deliberate
+  #     "this is finished" signal
+  #   - curriculum still needs Grandmaster Lee's approval before it stops
+  #     being provisional; green tests are not curriculum sign-off
+  auto-merge:
+    needs: verify
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false &&
+      startsWith(github.head_ref, 'claude/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Merge the pull request now that it is green
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            try {
+              const { data } = await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                merge_method: 'squash',
+                commit_title: `${pr.title} (#${pr.number})`,
+              });
+              core.info(`Merged ${data.sha}. GitHub Pages will republish main.`);
+            } catch (e) {
+              // A conflict, a race with another merge, or a repo whose Actions
+              // token is read-only. Say which, and leave the PR for a human
+              // rather than failing silently.
+              core.setFailed(
+                `Could not merge PR #${pr.number}: ${e.status || ''} ${e.message}\n` +
+                'If this is a permissions error, set Settings > Actions > General > ' +
+                'Workflow permissions to "Read and write permissions".'
+              );
+            }

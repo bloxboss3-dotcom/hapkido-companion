@@ -116,7 +116,17 @@ save, orphan-card retirement, missing/broken media states, themes, 320px, reduce
 motion, keyboard, reset, corrupted-save recovery. `.github/workflows/verify.yml`
 runs all of it on every PR and also fails if the committed `index.html` no longer
 matches its source. Deploy = commit + push to `main` (Pages redeploys root
-`index.html` automatically). Report honestly what was and wasn't tested; headless
+`index.html` automatically).
+
+**Deploys are automatic, and the matrix is the only gate.** `verify.yml` has an
+`auto-merge` job (`needs: verify`) that squash-merges a green PR, after which
+Pages republishes on its own — so a change reaches students with no human
+click. It is scoped to non-draft `claude/*` branches; a human's PR still merges
+by hand. Two consequences worth holding onto: a check the matrix does not cover
+is a check nothing performs, so grow it with every feature; and green tests are
+**not** curriculum approval — invariant 3 still stands, content stays
+`provisional` until Grandmaster Lee signs off. Keep a PR in draft until it is
+genuinely finished, because marking it ready is what ships it. Report honestly what was and wasn't tested; headless
 can't test TTS or real video playback.
 
 ## Content authoring rules
