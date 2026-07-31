@@ -15,10 +15,20 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   assigns items; a third course is a data entry.
 - **Engine:** Hanbit's FSRS-5 scheduler, session planner, FX/celebration system,
   storage/migration safety — preserved via the transform-override build
-  (`dev/build/`). 84/84 automated checks passing.
+  (`dev/build/`). 85/85 automated checks passing.
 - **Repo:** `npm run build` / `npm test` / `npm run check`, plus a GitHub Actions
   job that rebuilds `index.html` on every PR and fails if the deployed file has
-  drifted from the source it is generated from.
+  drifted from the source it is generated from. Dependencies are locked
+  (`package-lock.json`, `playwright` pinned exactly, CI on `npm ci`) so an
+  upstream release can't break an unrelated PR. `npm run smoke` optionally
+  checks the deployed site — the one failure class `file://` tests can't see.
+- **App icon:** `apple-touch-icon.png` (180×180) so iOS Add-to-Home-Screen shows
+  the app rather than a generic glyph. The enso ink ring is generated art; the
+  합 is composited from a real Korean font (Noto Sans KR), not drawn by the
+  image model — an approximated Hangul glyph is not acceptable on this app.
+  `transform.py` copies it beside both builds and asserts it exists. It is the
+  only file the page references, and only iOS ever fetches it, so the app still
+  works with the network off (you just lose the home-screen icon).
 - **Content:** 106 provisional items across three belts —
   White (53: etiquette, commands, counting, principles, safety, stances,
   falls-knowledge, first strikes, wrist releases), White·Yellow Stripe (30:
@@ -47,10 +57,11 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
    regardless); (c) **the real fix:** Grandmaster Lee records the terms (one voice
    memo, ~3 min) → split into clips → `data/audio.js` as
    `window.HKD_AUDIO = {"차렷": "data:audio/mp3;base64,..."}` or asset paths.
-   NOTE for agent sessions: this sandbox's network policy blocks the CDNs that
-   image/audio generators return assets on, so generated media cannot be pulled
-   into the repo from here — generate elsewhere and drop the file in, or keep
-   authoring vector art locally (see `dev/build/course-art.js`).
+   NOTE for agent sessions: the old network restriction is **gone**. Generated
+   media can now be pulled straight into the repo — the Runway MCP round trip
+   (generate → download from the CDN → commit) is proven, and produced the
+   `apple-touch-icon.png` described below. Generated Korean audio still ships
+   labeled as a stand-in and still needs a pronunciation check (invariant 6).
 2. **Grandmaster Lee's questionnaire** (`docs/grandmaster-lee-curriculum-intake.md`)
    — when answered, replace the provisional ladder/requirements (data-only change),
    flip approvalStatus per item as he approves, and re-badge the UI accordingly.
@@ -72,10 +83,11 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 ## Opening moves for the next session
 
 ```bash
-npm install && npx playwright install chromium   # if not present
+npm ci                                           # playwright, exactly as locked
 npm run check                                    # build + in-sync check + matrix
 ```
-Confirm 84/84, commit any drift, then pick up item 1 or 3 above with Kevin.
+Confirm 85/85, commit any drift, then pick up item 1 or 3 above with Kevin.
+After a deploy lands, `npm run smoke` checks the live site (needs network).
 When authoring the next belt, remember it wants units in BOTH courses.
 Original Hanbit app must never be modified: `dev/hanbit-korean.BACKUP-2026-07-30.html`
 is the pristine source (sha256 c964c277…8b86).

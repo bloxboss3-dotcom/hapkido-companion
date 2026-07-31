@@ -554,6 +554,22 @@ async function answerCurrentRight() {
     JSON.stringify(await dp.evaluate(() => performance.getEntriesByType('resource').map(r => r.name).slice(0, 5))));
   ok('deployed single file: course picker offers both courses', await dp.evaluate(() =>
     document.querySelectorAll('.ccard').length === 2 && document.querySelectorAll('.cart svg').length === 2));
+  // iOS Add-to-Home-Screen needs a real raster beside the file that links it.
+  // Assert the link AND the bytes: a dangling <link> would ship a broken icon
+  // silently, and the check above already proves it costs no load-time fetch.
+  ok('deployed single file: apple-touch-icon is linked and is a real 180x180 PNG', await (async () => {
+    const href = await dp.evaluate(() => {
+      const l = document.querySelector('link[rel="apple-touch-icon"]');
+      return l && l.getAttribute('href');
+    });
+    if (href !== 'apple-touch-icon.png') return false;
+    const png = path.resolve('..', href);
+    if (!fs.existsSync(png)) return false;
+    const b = fs.readFileSync(png);
+    // PNG signature, then IHDR width/height as big-endian uint32.
+    return b.slice(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) &&
+           b.readUInt32BE(16) === 180 && b.readUInt32BE(20) === 180;
+  })(), 'link href, file presence, or PNG dimensions wrong');
   await dp.click('[data-course="art"]'); await sleep(450);
   await dp.click('[data-act="start"]'); await sleep(550);
   ok('deployed single file: a course session runs', await dp.evaluate(() =>

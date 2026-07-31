@@ -40,10 +40,11 @@ Progress lives in that browser and nowhere else, so use **Settings → Export** 
 Pages serves.
 
 ```bash
-npm install                  # playwright, for the test matrix
+npm ci                       # playwright, exactly as locked
 npm run build                # rebuilds both index.html files from dev/
-npm test                     # 84 automated checks (needs chromium)
+npm test                     # 85 automated checks (needs chromium)
 npm run check                # build + "is the deployed file in sync?" + test
+npm run smoke                # optional: checks the DEPLOYED site (needs network)
 ```
 
 | Path | What it is |
@@ -53,7 +54,8 @@ npm run check                # build + "is the deployed file in sync?" + test
 | `dev/build/hapkido-part1..5.js` | the hapkido layer (courses, exercises, views, instructor mode) |
 | `dev/build/course-art.js` | the two course emblems (SVG) |
 | `dev/hapkido-companion/data/curriculum.js` | **all content** — belts, courses, domains, units, items |
-| `dev/build/test-matrix.js` | the 84-check matrix that gates every deploy |
+| `dev/build/test-matrix.js` | the 85-check matrix that gates every deploy |
+| `dev/build/smoke-deployed.js` | optional post-deploy check against the live URL |
 
 Adding or moving curriculum is a `curriculum.js` edit and nothing else. If a content change
 needs an engine change, the engine is wrong. Read [`CLAUDE.md`](CLAUDE.md) for the
