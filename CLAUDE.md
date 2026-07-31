@@ -83,11 +83,12 @@ Working title. Read `HANDOFF.md` for current state and roadmap before doing anyt
   that references them. The manifest is the ONLY thing the page fetches at
   load, and it is same-origin — keep it that way; nothing external, ever.
 - `SKILL_WEIGHT` (part1) — drills are NOT equal work, so they are not equal
-  slices. `t-steps` (order the steps) is 4, `t-error`/`t-points` 1.5, everything
-  else 1 — putting sequencing at ~44% of a full technique, because it means
+  slices. `t-steps` (order the steps) is 4, `t-explain` 2.5, `t-error`/`t-points`
+  1.5, everything else 1 — putting sequencing at ~35% of a full technique (it
+  moves whenever a rung is added; never pin the literal number in a test), because it means
   reading every step and placing it, several times the effort of a four-option
   question. `itemProgress()` / `skillShare()` / `rungProgress()` are
-  **display-only**: they drive the ring on an item and the "worth 44%" line in
+  **display-only**: they drive the ring on an item and the "worth N%" line in
   feedback. `knowledgeMastered()` and the five belt measures are deliberately
   untouched — mastery still means every rung holds, and a rank is still not
   half a rank. Weight new long drills; never let weighting unlock anything.
@@ -97,6 +98,18 @@ Working title. Read `HANDOFF.md` for current state and roadmap before doing anyt
   every theme. The dojang room and portraits use FIXED mid-tones for that
   reason. (b) *Korean without romanization.* Kevin cannot read Hangul yet —
   any new Korean-displaying UI must follow `showRomanization` like the rest.
+- **Pedagogy — what the exercise mix is for.** Four technique rungs are multiple
+  choice (recognition); `t-explain` is the one that makes the student PRODUCE
+  before seeing the answer, which is why it exists and why it is weighted 2.5.
+  Inducing self-explanation is among the best-evidenced study interventions
+  (Bisra et al. 2018 meta, g≈0.55 over 64 studies, and it holds for procedural
+  knowledge). It grades against `keyDetails`, so it costs no new content. The
+  mental-rehearsal prompt (`imageryPrompt()`, part3) is deliberately *smaller*
+  in tone: pooled effects survive publication-bias correction but are modest
+  (Toth et al. 2020, r≈0.13), strongest for **externally cued** movement — hence
+  the wording is built around the attack as the cue, and it says outright that
+  it is not a substitute for mat time. Do not inflate either claim; §2.7 of the
+  Phase-0 report is the evidence table this all answers to.
 - `window.__HKD` — debug/test handle used by the test harness. Keep it working.
   Note `Object.assign` **invokes** getters and copies values, so accessors must
   go on via `Object.defineProperty` or they silently freeze.
@@ -130,7 +143,7 @@ declares them; `domain.track` assigns items. Adding a third = one data entry.
 ```bash
 npm ci                                # once: playwright, exactly as locked
 npm run build                         # rebuilds both index.html files
-npm test                              # 123 checks; needs playwright + chromium
+npm test                              # 132 checks; needs playwright + chromium
 npm run check                         # build + in-sync check + test (what CI runs)
 npm run smoke                         # optional: tests the DEPLOYED site (needs network)
 ```
@@ -144,7 +157,7 @@ deploy-only failures (stale deploy, 404 or wrong MIME on an asset) that a
 `file://` matrix structurally cannot see. It is not in CI and needs real
 network — a sandbox that blocks the browser's egress can't run it.
 
-The matrix must pass 123/123 (grow it with every feature — count goes up, never
+The matrix must pass 132/132 (grow it with every feature — count goes up, never
 down). It covers: boot, course picker + switching + persistence, per-course paths,
 per-course daily budgets, course-scoped and both-course sessions, course-scoped vs
 whole-belt readiness, FSRS values against hand-computed expectations, wrong-answer
@@ -174,7 +187,10 @@ can't test TTS or real video playback.
   startingPosition or attackOrGrab, stepSequence (4-6 steps), keyDetails (3+),
   commonErrors (2-3), safetyNotes, safetyClass, instructorCheckpoints (if
   restricted), practiceAssignment ONLY if soloSafe. Quizzes for t-error/t-points
-  auto-generate from keyDetails×commonErrors.
+  auto-generate from keyDetails×commonErrors, and keyDetails (2+) also drives
+  `t-explain` — so weak, vague keyDetails now cost twice: they make a bad quiz
+  AND a bad self-explanation yardstick. Write them as the three things you would
+  actually say to a student about to try it.
 - Terms: ko/rom/en (+note). Concepts: body[], keyPoints[], quiz{recog/example/
   unsafe/scenario} (recog minimum).
 - Romanization: Revised Romanization until Grandmaster Lee sets house spellings.

@@ -103,6 +103,23 @@ function makeExercise(key) {
       ex.answer = pick(item.commonErrors);
       ex.options = mcOptions(ex.answer, shuffle(item.keyDetails.slice()));
       ex.why = 'Knowing the mistake trains your eye — you will spot it in class before it costs anyone.';
+    } else if (skill === 't-explain') {
+      // Produce, don't recognise. The student says it in their own words
+      // first, THEN compares against the key points and grades themselves —
+      // the same honest self-grading the speaking rung uses.
+      ex.type = 'self';
+      ex.explainMode = true;
+      ex.prompt = 'Explain ' + item.name + ' in your own words';
+      ex.target = item.attackOrGrab
+        ? 'Someone asks: what do you do about ' + lowerFirst(item.attackOrGrab) + ', and why does it work?'
+        : 'Someone asks: how does ' + item.name + ' work, and what makes it work?';
+      ex.targetEn = true;
+      ex.explain = {
+        purpose: item.purpose || '',
+        points: (item.keyDetails || []).slice(),
+        watch: (item.commonErrors || [])[0] || ''
+      };
+      ex.answer = (item.keyDetails || []).join(' · ');
     } else { // t-points
       ex.type = 'mc';
       ex.prompt = 'Which is a key point of ' + item.name + '?';
@@ -116,6 +133,14 @@ function makeExercise(key) {
   }
 
   return ex;
+}
+
+/* "Wrist grab from the front" -> "wrist grab from the front", so it reads as
+   part of a sentence. Leaves acronyms and Korean alone. */
+function lowerFirst(s) {
+  const t = String(s || '').trim();
+  if (!t || /^[A-Z]{2,}/.test(t)) return t;
+  return t[0].toLowerCase() + t.slice(1);
 }
 
 /* Commentary routing for hapkido skills. */
@@ -255,6 +280,31 @@ function renderExercise(step) {
       ${sess.reveal ? '' : `<div class="row" style="margin-top:12px">
         <button class="btn primary" data-act="submit" ${full ? '' : 'disabled'}>Check order</button>
         <button class="btn ghost" data-act="giveup">Show me</button></div>`}`;
+  } else if (ex.type === 'self' && ex.explainMode) {
+    // Say it before you see it. Producing the explanation is the exercise;
+    // reading a good one is not the same thing and does not stick the same way.
+    if (!sess.reveal && !sess.selfOpen) {
+      answerBlock = `<div class="q-card explain-cue" style="margin-top:12px;min-height:0">
+        <div class="faint" style="font-size:12.5px;line-height:1.55">Out loud if you can — to a parent, a training partner, or the wall.
+        Cover the shape of it, the one detail that makes it work, and the mistake to avoid.</div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn primary" data-act="selfreveal">I have explained it — compare <span class="faint" style="font-weight:400;font-size:11.5px">↵</span></button>
+      </div>`;
+    } else if (!sess.reveal) {
+      const x = ex.explain || {};
+      answerBlock = `<div class="q-card explain-key" style="margin-top:12px;min-height:0;text-align:left">
+        ${x.purpose ? `<div class="ex-purpose">${esc(x.purpose)}</div>` : ''}
+        ${x.points.length ? `<ul class="kd ex-points">${x.points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
+        ${x.watch ? `<div class="ex-watch"><b>Watch for:</b> ${esc(x.watch)}</div>` : ''}
+        <div class="faint" style="font-size:12px;margin-top:10px">Did yours cover these? Missing one is normal — grade honestly, the schedule only works on the truth.</div>
+      </div>
+      <div class="gradebar" style="margin-top:12px">
+        <button data-selfgrade="1">Missed most<b>see it again soon</b></button>
+        <button data-selfgrade="3" class="keep">Got the gist<b>with effort</b></button>
+        <button data-selfgrade="4">Covered it all<b>easy</b></button>
+      </div>`;
+    }
   } else if (ex.type === 'self') {
     if (!sess.reveal && !sess.selfOpen) {
       answerBlock = `<div class="row" style="margin-top:16px">
@@ -297,6 +347,8 @@ function renderFeedback(ex) {
       const had = chosen[i] && chosen[i].i === i;
       return `<li class="${had ? 'had' : 'missed'}">${esc(s)}</li>`;
     }).join('')}</ol>`;
+  } else if (ex.explainMode) {
+    answerLine = '';           // the key points were just shown in full, in a readable list
   } else if (r.result !== 'right' || ex.revealKo) {
     const shown = ex.revealKo || ex.answer;
     const rom = romFor(shown);

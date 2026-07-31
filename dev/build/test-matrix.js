@@ -242,7 +242,9 @@ async function answerCurrentRight() {
       const el = document.querySelector('.drill-share');
       if (!el) return false;
       const t = el.textContent.replace(/\s+/g, ' ');
-      return /Order the steps/.test(t) && /44% of this technique/.test(t) && /% learned/.test(t);
+      // Don't pin the literal share — it legitimately shifts whenever a rung
+      // is added. Pin that the drill names itself and states what it is worth.
+      return /Order the steps/.test(t) && /\d+% of this technique/.test(t) && /% learned/.test(t);
     }));
     await page.click('[data-act="next"]'); await sleep(200);
   }
@@ -278,7 +280,7 @@ async function answerCurrentRight() {
     const total = shares.reduce((a, b) => a + b, 0);
     return Math.abs(total - 1) < 1e-9 &&                       // shares are a real split
       steps === Math.max(...shares) &&                         // the biggest one
-      steps > 0.4 && steps < 0.5 &&                            // ~44%
+      steps > 0.3 &&                                           // and a substantial one
       steps > H.skillShare(it, 't-id') * 3;                    // dwarfs a quick recognition drill
   }));
   ok('weighting: finishing the sequence moves an item further than a quick drill', await page.evaluate(() => {
@@ -294,7 +296,7 @@ async function answerCurrentRight() {
     S.cards[H.ck(id, 't-steps')] = { ...held };
     const afterSteps = H.itemProgress(it);
     S.cards = saved;                                            // leave state as found
-    return zero === 0 && afterSteps > afterQuick * 3 && afterSteps > 0.4;
+    return zero === 0 && afterSteps > afterQuick * 3 && afterSteps > 0.3;
   }));
   ok('weighting: a rung only counts fully once the card actually holds', await page.evaluate(() => {
     const H = window.__HKD;
@@ -712,6 +714,107 @@ async function answerCurrentRight() {
     return true;
   }) && await (async () => { await page.reload(); await sleep(600);
     return page.evaluate(() => window.__HKD.view === 'courses' && !window.__HKD.activeCourse()); })());
+
+  /* ---- 19a. explain-it-yourself: production, not recognition ----
+     Four of the five technique rungs are multiple choice. This is the one
+     that makes the student generate the answer before seeing it. */
+  ok('explain: techniques with key points get an explain rung', await page.evaluate(() => {
+    const H = window.__HKD;
+    const withPoints = H.SEQUENCE.map(i => H.ITEMS[i])
+      .filter(i => i.kind === 'technique' && (i.keyDetails || []).length >= 2);
+    const without = H.SEQUENCE.map(i => H.ITEMS[i])
+      .filter(i => i.kind === 'technique' && (i.keyDetails || []).length < 2);
+    return withPoints.length > 0 &&
+      withPoints.every(i => H.ladderFor(i).includes('t-explain')) &&
+      without.every(i => !H.ladderFor(i).includes('t-explain'));   // auto-skips on missing data
+  }));
+  ok('explain: it is weighted as real work, second only to sequencing', await page.evaluate(() => {
+    const H = window.__HKD, it = H.ITEMS['x-ap-chagi'];
+    const shares = H.ladderFor(it).map(sk => [sk, H.skillShare(it, sk)]);
+    const explain = H.skillShare(it, 't-explain');
+    const steps = H.skillShare(it, 't-steps');
+    const rest = shares.filter(([sk]) => sk !== 't-explain' && sk !== 't-steps').map(([, v]) => v);
+    return explain > Math.max(...rest) && explain < steps;
+  }));
+  await page.evaluate(() => {
+    const H = window.__HKD, S = H.S;
+    S.settings.dailyNew = 0;
+    S.settings.activeCourseId = 'art';
+    S.introduced['x-ap-chagi'] = Date.now();
+    const held = { S: 30, D: 4, due: Date.now() + 20 * 86400000, last: Date.now(), reps: 3, lapses: 0, state: 'review' };
+    ['t-id', 't-situation', 't-steps', 't-error', 't-points'].forEach(sk => { S.cards[H.ck('x-ap-chagi', sk)] = { ...held }; });
+    S.cards[H.ck('x-ap-chagi', 't-explain')] = H.newCard();
+    H.save(); H.view = 'today'; H.render();
+  });
+  await sleep(250);
+  let atExplain = false;
+  if (await page.$('[data-act="start"]')) {
+    await page.click('[data-act="start"]'); await sleep(450);
+    for (let i = 0; i < 8; i++) {
+      const sk = await page.evaluate(() => window.__HKD.liveEx && window.__HKD.liveEx.skill);
+      if (sk === 't-explain' && !(await page.$('[data-act="learned"]'))) { atExplain = true; break; }
+      await answerCurrentRight();
+    }
+  }
+  ok('explain: the rung is reachable in a real session', atExplain);
+  if (atExplain) {
+    // The whole point: you must produce before you compare.
+    ok('explain: the key points are hidden until you have explained it', await page.evaluate(() => {
+      const H = window.__HKD;
+      const shown = document.body.innerText;
+      const pts = H.ITEMS['x-ap-chagi'].keyDetails;
+      return !!document.querySelector('[data-act="selfreveal"]') &&
+        pts.every(p => !shown.includes(p)) &&
+        !document.querySelector('.gradebar');            // cannot grade before revealing
+    }));
+    await page.click('[data-act="selfreveal"]'); await sleep(300);
+    ok('explain: revealing shows the key points and an honest self-grade', await page.evaluate(() => {
+      const H = window.__HKD;
+      const shown = document.body.innerText;
+      const pts = H.ITEMS['x-ap-chagi'].keyDetails;
+      return pts.every(p => shown.includes(p)) &&
+        document.querySelectorAll('.gradebar [data-selfgrade]').length === 3;
+    }));
+    await page.screenshot({ path: 'shots/explain-rung.png' });
+    // Grading yourself down must reschedule sooner, exactly like any miss.
+    const beforeDue = await page.evaluate(() => (window.__HKD.S.cards['x-ap-chagi|t-explain'] || {}).due || 0);
+    await page.click('[data-selfgrade="1"]'); await sleep(350);
+    ok('explain: admitting you missed it brings the card back sooner', await page.evaluate(before => {
+      const c = window.__HKD.S.cards['x-ap-chagi|t-explain'];
+      return !!c && c.state !== 'new' && c.due >= before;
+    }, beforeDue));
+    if (await page.$('[data-act="next"]')) { await page.click('[data-act="next"]'); await sleep(250); }
+  }
+  if (await page.$('[data-act="quit"]')) { await page.click('[data-act="quit"]'); await sleep(300); }
+  if (await page.evaluate(() => window.__HKD.view === 'done')) { await page.click('[data-view="today"]'); await sleep(200); }
+
+  /* ---- mental rehearsal prompt ---- */
+  await page.evaluate(() => { window.__HKD.view = 'belt'; window.__HKD.render(); });
+  await sleep(300);
+  await page.click('[data-expand="x-ap-chagi"]'); await sleep(350);
+  ok('imagery: a technique with steps carries a mental-rehearsal prompt', await page.evaluate(() => {
+    const el = document.querySelector('.imagery');
+    return !!el && /in your head/i.test(el.innerText);
+  }));
+  ok('imagery: it never claims to replace real practice', await page.evaluate(() => {
+    const t = document.querySelector('.imagery').innerText;
+    return /not a substitute/i.test(t) && !/instead of class|as good as practi/i.test(t);
+  }));
+  await page.click('[data-expand="x-ap-chagi"]'); await sleep(200);
+  ok('imagery: a restricted technique still says class-only', await page.evaluate(() => {
+    const H = window.__HKD;
+    const it = H.SEQUENCE.map(i => H.ITEMS[i]).find(i => i.kind === 'technique' && (i.stepSequence || []).length &&
+      i.safetyClass && i.safetyClass !== 'soloSafe' && i.safetyClass !== 'knowledgeOnly');
+    if (!it) return false;
+    H.S.settings.activeBeltId = it.beltId; H.view = 'belt'; H.render();
+    const row = document.querySelector(`[data-expand="${it.id}"]`);
+    if (!row) return false;
+    row.click();
+    const el = document.querySelector('.imagery');
+    return !!el && /not practising it/i.test(el.innerText) && /class-only/i.test(el.innerText);
+  }));
+  await page.evaluate(() => { const H = window.__HKD; H.S.settings.activeBeltId = ''; H.view = 'today'; H.render(); });
+  await sleep(200);
 
   /* ---- 19b. the dojang: collectibles ----
      The load-bearing rule is that ki pays for WORK, never for being right.

@@ -76,6 +76,13 @@ function ladderFor(item) {
     if ((item.stepSequence || []).length >= 3) l.push('t-steps');
     if ((item.commonErrors || []).length && (item.keyDetails || []).length >= 2) l.push('t-error');
     if ((item.keyDetails || []).length && (item.commonErrors || []).length) l.push('t-points');
+    // Last rung, and the only one that asks the student to PRODUCE rather than
+    // recognise. Four of the rungs above are multiple choice; inducing
+    // self-explanation is one of the better-evidenced things a study tool can
+    // do (Bisra et al. 2018 meta, g≈0.55 over 64 studies, and it holds for
+    // procedural knowledge, not just facts). Costs no new content — it grades
+    // against keyDetails, which every technique already has.
+    if ((item.keyDetails || []).length >= 2) l.push('t-explain');
     return l;
   }
   return ['recog'];
@@ -92,7 +99,7 @@ function ladderFor(item) {
    Everything else defaults to 1. On a full technique ladder this puts
    sequencing at ~44% — by far the largest single slice, without letting one
    drill outweigh safety recognition and the key points combined. */
-const SKILL_WEIGHT = { 't-steps': 4, 't-error': 1.5, 't-points': 1.5 };
+const SKILL_WEIGHT = { 't-steps': 4, 't-explain': 2.5, 't-error': 1.5, 't-points': 1.5 };
 const skillWeight = sk => SKILL_WEIGHT[sk] || 1;
 
 /* A rung's completion, 0..1. Half credit at most until the card actually
@@ -131,7 +138,7 @@ const SKILL_LABEL = {
   recog: 'Meaning', listen: 'By ear', recallKO: 'Korean term', speak: 'Say it in Korean',
   'c-recog': 'Recognize it', 'c-example': 'Pick the example', 'c-unsafe': 'Spot the unsafe call', 'c-scenario': 'Apply it',
   't-id': 'Name the technique', 't-situation': 'Read the situation', 't-steps': 'Order the steps',
-  't-error': 'Spot the mistake', 't-points': 'Key points'
+  't-error': 'Spot the mistake', 't-points': 'Key points', 't-explain': 'Explain it yourself'
 };
 
 /* ---------- safety classifications ---------- */

@@ -857,6 +857,19 @@ header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, va
 .fb-steps.marked li.missed { color: var(--tx); font-weight: 600; }
 .fb-steps.marked li.missed::marker { color: var(--bad); font-weight: 700; }
 
+/* ---- explain-it-yourself rung ---- */
+.explain-cue { border-style: dashed; }
+.ex-purpose { font-size: 14px; line-height: 1.55; margin-bottom: 8px; }
+.ex-points { margin: 0; padding-left: 18px; font-size: 13.5px; }
+.ex-points li { margin-bottom: 4px; }
+.ex-watch { margin-top: 9px; font-size: 13px; color: var(--tx-dim); }
+.ex-watch b { color: var(--warn); }
+
+/* ---- mental-rehearsal prompt ---- */
+.imagery { margin-top: 12px; padding: 11px 13px; border-radius: var(--radius-sm);
+  border: 1px dashed var(--line); background: var(--bg-soft); font-size: 12.5px; line-height: 1.55; color: var(--tx-dim); }
+.imagery b { color: var(--tx); }
+
 /* ---- the tab bar has to show every tab ----
    A sixth tab pushed Settings off the right edge on a normal phone, and both
    Method and Settings at 320px. The bar scrolled, but a scroll nobody can see
@@ -4324,6 +4337,13 @@ function ladderFor(item) {
     if ((item.stepSequence || []).length >= 3) l.push('t-steps');
     if ((item.commonErrors || []).length && (item.keyDetails || []).length >= 2) l.push('t-error');
     if ((item.keyDetails || []).length && (item.commonErrors || []).length) l.push('t-points');
+    // Last rung, and the only one that asks the student to PRODUCE rather than
+    // recognise. Four of the rungs above are multiple choice; inducing
+    // self-explanation is one of the better-evidenced things a study tool can
+    // do (Bisra et al. 2018 meta, g≈0.55 over 64 studies, and it holds for
+    // procedural knowledge, not just facts). Costs no new content — it grades
+    // against keyDetails, which every technique already has.
+    if ((item.keyDetails || []).length >= 2) l.push('t-explain');
     return l;
   }
   return ['recog'];
@@ -4340,7 +4360,7 @@ function ladderFor(item) {
    Everything else defaults to 1. On a full technique ladder this puts
    sequencing at ~44% — by far the largest single slice, without letting one
    drill outweigh safety recognition and the key points combined. */
-const SKILL_WEIGHT = { 't-steps': 4, 't-error': 1.5, 't-points': 1.5 };
+const SKILL_WEIGHT = { 't-steps': 4, 't-explain': 2.5, 't-error': 1.5, 't-points': 1.5 };
 const skillWeight = sk => SKILL_WEIGHT[sk] || 1;
 
 /* A rung's completion, 0..1. Half credit at most until the card actually
@@ -4379,7 +4399,7 @@ const SKILL_LABEL = {
   recog: 'Meaning', listen: 'By ear', recallKO: 'Korean term', speak: 'Say it in Korean',
   'c-recog': 'Recognize it', 'c-example': 'Pick the example', 'c-unsafe': 'Spot the unsafe call', 'c-scenario': 'Apply it',
   't-id': 'Name the technique', 't-situation': 'Read the situation', 't-steps': 'Order the steps',
-  't-error': 'Spot the mistake', 't-points': 'Key points'
+  't-error': 'Spot the mistake', 't-points': 'Key points', 't-explain': 'Explain it yourself'
 };
 
 /* ---------- safety classifications ---------- */
@@ -4882,6 +4902,23 @@ function makeExercise(key) {
       ex.answer = pick(item.commonErrors);
       ex.options = mcOptions(ex.answer, shuffle(item.keyDetails.slice()));
       ex.why = 'Knowing the mistake trains your eye — you will spot it in class before it costs anyone.';
+    } else if (skill === 't-explain') {
+      // Produce, don't recognise. The student says it in their own words
+      // first, THEN compares against the key points and grades themselves —
+      // the same honest self-grading the speaking rung uses.
+      ex.type = 'self';
+      ex.explainMode = true;
+      ex.prompt = 'Explain ' + item.name + ' in your own words';
+      ex.target = item.attackOrGrab
+        ? 'Someone asks: what do you do about ' + lowerFirst(item.attackOrGrab) + ', and why does it work?'
+        : 'Someone asks: how does ' + item.name + ' work, and what makes it work?';
+      ex.targetEn = true;
+      ex.explain = {
+        purpose: item.purpose || '',
+        points: (item.keyDetails || []).slice(),
+        watch: (item.commonErrors || [])[0] || ''
+      };
+      ex.answer = (item.keyDetails || []).join(' · ');
     } else { // t-points
       ex.type = 'mc';
       ex.prompt = 'Which is a key point of ' + item.name + '?';
@@ -4895,6 +4932,14 @@ function makeExercise(key) {
   }
 
   return ex;
+}
+
+/* "Wrist grab from the front" -> "wrist grab from the front", so it reads as
+   part of a sentence. Leaves acronyms and Korean alone. */
+function lowerFirst(s) {
+  const t = String(s || '').trim();
+  if (!t || /^[A-Z]{2,}/.test(t)) return t;
+  return t[0].toLowerCase() + t.slice(1);
 }
 
 /* Commentary routing for hapkido skills. */
@@ -5034,6 +5079,31 @@ function renderExercise(step) {
       ${sess.reveal ? '' : `<div class="row" style="margin-top:12px">
         <button class="btn primary" data-act="submit" ${full ? '' : 'disabled'}>Check order</button>
         <button class="btn ghost" data-act="giveup">Show me</button></div>`}`;
+  } else if (ex.type === 'self' && ex.explainMode) {
+    // Say it before you see it. Producing the explanation is the exercise;
+    // reading a good one is not the same thing and does not stick the same way.
+    if (!sess.reveal && !sess.selfOpen) {
+      answerBlock = `<div class="q-card explain-cue" style="margin-top:12px;min-height:0">
+        <div class="faint" style="font-size:12.5px;line-height:1.55">Out loud if you can — to a parent, a training partner, or the wall.
+        Cover the shape of it, the one detail that makes it work, and the mistake to avoid.</div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn primary" data-act="selfreveal">I have explained it — compare <span class="faint" style="font-weight:400;font-size:11.5px">↵</span></button>
+      </div>`;
+    } else if (!sess.reveal) {
+      const x = ex.explain || {};
+      answerBlock = `<div class="q-card explain-key" style="margin-top:12px;min-height:0;text-align:left">
+        ${x.purpose ? `<div class="ex-purpose">${esc(x.purpose)}</div>` : ''}
+        ${x.points.length ? `<ul class="kd ex-points">${x.points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
+        ${x.watch ? `<div class="ex-watch"><b>Watch for:</b> ${esc(x.watch)}</div>` : ''}
+        <div class="faint" style="font-size:12px;margin-top:10px">Did yours cover these? Missing one is normal — grade honestly, the schedule only works on the truth.</div>
+      </div>
+      <div class="gradebar" style="margin-top:12px">
+        <button data-selfgrade="1">Missed most<b>see it again soon</b></button>
+        <button data-selfgrade="3" class="keep">Got the gist<b>with effort</b></button>
+        <button data-selfgrade="4">Covered it all<b>easy</b></button>
+      </div>`;
+    }
   } else if (ex.type === 'self') {
     if (!sess.reveal && !sess.selfOpen) {
       answerBlock = `<div class="row" style="margin-top:16px">
@@ -5076,6 +5146,8 @@ function renderFeedback(ex) {
       const had = chosen[i] && chosen[i].i === i;
       return `<li class="${had ? 'had' : 'missed'}">${esc(s)}</li>`;
     }).join('')}</ol>`;
+  } else if (ex.explainMode) {
+    answerLine = '';           // the key points were just shown in full, in a readable list
   } else if (r.result !== 'right' || ex.revealKo) {
     const shown = ex.revealKo || ex.answer;
     const rom = romFor(shown);
@@ -5665,6 +5737,31 @@ function renderBelt() {
     ${units}${cumCard}`;
 }
 
+/* Mental rehearsal. Worth being honest about the size of this one: pooled
+   across 37 studies the effect survives publication-bias correction but is
+   small (Toth et al. 2020, r≈0.13), well below retrieval practice or
+   self-explanation. What the same analysis found is that it works best for
+   EXTERNALLY CUED movement — a response to something that happens to you —
+   which is exactly the shape of a defence against a grab. So the prompt is
+   written around the cue rather than as free-floating visualisation.
+
+   It is rehearsal of knowledge, not practice: no restricted technique is ever
+   unlocked by it, and for those the wording deliberately stays on recognising
+   the situation and your own footing rather than applying anything to anyone. */
+function imageryPrompt(it) {
+  const steps = (it.stepSequence || []).length;
+  if (!steps) return '';
+  const cue = it.attackOrGrab ? lowerFirst(it.attackOrGrab) : null;
+  const open = cue
+    ? `Picture <b>${esc(cue)}</b> happening — the moment it starts, not after.`
+    : `Picture the moment <b>${esc(it.name)}</b> begins.`;
+  const body = isRestricted(it)
+    ? 'Then walk the steps through in your head: what you would recognise, where your feet go, where your balance is. Rehearsing it mentally is not practising it — this one is still class-only.'
+    : 'Then run the steps through in your head at your own pace, feeling where your weight is at each one.';
+  return `<div class="imagery"><b>Before class, in your head:</b> ${open} ${body}
+    <span class="faint"> Mental rehearsal is a small effect, not a substitute for mat time — but it is free and it costs nothing to do on the bus.</span></div>`;
+}
+
 /* Weighted progress for one item, plus what each drill is worth toward it.
    The long exercises carry the most weight, so ordering the steps visibly
    moves a technique further than a recognition question does. Reports
@@ -5732,6 +5829,7 @@ function renderItemDetail(it) {
     ${(it.keyDetails || []).length ? `<div class="tip"><b>Key points</b><ul class="kd">${it.keyDetails.map(k => `<li>${esc(k)}</li>`).join('')}</ul></div>` : ''}
     ${(it.commonErrors || []).length ? `<div class="tip"><b>Common mistakes to spot</b><ul class="kd">${it.commonErrors.map(k => `<li>${esc(k)}</li>`).join('')}</ul></div>` : ''}
     ${(it.safetyNotes || []).length ? `<div class="tip"><b>Safety</b><ul class="kd">${it.safetyNotes.map(k => `<li>${esc(k)}</li>`).join('')}</ul></div>` : ''}
+    ${imageryPrompt(it)}
     ${isRestricted(it) ? supervisionNotice(it) : ''}
     ${(it.instructorCheckpoints || []).length ? `<div class="tip"><b>What your instructor checks</b><ul class="kd">${it.instructorCheckpoints.map(k => `<li>${esc(k)}</li>`).join('')}</ul></div>` : ''}
     ${canPractice(it)
