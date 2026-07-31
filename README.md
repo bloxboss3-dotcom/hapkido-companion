@@ -42,7 +42,7 @@ Pages serves.
 ```bash
 npm ci                       # playwright, exactly as locked
 npm run build                # rebuilds both index.html files from dev/
-npm test                     # 119 automated checks (needs chromium)
+npm test                     # 123 automated checks (needs chromium)
 npm run check                # build + "is the deployed file in sync?" + test
 npm run smoke                # optional: checks the DEPLOYED site (needs network)
 ```
@@ -54,7 +54,7 @@ npm run smoke                # optional: checks the DEPLOYED site (needs network
 | `dev/build/hapkido-part1..5.js` | the hapkido layer (courses, exercises, views, instructor mode) |
 | `dev/build/course-art.js` | the two course emblems (SVG) |
 | `dev/hapkido-companion/data/curriculum.js` | **all content** — belts, courses, domains, units, items |
-| `dev/build/test-matrix.js` | the 119-check matrix that gates every deploy |
+| `dev/build/test-matrix.js` | the 123-check matrix that gates every deploy |
 | `dev/build/smoke-deployed.js` | optional post-deploy check against the live URL |
 
 Adding or moving curriculum is a `curriculum.js` edit and nothing else. If a content change

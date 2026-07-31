@@ -15,7 +15,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   assigns items; a third course is a data entry.
 - **Engine:** Hanbit's FSRS-5 scheduler, session planner, FX/celebration system,
   storage/migration safety — preserved via the transform-override build
-  (`dev/build/`). 119/119 automated checks passing.
+  (`dev/build/`). 123/123 automated checks passing.
 - **Repo:** `npm run build` / `npm test` / `npm run check`, plus a GitHub Actions
   job that rebuilds `index.html` on every PR and fails if the deployed file has
   drifted from the source it is generated from. Dependencies are locked
@@ -80,7 +80,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 - **Deploy:** GitHub Pages serves root `index.html` (generated single-file), now
   by `git push` to `main` rather than manual upload. **Fully automatic:** the
   `auto-merge` job in `verify.yml` squash-merges a green non-draft `claude/*`
-  PR and Pages republishes itself, so nobody clicks merge. The 119-check matrix
+  PR and Pages republishes itself, so nobody clicks merge. The 123-check matrix
   is therefore the only gate before students see a change — grow it, and keep
   PRs in draft until they are actually finished. The repo had drifted — only
   a hand-uploaded `index.html` was on GitHub, one build behind (still the old
@@ -124,7 +124,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 npm ci                                           # playwright, exactly as locked
 npm run check                                    # build + in-sync check + matrix
 ```
-Confirm 119/119, commit any drift, then pick up item 1 or 3 above with Kevin.
+Confirm 123/123, commit any drift, then pick up item 1 or 3 above with Kevin.
 After a deploy lands, `npm run smoke` checks the live site (needs network).
 When authoring the next belt, remember it wants units in BOTH courses.
 Original Hanbit app must never be modified: `dev/hanbit-korean.BACKUP-2026-07-30.html`
