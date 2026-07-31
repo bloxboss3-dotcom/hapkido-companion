@@ -207,6 +207,26 @@ header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, va
 .fb-steps { margin: 8px 0 0; padding-left: 20px; font-size: 13.5px; }
 .fb-steps li { margin-bottom: 4px; }
 
+/* Marked-up sequencing result. Mirrors the .opt.right / .opt.wrong language
+   the student already knows from multiple choice, so green/red mean the same
+   thing everywhere. Colour is never load-bearing on its own: .stepmark shows
+   a tick or the position the step belongs in, and the buttons carry
+   aria-labels saying it in words. */
+.tile.step.ok  { border-color: var(--good); background: var(--good-dim); }
+.tile.step.off { border-color: var(--bad);  background: var(--bad-dim); }
+.tile.step.ok  .stepnum, .tile.step.off .stepnum { color: var(--tx-dim); }
+.tile.step[disabled] { opacity: 1; cursor: default; }
+.stepmark { margin-left: auto; flex: none; font-family: var(--mono); font-size: 12px; font-weight: 700; padding-top: 1px; white-space: nowrap; }
+.stepmark.ok  { color: var(--good); }
+.stepmark.off { color: var(--bad); }
+.step-tally { margin-top: 10px; font-size: 12.5px; color: var(--tx-dim); text-align: center; }
+
+/* In the correct order below, fade what they already had right so the eye
+   lands on the steps that actually moved. */
+.fb-steps.marked li.had { color: var(--tx-faint); }
+.fb-steps.marked li.missed { color: var(--tx); font-weight: 600; }
+.fb-steps.marked li.missed::marker { color: var(--bad); font-weight: 700; }
+
 /* ---- belt pills ---- */
 .belt-pills { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
 .belt-pills::-webkit-scrollbar { display: none; }
