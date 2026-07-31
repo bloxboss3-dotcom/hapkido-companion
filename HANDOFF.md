@@ -44,7 +44,11 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   avatar with moods; step-sequencing, spot-the-mistake, self-graded speaking
   exercises; missing/broken media fallbacks; real-audio hook (`HKD_AUDIO`).
 - **Deploy:** GitHub Pages serves root `index.html` (generated single-file), now
-  by `git push` to `main` rather than manual upload. The repo had drifted — only
+  by `git push` to `main` rather than manual upload. **Fully automatic:** the
+  `auto-merge` job in `verify.yml` squash-merges a green non-draft `claude/*`
+  PR and Pages republishes itself, so nobody clicks merge. The 85-check matrix
+  is therefore the only gate before students see a change — grow it, and keep
+  PRs in draft until they are actually finished. The repo had drifted — only
   a hand-uploaded `index.html` was on GitHub, one build behind (still the old
   tiger mascot); the whole source tree is committed now and CI guards the drift.
 
