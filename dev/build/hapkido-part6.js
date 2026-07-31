@@ -170,7 +170,7 @@ function renderDojangRoom() {
   }).join('');
   return `<div class="dj-room-wrap">
     <div class="dj-room" style="height:${roomH}px" aria-label="Your dojang, ${owned.length} characters living here">
-      <div class="dj-wall"><span class="dj-scroll ko">수련</span></div>
+      <div class="dj-wall"><span class="dj-scroll ko" title="suryeon — training, practice" aria-hidden="true">수련</span></div>
       ${floor}
     </div>
     <p class="faint dj-roomnote">${owned.length} of ${st.total} living here. They train, stretch and wander — nobody here demonstrates a technique, and none of them are a rank.</p>
@@ -223,7 +223,7 @@ function renderDojangReveal() {
       <div class="dj-art">${djCharSvg(c)}</div>
       <div class="dj-name">${esc(c.name)}</div>
       ${djRarityTag(res.rarity, true)}
-      ${res.dup ? `<div class="dj-dupe">Already had them — +${res.refund} 기 back</div>`
+      ${res.dup ? `<div class="dj-dupe">Already had them — +${res.refund} 기${S.settings.showRomanization ? ' (ki)' : ''} back</div>`
               : '<div class="dj-newtag">New!</div>'}
     </div>`;
   }).join('');
@@ -240,20 +240,30 @@ function renderDojang() {
   const canOne = bal >= PACK_COST, canFive = bal >= PACK_COST * 5;
   const st = djCollectionStats();
   const tab = djTab === 'collection' ? 'collection' : 'room';
+  // Romanization follows Hangul everywhere in this app — Kevin cannot read
+  // Hangul yet, and a currency he cannot read is a currency he cannot reason
+  // about. Honour the same setting the rest of the UI uses.
+  const rom = S.settings.showRomanization;
+  const ki = rom ? '기 <i class="dj-rom">ki</i>' : '기';
+  // A short session is roughly a dozen reviews, and turning up at all pays the
+  // day bonus — count both, or the estimate reads far bleaker than the truth.
+  const perSession = KI_PER_REVIEW * 12 + KI_DAY_BONUS;
+  const need = PACK_COST - bal;
+  const sessions = Math.max(1, Math.ceil(need / perSession));
   return `
   <div class="card dj-head">
     <div class="row" style="align-items:center;gap:12px">
       <div style="flex:1">
         <h2 style="margin:0">Dojang</h2>
-        <p class="sub" style="margin:4px 0 0">Earned by training — never by being right. Wrong answers pay exactly the same.</p>
+        <p class="sub" style="margin:4px 0 0">Training earns <b>기${rom ? ' (ki)' : ''}</b> — for the work, never for being right. Wrong answers pay exactly the same.</p>
       </div>
-      <div class="dj-bal" title="Your ki"><span class="ko">기</span><b>${bal}</b></div>
+      <div class="dj-bal" aria-label="${bal} ki"><span class="ko" aria-hidden="true">${ki}</span><b>${bal}</b></div>
     </div>
     <div class="row" style="margin-top:12px;flex-wrap:wrap">
-      <button class="btn primary" data-dj="open1" ${canOne ? '' : 'disabled'}>Open a pack · ${PACK_COST} 기</button>
-      <button class="btn" data-dj="open5" ${canFive ? '' : 'disabled'}>Open five · ${PACK_COST * 5} 기</button>
+      <button class="btn primary" data-dj="open1" ${canOne ? '' : 'disabled'} aria-label="Open a pack for ${PACK_COST} ki">Open a pack · ${PACK_COST} 기</button>
+      <button class="btn" data-dj="open5" ${canFive ? '' : 'disabled'} aria-label="Open five packs for ${PACK_COST * 5} ki">Open five · ${PACK_COST * 5} 기</button>
     </div>
-    ${!canOne ? `<p class="faint" style="margin:9px 0 0;font-size:12.5px">${PACK_COST - bal} 기 to go — about ${Math.max(1, Math.ceil((PACK_COST - bal) / (KI_PER_REVIEW * 12)))} more short session${Math.ceil((PACK_COST - bal) / (KI_PER_REVIEW * 12)) === 1 ? '' : 's'}.</p>` : ''}
+    ${!canOne ? `<p class="faint" style="margin:9px 0 0;font-size:12.5px">${need} 기 to go — about ${sessions} more short session${sessions === 1 ? '' : 's'}.</p>` : ''}
     ${today.capped ? '<p class="faint" style="margin:9px 0 0;font-size:12.5px">You have earned today\'s full 기 — more reviews still count for your scheduling, they just stop paying. Rest is part of it.</p>' : ''}
     <div class="dj-pity faint">Guaranteed a Rare or better within ${PITY_RARE - djState().pityRare} pack${PITY_RARE - djState().pityRare === 1 ? '' : 's'} · Legendary or better within ${PITY_LEG - djState().pityLeg}.</div>
   </div>

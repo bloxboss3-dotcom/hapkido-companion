@@ -227,6 +227,31 @@ header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, va
 .fb-steps.marked li.missed { color: var(--tx); font-weight: 600; }
 .fb-steps.marked li.missed::marker { color: var(--bad); font-weight: 700; }
 
+/* ---- the tab bar has to show every tab ----
+   A sixth tab pushed Settings off the right edge on a normal phone, and both
+   Method and Settings at 320px. The bar scrolled, but a scroll nobody can see
+   is a tab nobody finds. Wrapping costs one short second row on small screens
+   and hides nothing, which is the better trade for a nav bar. */
+nav.tabs { flex-wrap: wrap; overflow-x: visible; row-gap: 5px; }
+nav.tabs button { padding: 7px 11px; }
+@media (max-width: 359px) { nav.tabs button { padding: 6px 9px; font-size: 13px; } }
+
+/* ---- narrow-screen repairs ----
+   A data-filled table pushed the whole page sideways at 320px. Let the table
+   scroll inside its own card instead of dragging the layout with it. */
+.card table.list { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+.card table.list td, .card table.list th { white-space: nowrap; }
+.card table.list td.k { white-space: normal; }
+
+@media (max-width: 359px) {
+  /* At 320px the brand wrapped onto four lines and ate a fifth of the screen
+     before any content appeared. The working-title note is not worth that. */
+  .brand small { display: none; }
+  .brand { font-size: 14.5px; gap: 7px; }
+  .brand .mark { --csz: 22px; }
+  nav.tabs button { padding: 7px 10px; }
+}
+
 /* ---- weighted drill progress ----
    Rungs are not equal work, so they are not equal slices. The ring is the
    item's weighted total; each row shows what that drill is worth and how far
@@ -257,7 +282,8 @@ header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, va
    Rarity colour is decoration only — every tier is spelled out in words next
    to it, so nothing here depends on telling colours apart. */
 .dj-head .dj-bal { display: flex; align-items: center; gap: 6px; background: var(--bg-raise); border: 1px solid var(--line); border-radius: 999px; padding: 6px 13px; font-size: 15px; flex: none; }
-.dj-head .dj-bal .ko { color: var(--accent); font-weight: 700; }
+.dj-head .dj-bal .ko { color: var(--accent); font-weight: 700; display: inline-flex; align-items: baseline; gap: 4px; }
+.dj-rom { font-style: normal; font-family: var(--mono); font-size: 10px; font-weight: 400; color: var(--tx-faint); }
 .dj-pity { font-size: 12px; margin-top: 10px; }
 .dj-tabs { display: flex; gap: 6px; margin: 14px 0 12px; overflow-x: auto; scrollbar-width: none; }
 .dj-tabs::-webkit-scrollbar { display: none; }
@@ -274,7 +300,13 @@ header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, va
 .dj-group-h { display: flex; justify-content: space-between; align-items: center; margin: 0 2px 8px; font-size: 12px; color: var(--tx-faint); }
 .dj-card { position: relative; background: var(--bg-card); border: 1px solid var(--line-soft); border-top: 2px solid var(--rc, var(--line)); border-radius: var(--radius-sm); padding: 8px 8px 9px; text-align: center; }
 .dj-card.locked { opacity: .5; border-top-color: var(--line); }
-.dj-art { height: 76px; display: flex; align-items: flex-end; justify-content: center; }
+/* A slice of the room behind each portrait. Without it, white doboks washed
+   out on the light theme's near-white cards — the same contrast trap the room
+   itself had. Fixed tones, so it holds in both themes. */
+.dj-art { height: 76px; display: flex; align-items: flex-end; justify-content: center; border-radius: 7px;
+  background: linear-gradient(180deg, #434a5c 0%, #434a5c 38%, #87704f 38%, #87704f 100%); }
+.dj-card.locked .dj-art { background: linear-gradient(180deg, #434a5c 0%, #434a5c 38%, #87704f 38%, #87704f 100%); opacity: .5; }
+.dj-reveal-card .dj-art { margin-bottom: 4px; }
 .dj-unknown { font-size: 30px; color: var(--tx-faint); font-weight: 700; align-self: center; }
 .dj-name { font-size: 12px; font-weight: 600; margin-top: 5px; }
 .dj-count { position: absolute; top: 6px; right: 7px; font-family: var(--mono); font-size: 10.5px; color: var(--tx-dim); background: var(--bg-raise); border-radius: 999px; padding: 1px 6px; }
@@ -286,15 +318,25 @@ header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, va
 .dj-dupe { font-size: 10.5px; color: var(--tx-faint); margin-top: 4px; }
 
 .dj-room-wrap { margin-top: 2px; }
+/* The room keeps its OWN mid-tone palette rather than following the theme.
+   Uniforms run from near-white to near-black, so a theme-coloured room made
+   one family vanish every time: white doboks disappeared on the light theme,
+   dark ones sank into the dark theme. A wood floor sits between the two, so
+   every character reads in both — and it looks like a dojang. */
 .dj-room { position: relative; border: 1px solid var(--line-soft); border-radius: var(--radius); overflow: hidden;
-  background: linear-gradient(180deg, var(--bg-soft) 0px, var(--bg-soft) 76px, var(--bg-raise) 76px, var(--bg-raise) 100%); }
-.dj-wall { position: absolute; left: 0; right: 0; top: 0; height: 76px; display: flex; align-items: center; justify-content: center; }
-.dj-scroll { font-size: 30px; color: var(--tx-faint); opacity: .26; letter-spacing: 6px; }
+  background-color: #87704f;
+  /* Boards run across, receding — vertical lines lined up with the figures and
+     read as cubicles. */
+  background-image: repeating-linear-gradient(180deg, rgba(0,0,0,.07) 0 1px, transparent 1px 38px); }
+.dj-wall { position: absolute; left: 0; right: 0; top: 0; height: 76px; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(180deg, #3d4354, #474e62); box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+.dj-scroll { font-size: 30px; color: #d8c39a; opacity: .5; letter-spacing: 6px; }
 /* Centred on its slot, so the small drift can never reach a neighbour. */
 .dj-liv { position: absolute; width: 62px; margin-left: -31px; transform: scale(var(--s)); transform-origin: bottom center; }
 .dj-liv .dj-svg { height: 66px; }
-.dj-liv-name { display: block; text-align: center; font-size: 9px; color: var(--tx-faint); margin-top: -1px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Fixed colour, like the room: theme text colours would vanish on the wood. */
+.dj-liv-name { display: block; text-align: center; font-size: 9px; color: #fdf6e9; margin-top: -1px;
+  text-shadow: 0 1px 2px rgba(0,0,0,.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dj-roomnote { font-size: 12px; margin-top: 9px; }
 .dj-empty { text-align: center; }
 

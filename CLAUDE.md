@@ -91,7 +91,15 @@ Working title. Read `HANDOFF.md` for current state and roadmap before doing anyt
   feedback. `knowledgeMastered()` and the five belt measures are deliberately
   untouched — mastery still means every rung holds, and a rank is still not
   half a rank. Weight new long drills; never let weighting unlock anything.
+- **Two traps this UI has already fallen into — check new UI against both.**
+  (a) *Theme-coloured backgrounds behind fixed-colour art.* Uniforms run from
+  near-white to near-black, so a themed backdrop made one family vanish in
+  every theme. The dojang room and portraits use FIXED mid-tones for that
+  reason. (b) *Korean without romanization.* Kevin cannot read Hangul yet —
+  any new Korean-displaying UI must follow `showRomanization` like the rest.
 - `window.__HKD` — debug/test handle used by the test harness. Keep it working.
+  Note `Object.assign` **invokes** getters and copies values, so accessors must
+  go on via `Object.defineProperty` or they silently freeze.
 - `window.HKD_AUDIO` — maps exact Korean text → audio URL/data URI; `speak()`
   prefers it over TTS. This is where Grandmaster Lee's recordings plug in
   (planned: `data/audio.js`).
@@ -122,7 +130,7 @@ declares them; `domain.track` assigns items. Adding a third = one data entry.
 ```bash
 npm ci                                # once: playwright, exactly as locked
 npm run build                         # rebuilds both index.html files
-npm test                              # 119 checks; needs playwright + chromium
+npm test                              # 123 checks; needs playwright + chromium
 npm run check                         # build + in-sync check + test (what CI runs)
 npm run smoke                         # optional: tests the DEPLOYED site (needs network)
 ```
@@ -136,7 +144,7 @@ deploy-only failures (stale deploy, 404 or wrong MIME on an asset) that a
 `file://` matrix structurally cannot see. It is not in CI and needs real
 network — a sandbox that blocks the browser's egress can't run it.
 
-The matrix must pass 119/119 (grow it with every feature — count goes up, never
+The matrix must pass 123/123 (grow it with every feature — count goes up, never
 down). It covers: boot, course picker + switching + persistence, per-course paths,
 per-course daily budgets, course-scoped and both-course sessions, course-scoped vs
 whole-belt readiness, FSRS values against hand-computed expectations, wrong-answer

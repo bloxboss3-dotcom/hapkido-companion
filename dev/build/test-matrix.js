@@ -568,6 +568,22 @@ async function answerCurrentRight() {
   await page.click('[data-act="theme"]'); await sleep(150);
   await page.setViewportSize({ width: 320, height: 640 }); await sleep(250);
   ok('320px: renders without horizontal overflow', await page.evaluate(() => document.documentElement.scrollWidth <= 325));
+  // A tab scrolled off the edge of a bar with no scroll affordance is a tab
+  // nobody finds. Adding the sixth one silently pushed Settings off a normal
+  // phone — this pins every tab as reachable at both widths.
+  for (const w of [320, 390]) {
+    await page.setViewportSize({ width: w, height: 700 }); await sleep(200);
+    ok(`${w}px: every nav tab is visible, none clipped off the edge`, await page.evaluate(() => {
+      const nav = document.querySelector('nav.tabs');
+      const nr = nav.getBoundingClientRect();
+      const btns = [...nav.querySelectorAll('button')];
+      return btns.length >= 6 && btns.every(b => {
+        const r = b.getBoundingClientRect();
+        return r.right <= nr.right + 1 && r.left >= nr.left - 1;
+      });
+    }));
+  }
+  await page.setViewportSize({ width: 320, height: 640 }); await sleep(200);
   await page.screenshot({ path: 'shots/narrow.png' });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -841,6 +857,22 @@ async function answerCurrentRight() {
     const words = ['Common', 'Rare', 'Legendary', 'Mythical'];
     return tags.length > 0 && tags.every(t => words.some(w => t.textContent.includes(w)));
   }));
+  // Kevin cannot read Hangul yet, and the app's rule is that romanization
+  // follows Hangul everywhere the setting is on. A currency you cannot read is
+  // a currency you cannot reason about.
+  ok('dojang: the ki currency carries romanization, like all Korean in the app', await page.evaluate(() => {
+    const H = window.__HKD;
+    H.S.settings.showRomanization = true; H.render();
+    const on = document.body.innerText;
+    const romShown = /\bki\b/i.test(on) && /기/.test(on);
+    H.S.settings.showRomanization = false; H.render();
+    const off = document.body.innerText;
+    const hangulStill = /기/.test(off);
+    H.S.settings.showRomanization = true; H.render();
+    return romShown && hangulStill;
+  }));
+  ok('dojang: the pack buttons say what they cost in words too', await page.evaluate(() =>
+    [...document.querySelectorAll('[data-dj^="open"]')].every(b => /\d+ ki/i.test(b.getAttribute('aria-label') || ''))));
   ok('dojang: says plainly these are not rank and not curriculum', await page.evaluate(() => {
     const t = document.body.textContent;
     return /not rank/i.test(t) && /only Grandmaster Lee awards belts/i.test(t) && /not curriculum/i.test(t);
