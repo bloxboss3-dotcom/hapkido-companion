@@ -549,9 +549,21 @@ async function answerCurrentRight() {
   ok('deployed single file: boots with the curriculum inlined, no errors', await dp.evaluate(() =>
     !!window.CURRICULUM && window.CURRICULUM.items.length > 0 && !!window.__HKD) && dErrs.length === 0,
     JSON.stringify(dErrs).slice(0, 200));
-  ok('deployed single file: makes no network requests of any kind', await dp.evaluate(() =>
-    performance.getEntriesByType('resource').filter(r => !r.name.startsWith('data:')).length === 0),
-    JSON.stringify(await dp.evaluate(() => performance.getEntriesByType('resource').map(r => r.name).slice(0, 5))));
+  // The app is installable, so Chrome fetches the manifest on load. That is
+  // the ONLY thing it may ever request, and it must be same-origin: the
+  // property that matters is that nothing is fetched from anyone else, ever.
+  ok('deployed single file: requests nothing except its own manifest', await dp.evaluate(() => {
+    const origin = location.href.replace(/[^/]*$/, '');
+    return performance.getEntriesByType('resource')
+      .filter(r => !r.name.startsWith('data:'))
+      .every(r => r.name.startsWith(origin) && /manifest\.webmanifest$/.test(r.name));
+  }), JSON.stringify(await dp.evaluate(() => performance.getEntriesByType('resource').map(r => r.name).slice(0, 5))));
+  ok('deployed single file: contacts no third-party origin', await dp.evaluate(() => {
+    const origin = location.origin;
+    return performance.getEntriesByType('resource')
+      .filter(r => !r.name.startsWith('data:'))
+      .every(r => r.name.startsWith(origin) || r.name.startsWith('file://'));
+  }));
   ok('deployed single file: course picker offers both courses', await dp.evaluate(() =>
     document.querySelectorAll('.ccard').length === 2 && document.querySelectorAll('.cart svg').length === 2));
   // iOS Add-to-Home-Screen needs a real raster beside the file that links it.
@@ -570,6 +582,37 @@ async function answerCurrentRight() {
     return b.slice(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) &&
            b.readUInt32BE(16) === 180 && b.readUInt32BE(20) === 180;
   })(), 'link href, file presence, or PNG dimensions wrong');
+  // Installability: the app must open in its own window, not a browser tab.
+  // Checks the declarations a browser actually reads before offering Install,
+  // and that every icon the manifest promises is a real PNG of the stated size.
+  ok('deployed single file: declares itself installable (manifest + iOS meta)', await (async () => {
+    const decl = await dp.evaluate(() => ({
+      manifest: (document.querySelector('link[rel="manifest"]') || {}).getAttribute
+        ? document.querySelector('link[rel="manifest"]').getAttribute('href') : null,
+      appleCapable: (document.querySelector('meta[name="apple-mobile-web-app-capable"]') || {}).content,
+      statusBar: (document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]') || {}).content,
+      title: (document.querySelector('meta[name="apple-mobile-web-app-title"]') || {}).content,
+    }));
+    if (decl.manifest !== 'manifest.webmanifest' || decl.appleCapable !== 'yes' || !decl.title) return false;
+    // black-translucent would slide content under the iOS status bar, and
+    // nothing here uses safe-area insets — so it must stay opaque.
+    if (decl.statusBar !== 'black') return false;
+    const mf = path.resolve('..', 'manifest.webmanifest');
+    if (!fs.existsSync(mf)) return false;
+    const m = JSON.parse(fs.readFileSync(mf, 'utf8'));
+    if (m.display !== 'standalone' || !m.name || !m.short_name || !m.start_url) return false;
+    // Chrome requires a 192 and a 512; Android wants a maskable one.
+    const sizes = m.icons.map(i => i.sizes);
+    if (!sizes.includes('192x192') || !sizes.includes('512x512')) return false;
+    if (!m.icons.some(i => (i.purpose || '').includes('maskable'))) return false;
+    return m.icons.every(i => {
+      const p = path.resolve('..', i.src);
+      if (!fs.existsSync(p)) return false;
+      const b = fs.readFileSync(p);
+      const [w, h] = i.sizes.split('x').map(Number);
+      return b.readUInt32BE(16) === w && b.readUInt32BE(20) === h;
+    });
+  })(), 'manifest, iOS meta tags, or a declared icon is missing/wrong');
   await dp.click('[data-course="art"]'); await sleep(450);
   await dp.click('[data-act="start"]'); await sleep(550);
   ok('deployed single file: a course session runs', await dp.evaluate(() =>

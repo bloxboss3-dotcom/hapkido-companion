@@ -60,6 +60,12 @@ Working title. Read `HANDOFF.md` for current state and roadmap before doing anyt
   domains (with `track: knowledge|technique`, the ONLY thing deciding which course
   an item belongs to), items (term/concept/technique). Ladder rungs auto-skip when
   an item lacks the data (no stepSequence → no sequencing rung).
+- `dev/hapkido-companion/manifest.webmanifest` + `apple-touch-icon.png` /
+  `icon-192` / `icon-512` / `icon-maskable-512` — what makes it installable
+  (own window, no browser chrome). `transform.py` copies them beside BOTH
+  builds and asserts each exists, so they must live next to the `index.html`
+  that references them. The manifest is the ONLY thing the page fetches at
+  load, and it is same-origin — keep it that way; nothing external, ever.
 - `window.__HKD` — debug/test handle used by the test harness. Keep it working.
 - `window.HKD_AUDIO` — maps exact Korean text → audio URL/data URI; `speak()`
   prefers it over TTS. This is where Grandmaster Lee's recordings plug in
@@ -91,7 +97,7 @@ declares them; `domain.track` assigns items. Adding a third = one data entry.
 ```bash
 npm ci                                # once: playwright, exactly as locked
 npm run build                         # rebuilds both index.html files
-npm test                              # 85 checks; needs playwright + chromium
+npm test                              # 87 checks; needs playwright + chromium
 npm run check                         # build + in-sync check + test (what CI runs)
 npm run smoke                         # optional: tests the DEPLOYED site (needs network)
 ```
@@ -105,7 +111,7 @@ deploy-only failures (stale deploy, 404 or wrong MIME on an asset) that a
 `file://` matrix structurally cannot see. It is not in CI and needs real
 network — a sandbox that blocks the browser's egress can't run it.
 
-The matrix must pass 85/85 (grow it with every feature — count goes up, never
+The matrix must pass 87/87 (grow it with every feature — count goes up, never
 down). It covers: boot, course picker + switching + persistence, per-course paths,
 per-course daily budgets, course-scoped and both-course sessions, course-scoped vs
 whole-belt readiness, FSRS values against hand-computed expectations, wrong-answer

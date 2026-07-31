@@ -6,13 +6,20 @@
 <meta name="theme-color" content="#0f1115">
 <meta name="description" content="Hapkido Companion (working title) — an ad-free training companion for students of the school. Terminology, principles, and technique knowledge on FSRS spaced repetition; physical skill is verified only by instructors. Stores nothing anywhere but your own browser.">
 <title>Hapkido Companion · LMAA (working title)</title>
-<!-- No external requests of any kind: Korean text uses the system font stack
-     so the file works with the network switched off and nothing is ever
-     fetched, logged or phoned home. The single same-origin file referenced
-     below is apple-touch-icon.png, which only iOS requests when a student
-     taps Add to Home Screen — never during normal use. -->
+<!-- No external requests of any kind: Korean text uses the system font stack,
+     so the app runs with the network switched off and nothing is ever logged
+     or phoned home. The only files referenced are same-origin and local to
+     this folder: the manifest and the icons that let it install to a home
+     screen. Chrome fetches the manifest once on load; iOS fetches an icon
+     only when a student adds the app. Nothing else is ever requested, and
+     none of it is needed for the app to work. -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%236ea8fe'/%3E%3Ctext x='50' y='72' font-size='64' font-family='sans-serif' font-weight='700' text-anchor='middle' fill='%230b1220'%3E%ED%95%A9%3C/text%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Hapkido">
 <style>
 :root {
   --bg: #0f1115;
