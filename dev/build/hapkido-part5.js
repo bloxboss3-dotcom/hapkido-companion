@@ -440,5 +440,6 @@ window.__HKD = {
   get fxGlyphs() { return FX_JAMO.slice(); },
   save, render, plan, planTotal, stats, beltStats, cumulativeStats, activeBelt, ladderFor, knowledgeMastered,
   itemStatus, eligibleSequence, newCard, ck, ITEMS, SEQUENCE, BELTS, schedule, retrievability, itemTrack,
-  COURSES, COURSE_BY_ID, activeCourse, switchCourse, courseOf, courseIdOf, courseUnits, newToday, startSession
+  COURSES, COURSE_BY_ID, activeCourse, switchCourse, courseOf, courseIdOf, courseUnits, newToday, startSession,
+  sequenceFastMs
 };

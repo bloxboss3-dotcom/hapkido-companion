@@ -97,7 +97,7 @@ declares them; `domain.track` assigns items. Adding a third = one data entry.
 ```bash
 npm ci                                # once: playwright, exactly as locked
 npm run build                         # rebuilds both index.html files
-npm test                              # 87 checks; needs playwright + chromium
+npm test                              # 96 checks; needs playwright + chromium
 npm run check                         # build + in-sync check + test (what CI runs)
 npm run smoke                         # optional: tests the DEPLOYED site (needs network)
 ```
@@ -111,7 +111,7 @@ deploy-only failures (stale deploy, 404 or wrong MIME on an asset) that a
 `file://` matrix structurally cannot see. It is not in CI and needs real
 network — a sandbox that blocks the browser's egress can't run it.
 
-The matrix must pass 87/87 (grow it with every feature — count goes up, never
+The matrix must pass 96/96 (grow it with every feature — count goes up, never
 down). It covers: boot, course picker + switching + persistence, per-course paths,
 per-course daily budgets, course-scoped and both-course sessions, course-scoped vs
 whole-belt readiness, FSRS values against hand-computed expectations, wrong-answer

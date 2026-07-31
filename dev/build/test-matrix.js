@@ -178,8 +178,87 @@ async function answerCurrentRight() {
     await page.click('[data-act="submit"]'); await sleep(250);
     ok('sequencing: correct order accepted', await page.evaluate(() =>
       document.querySelector('.fb') && document.querySelector('.fb').classList.contains('right')));
+    // A correct order marks every step, so "what did I get right" needs no
+    // reading at all.
+    ok('sequencing: a correct order marks every step right', await page.evaluate(() =>
+      document.querySelectorAll('.tile.step.ok').length === window.__HKD.liveEx.tiles.length &&
+      document.querySelectorAll('.tile.step.off').length === 0));
     await page.click('[data-act="next"]'); await sleep(200);
   }
+
+  /* ---- sequencing: a WRONG order is marked per step ----
+     The whole point: see which steps were right and where the misplaced ones
+     belong, without diffing against the correct list underneath. */
+  await page.evaluate(() => {
+    const H = window.__HKD, S = H.S;
+    S.settings.dailyNew = 0;
+    S.introduced['x-ap-chagi'] = Date.now();
+    const held = { S: 30, D: 4, due: Date.now() + 20 * 86400000, last: Date.now(), reps: 3, lapses: 0, state: 'review' };
+    S.cards['x-ap-chagi|t-id'] = { ...held };
+    S.cards['x-ap-chagi|t-situation'] = { ...held };
+    S.cards['x-ap-chagi|t-steps'] = H.newCard();
+    H.save(); H.view = 'today'; H.render();
+  });
+  await page.click('[data-act="start"]'); await sleep(400);
+  let seqFound = false;
+  for (let i = 0; i < 8; i++) {
+    const t = await page.evaluate(() => window.__HKD.liveEx && window.__HKD.liveEx.type);
+    const teach = await page.$('[data-act="learned"]');
+    if (t === 'build' && !teach) { seqFound = true; break; }
+    await answerCurrentRight();
+  }
+  if (seqFound) {
+    const n = await page.evaluate(() => window.__HKD.liveEx.tiles.length);
+    // Swap the 2nd and 3rd steps; leave the rest correct.
+    const order = [...Array(n).keys()];
+    if (n >= 3) { const t = order[1]; order[1] = order[2]; order[2] = t; }
+    for (const i of order) { await page.click(`[data-pickt="${i}"]`); await sleep(50); }
+    await page.click('[data-act="submit"]'); await sleep(300);
+    await page.screenshot({ path: 'shots/sequencing-marked.png' });
+    ok('sequencing: misplaced steps are marked, correct ones are not', await page.evaluate(() =>
+      document.querySelectorAll('.tile.step.off').length === 2 &&
+      document.querySelectorAll('.tile.step.ok').length === window.__HKD.liveEx.tiles.length - 2));
+    ok('sequencing: a misplaced step shows the position it belongs in', await page.evaluate(() => {
+      const offs = [...document.querySelectorAll('.tile.step.off')];
+      // Swapped pair: the one sitting at position 2 belongs at 3, and vice versa.
+      return offs.length === 2 &&
+        offs.every(b => /→\s*\d/.test(b.querySelector('.stepmark.off').textContent)) &&
+        offs.every(b => /misplaced/.test(b.getAttribute('aria-label') || ''));
+    }));
+    ok('sequencing: correctness is not conveyed by colour alone', await page.evaluate(() =>
+      [...document.querySelectorAll('.tile.step.ok')].every(b =>
+        b.querySelector('.stepmark.ok') && /correct/.test(b.getAttribute('aria-label') || ''))));
+    ok('sequencing: shows how many landed in the right place', await page.evaluate(() => {
+      const el = document.querySelector('.step-tally');
+      return el && /\b3 of 5 in the right place\b/.test(el.textContent);
+    }));
+    ok('sequencing: the answer list fades what was already right', await page.evaluate(() =>
+      document.querySelectorAll('.fb-steps.marked li.missed').length === 2 &&
+      document.querySelectorAll('.fb-steps.marked li.had').length === 3));
+    ok('sequencing: the tile pool is dropped once checked, not left as a third list',
+      await page.evaluate(() => !document.querySelector('.build-pool')));
+    await page.click('[data-act="next"]'); await sleep(200);
+  }
+  ok('sequencing: wrong-order marking exercised', seqFound);
+  if (await page.$('[data-act="quit"]')) { await page.click('[data-act="quit"]'); await sleep(300); }
+  if (await page.evaluate(() => window.__HKD.view === 'done')) { await page.click('[data-view="today"]'); await sleep(200); }
+
+  /* ---- sequencing: the "easy" allowance scales with how much there is to read ----
+     A flat 14s was inherited from short multiple choice, so the longest
+     exercise in the app could effectively never earn the longer interval. */
+  ok('sequencing: speed allowance scales with the reading load', await page.evaluate(() => {
+    const H = window.__HKD;
+    const short = H.sequenceFastMs({ tiles: [{ w: 'a b' }, { w: 'c d' }, { w: 'e f' }] });
+    const long = H.sequenceFastMs({ tiles: [
+      { w: 'Lift the kicking knee toward your chest, foot under the knee' },
+      { w: 'Pull the toes back so the ball of the foot leads' },
+      { w: 'Extend the leg forward in a straight snap' },
+      { w: 'Re-chamber the knee immediately after the kick' },
+      { w: 'Set the foot down in a balanced stance' }] });
+    // The real five-step kick must get materially more room than the old flat
+    // 14s, and more than a short three-step item — but still bounded.
+    return long > 14000 && long > short * 1.5 && long < 40000 && short < 14000;
+  }));
   await page.evaluate(() => { if (window.__HKD.sess) { } });
   if (await page.$('[data-act="quit"]')) { await page.click('[data-act="quit"]'); await sleep(300); }
   if (await page.evaluate(() => window.__HKD.view === 'done')) { await page.click('[data-view="today"]'); await sleep(200); }

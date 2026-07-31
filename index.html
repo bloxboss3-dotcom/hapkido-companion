@@ -837,6 +837,26 @@ header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, va
 .fb-steps { margin: 8px 0 0; padding-left: 20px; font-size: 13.5px; }
 .fb-steps li { margin-bottom: 4px; }
 
+/* Marked-up sequencing result. Mirrors the .opt.right / .opt.wrong language
+   the student already knows from multiple choice, so green/red mean the same
+   thing everywhere. Colour is never load-bearing on its own: .stepmark shows
+   a tick or the position the step belongs in, and the buttons carry
+   aria-labels saying it in words. */
+.tile.step.ok  { border-color: var(--good); background: var(--good-dim); }
+.tile.step.off { border-color: var(--bad);  background: var(--bad-dim); }
+.tile.step.ok  .stepnum, .tile.step.off .stepnum { color: var(--tx-dim); }
+.tile.step[disabled] { opacity: 1; cursor: default; }
+.stepmark { margin-left: auto; flex: none; font-family: var(--mono); font-size: 12px; font-weight: 700; padding-top: 1px; white-space: nowrap; }
+.stepmark.ok  { color: var(--good); }
+.stepmark.off { color: var(--bad); }
+.step-tally { margin-top: 10px; font-size: 12.5px; color: var(--tx-dim); text-align: center; }
+
+/* In the correct order below, fade what they already had right so the eye
+   lands on the steps that actually moved. */
+.fb-steps.marked li.had { color: var(--tx-faint); }
+.fb-steps.marked li.missed { color: var(--tx); font-weight: 600; }
+.fb-steps.marked li.missed::marker { color: var(--bad); font-weight: 700; }
+
 /* ---- belt pills ---- */
 .belt-pills { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
 .belt-pills::-webkit-scrollbar { display: none; }
@@ -5807,11 +5827,28 @@ function renderExercise(step) {
   } else if (ex.type === 'build') {
     const chosen = (sess.build || []);
     const full = chosen.length === ex.tiles.length;
-    answerBlock = `<div class="build-target steps" id="buildtarget">${chosen.map((t, i) =>
-      `<button class="tile step" data-unpick="${i}"><span class="stepnum">${i + 1}.</span><span>${esc(t.w)}</span></button>`).join('')
+    // Once checked, mark the student's OWN answer: each step is either in the
+    // right place or shows the place it belongs. Ordering five steps is a lot
+    // of reading, and diffing it against the correct list underneath is more
+    // reading again — this puts the whole result where they already are.
+    // Colour is never the only signal: the tick and the target number say the
+    // same thing, and each button carries an aria-label for screen readers.
+    const graded = !!sess.reveal && ex.stepMode && full;
+    answerBlock = `<div class="build-target steps" id="buildtarget">${chosen.map((t, i) => {
+      const ok = t.i === i;
+      const mark = !graded ? ''
+        : ok ? '<span class="stepmark ok" aria-hidden="true">✓</span>'
+             : `<span class="stepmark off" aria-hidden="true">→&nbsp;${t.i + 1}</span>`;
+      const label = !graded ? ''
+        : ok ? ` aria-label="Position ${i + 1}, correct: ${esc(t.w)}"`
+             : ` aria-label="Position ${i + 1}, misplaced — belongs at position ${t.i + 1}: ${esc(t.w)}"`;
+      return `<button class="tile step${graded ? (ok ? ' ok' : ' off') : ''}" data-unpick="${i}"${
+        sess.reveal ? ' disabled' : ''}${label}><span class="stepnum">${i + 1}.</span><span>${esc(t.w)}</span>${mark}</button>`;
+    }).join('')
       || '<span class="faint" style="font-size:13px;align-self:center">tap the steps in order, first to last</span>'}</div>
-      <div class="build-pool steps">${ex.tiles.map(t =>
-      `<button class="tile step ${chosen.some(c => c.i === t.i) ? 'used' : ''}" data-pickt="${t.i}">${esc(t.w)}</button>`).join('')}</div>
+      ${sess.reveal ? '' : `<div class="build-pool steps">${ex.tiles.map(t =>
+      `<button class="tile step ${chosen.some(c => c.i === t.i) ? 'used' : ''}" data-pickt="${t.i}">${esc(t.w)}</button>`).join('')}</div>`}
+      ${graded ? `<div class="step-tally">${chosen.filter((t, i) => t.i === i).length} of ${chosen.length} in the right place</div>` : ''}
       ${sess.reveal ? '' : `<div class="row" style="margin-top:12px">
         <button class="btn primary" data-act="submit" ${full ? '' : 'disabled'}>Check order</button>
         <button class="btn ghost" data-act="giveup">Show me</button></div>`}`;
@@ -5847,7 +5884,16 @@ function renderFeedback(ex) {
 
   let answerLine = '';
   if (ex.stepMode) {
-    answerLine = `<ol class="fb-steps">${ex.orderAnswer.map(s => `<li>${esc(s)}</li>`).join('')}</ol>`;
+    // Dim the positions the student already had right so the eye goes straight
+    // to the ones that moved. Only meaningful when they actually attempted a
+    // full order — after "Show me" there is nothing to compare against.
+    const chosen = sess.build || [];
+    const graded = ex.orderAnswer.length > 0 && chosen.length === ex.orderAnswer.length && r.result !== 'shown';
+    answerLine = `<ol class="fb-steps${graded ? ' marked' : ''}">${ex.orderAnswer.map((s, i) => {
+      if (!graded) return `<li>${esc(s)}</li>`;
+      const had = chosen[i] && chosen[i].i === i;
+      return `<li class="${had ? 'had' : 'missed'}">${esc(s)}</li>`;
+    }).join('')}</ol>`;
   } else if (r.result !== 'right' || ex.revealKo) {
     const shown = ex.revealKo || ex.answer;
     const rom = romFor(shown);
@@ -5897,6 +5943,26 @@ function renderFeedback(ex) {
   </div>`;
 }
 
+/* How fast counts as "easy" on a sequencing card.
+
+   The engine grades multiple choice 4 (easy) under 3.2s — right for a short
+   prompt and four short options. Sequencing inherited a flat 14s, which is a
+   different job entirely: read every step, find each one in a shuffled pool,
+   and tap them in order. A five-step technique is ~40 words read at least
+   twice, so a fluent student still lands past 14s and gets 3 — meaning the
+   longest exercise in the app could effectively never earn the longer
+   interval, and kept coming back to be read again.
+
+   Scale the allowance with the actual reading load instead: orientation, plus
+   per-tile scan-and-tap, plus reading time at roughly 230 wpm. Being fast
+   still has to mean fast — this only stops charging the student for how much
+   text the item happens to contain. */
+function sequenceFastMs(ex) {
+  const tiles = ex.tiles || [];
+  const words = tiles.reduce((n, t) => n + String(t.w).trim().split(/\s+/).filter(Boolean).length, 0);
+  return 3500 + tiles.length * 900 + words * 260;
+}
+
 /* Submit for step-sequencing (order check) — mc uses pickMC, self uses selfGrade. */
 function submitAnswer() {
   const ex = liveEx;
@@ -5905,7 +5971,7 @@ function submitAnswer() {
   if (ex.stepMode && chosen.length !== ex.tiles.length) return;
   const result = chosen.length && chosen.every((t, idx) => t.i === idx) ? 'right' : 'wrong';
   const elapsed = Date.now() - exStart;
-  const grade = result === 'right' ? (elapsed < 14000 ? 4 : 3) : 1;
+  const grade = result === 'right' ? (elapsed < sequenceFastMs(ex) ? 4 : 3) : 1;
   const line = scoreAnswer(ex, result, elapsed, grade);
   sess.reveal = { result, line };
   if (ex.speakAfter) speak(ex.speakAfter);
@@ -7134,7 +7200,8 @@ window.__HKD = {
   get fxGlyphs() { return FX_JAMO.slice(); },
   save, render, plan, planTotal, stats, beltStats, cumulativeStats, activeBelt, ladderFor, knowledgeMastered,
   itemStatus, eligibleSequence, newCard, ck, ITEMS, SEQUENCE, BELTS, schedule, retrievability, itemTrack,
-  COURSES, COURSE_BY_ID, activeCourse, switchCourse, courseOf, courseIdOf, courseUnits, newToday, startSession
+  COURSES, COURSE_BY_ID, activeCourse, switchCourse, courseOf, courseIdOf, courseUnits, newToday, startSession,
+  sequenceFastMs
 };
 
 
