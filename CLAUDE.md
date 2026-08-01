@@ -18,8 +18,18 @@ Working title. Read `HANDOFF.md` for current state and roadmap before doing anyt
 3. **Everything curriculum-related is PROVISIONAL until Grandmaster Lee approves it.**
    `approvalStatus: "provisional"` + visible badges stay until he signs off. Never
    present researched content as his curriculum.
-4. **Original wording only.** Research other schools' published syllabi for
-   *structure*, never copy any school's curriculum, text, or numbered system.
+4. **Research widely; write it in our own words.** Hapkido is a shared art and
+   this app should cover it as completely as we can — study any published
+   syllabus, manual, federation standard or video, name techniques the way the
+   art commonly names them, and aim at the whole ladder rather than a thin
+   slice. Breadth is a goal, not a risk. The single hard limit is *expression*:
+   never paste another school's sentences, teaching notes, or house numbering
+   into this app, and never present another school's curriculum as LMAA's.
+   Facts, technique names, what a technique defends against and the general
+   shape of a syllabus are all free to use; someone else's paragraphs and their
+   proprietary numbering are not. Grandmaster Lee's material is the authority
+   layer that sits *over* the researched base — it supplements and corrects it,
+   which is why the base has to be ours to change.
 5. **No punishment mechanics.** No hearts, lives, timers, streak guilt, or penalties.
    Wrong answers reschedule sooner and get gentle feedback. The celebration layer is
    deliberately asymmetric. Streak tolerates 2 rest days/week.
