@@ -21,7 +21,7 @@ window.CURRICULUM = {
     school: "Lee's Martial Arts Academy (branding placeholder)",
     appName: "Hapkido Companion",
     workingTitle: true,
-    version: "0.6.0-provisional",
+    version: "0.7.0-provisional",
     approvalStatus: "provisional",          // provisional | approved
     approvedBy: null, approvedDate: null,
     audience: "current-students",
@@ -129,7 +129,19 @@ window.CURRICULUM = {
         { id: "YG8", title: "Yellow · Green Evaluation", blurb: "What changes in a test once throwing enters the room." }
       ] },
     { id: "green",        order: 5,  gup: 6,  nameEnglish: "Green Belt",                nameKorean: "초록띠",      rom: "chorok tti",
-      color: "#3f9e5f", stripe: null,      dark: true,  theme: "Awaiting Grandmaster Lee's curriculum", cumulative: true, provisional: true, units: [] },
+      color: "#3f9e5f", stripe: null,      dark: true,
+      theme: "Being held — the self-defence core: two-hand grabs, clothing, being wrapped up, and taking control",
+      cumulative: true, provisional: true,
+      units: [
+        { id: "G1", title: "Words for Holds",        blurb: "The vocabulary of being grabbed — collar, both hands, hair, control." },
+        { id: "G2", title: "Distance Decides",       blurb: "Which technique even exists is settled before contact, by range." },
+        { id: "G3", title: "Only What It Needs",     blurb: "Being held is frightening. What that does to judgement, and what restraint means." },
+        { id: "G4", title: "When Both Wrists Are Taken", blurb: "They have committed both hands — which costs them more than it costs you." },
+        { id: "G5", title: "Grabbed by the Clothing", blurb: "The collar grab, one hand and two, and why the neck changes everything." },
+        { id: "G6", title: "Wrapped Up",             blurb: "Bear hugs front and behind, including when your arms are pinned." },
+        { id: "G7", title: "Hair, and Taking Control", blurb: "The hair grab, and turning an escape into control you can hold." },
+        { id: "G8", title: "Green Evaluation",       blurb: "What examiners watch once you are being held rather than struck." }
+      ] },
     { id: "green-blue",   order: 6,  gup: 5,  nameEnglish: "Green Belt · Blue Stripe",  nameKorean: "초록띠 · 파란줄", rom: "chorok tti",
       color: "#3f9e5f", stripe: "#3b76d6", dark: true,  theme: "Awaiting Grandmaster Lee's curriculum", cumulative: true, provisional: true, units: [] },
     { id: "blue",         order: 7,  gup: 4,  nameEnglish: "Blue Belt",                 nameKorean: "파란띠",      rom: "paran tti",
@@ -1410,6 +1422,242 @@ window.CURRICULUM = {
     quiz: {
       recog:   { q: "Once throws appear in an evaluation, you are being assessed on…", a: "Both your technique and how safely your partner lands", d: ["Only the speed of the throw", "Only how far your partner travels", "Only whether you remember the Korean name"] },
       scenario:{ q: "In a test your throw succeeds, but your partner lands awkwardly because you let go of the arm. That is…", a: "A control failure — the landing was your responsibility", d: ["Fine, since the throw itself worked", "Your partner's fault for falling badly", "Only a problem if they are injured"] }
+    } },
+
+  /* ================================================================
+     GREEN BELT (6th gup) — PROVISIONAL — THE SELF-DEFENCE CORE
+     This belt is deliberately weighted to being HELD rather than being
+     struck: two-hand grabs, clothing grabs, bear hugs, hair, and turning
+     an escape into control. That is the part of Hapkido this app exists
+     for, and the part a student cannot rehearse alone.
+
+     Researched broadly from the shared body of the art; every sentence
+     here is written for this app. Nothing is any school's text or house
+     numbering, and nothing is presented as LMAA's until Grandmaster Lee
+     says so. Everything on this belt is restricted class — being held is
+     a partner situation by definition.
+     ================================================================ */
+
+  /* ============ G1 · Words for Holds ============ */
+  { id: "t-myeoksal", kind: "term", beltId: "green", domain: "terminology", unit: "G1",
+    ko: "멱살", rom: "myeoksal", en: "collar / lapel (the front of the clothing at the throat)",
+    note: "멱살을 잡다 — to grab someone by the collar. One of the most common real grabs there is." },
+  { id: "t-yangson", kind: "term", beltId: "green", domain: "terminology", unit: "G1",
+    ko: "양손", rom: "yangson", en: "both hands",
+    note: "When you hear 양손, someone has committed everything they have to holding you." },
+  { id: "t-meorichae", kind: "term", beltId: "green", domain: "terminology", unit: "G1",
+    ko: "머리채", rom: "meorichae", en: "a handful of hair",
+    note: "머리채를 잡다 — to grab someone by the hair. Unpleasant, common, and answerable." },
+  { id: "t-jeap", kind: "term", beltId: "green", domain: "terminology", unit: "G1",
+    ko: "제압", rom: "jeap", en: "control / subduing",
+    note: "The goal of most Hapkido answers: the situation ends, and nobody needs an ambulance." },
+  { id: "t-geori", kind: "term", beltId: "green", domain: "terminology", unit: "G1",
+    ko: "거리", rom: "geori", en: "distance / range",
+    note: "The quiet variable behind every technique — what is even possible depends on it." },
+
+  /* ============ G2 · Distance Decides ============ */
+  { id: "c-distance-decides", kind: "concept", beltId: "green", domain: "history", unit: "G2",
+    nameEnglish: "Distance decides what exists", nameHangul: "거리가 정한다",
+    body: ["A kick needs room. A lock needs contact. A throw needs your hips past theirs. None of these is better than the others — each simply exists at a different distance, and the distance is usually chosen by whoever moved first.",
+      "This is why being grabbed is not a disaster in Hapkido: a grab hands you close range, which is where locks and throws live. The person holding you has chosen the distance that suits the art you train."],
+    keyPoints: ["Range decides which techniques are even available — not preference or skill", "A grab gives away close range, which is where locks and control live", "Read the distance first; the technique follows from it rather than the other way round"],
+    quiz: {
+      recog:   { q: "In Hapkido, what mostly determines which technique is available?", a: "The distance between you at that moment", d: ["Which technique you practised most recently", "Which belt you currently hold", "How strong you are compared to them"] },
+      example: { q: "Someone grabs your wrist at arm's length. Compared to a kicking exchange, that distance…", a: "Favours locks and control, because contact already exists", d: ["Favours long kicks, because your legs are free", "Is always worse for you", "Makes no difference to what is possible"] },
+      scenario:{ q: "You are being held at very close range and keep reaching for a kick that will not fit. The Hapkido correction is…", a: "Use what this distance offers instead of forcing one that does not fit", d: ["Kick harder to make the room", "Step back and restart the encounter", "Wait for them to move away"] }
+    } },
+  { id: "c-both-hands-cost", kind: "concept", beltId: "green", domain: "history", unit: "G2",
+    nameEnglish: "What a two-handed grab costs them", nameHangul: "양손의 대가",
+    body: ["A grab with both hands feels overwhelming and is often the opposite. Everything they hold you with is something they can no longer hit you with, block with, or catch themselves with. They have also tied their own balance to yours — where you go, some of them has to follow.",
+      "The trained answer is not to out-pull them. It is to notice what they have spent, and use the part of yourself they did not buy: your feet, your hips, your angle, and the elbow of whichever arm they committed."],
+    keyPoints: ["Every hand on you is a hand not doing something else", "Two-handed grabs tie their balance to yours — that link works in both directions", "Answer with what they did not commit: footwork, angle, hips"],
+    quiz: {
+      recog:   { q: "When someone grabs you with both hands, the hidden cost to THEM is…", a: "Those hands can no longer strike, block or catch their own fall", d: ["Nothing — two hands is strictly better for them", "They get tired faster", "They cannot see you properly"] },
+      example: { q: "Both your wrists are held. The Hapkido instinct is to…", a: "Move your feet and angle, using what they did not commit", d: ["Pull straight backwards with everything you have", "Wait for their grip to weaken", "Match their grip strength"] }
+    } },
+
+  /* ============ G3 · Only What It Needs ============ */
+  { id: "c-hold-panic", kind: "concept", beltId: "green", domain: "safety", unit: "G3",
+    nameEnglish: "What being held does to thinking", nameHangul: "붙잡힘과 판단",
+    body: ["Being grabbed does something a punch does not: it removes your options while you are still deciding. Most untrained people respond by freezing or by exploding — pulling hard, straight back, with everything at once. Both are the panic answer, and both usually make the hold better.",
+      "Training is how the frightening part becomes ordinary. Drilling being held, slowly and often, buys you the two seconds in which technique becomes possible. That is most of what these belts are for."],
+    keyPoints: ["Grabs remove options while you are still deciding — that is what makes them frightening", "Freezing and exploding are the same panic answer wearing different clothes", "Repetition under calm conditions is what buys the seconds you need"],
+    quiz: {
+      recog:   { q: "Why is being grabbed harder to answer than being struck?", a: "It removes your options while you are still deciding what to do", d: ["It hurts more", "It is faster", "It is less common, so nobody practises it"] },
+      unsafe:  { q: "Which is the DANGEROUS habit when practising being held?", a: "Drilling only at full panic speed, so the technique never actually forms", d: ["Starting slowly and building up", "Agreeing a stop signal first", "Letting the person held set the pace"], why: "Speed rehearses the panic. Slow repetition is what replaces it with something you can actually use." }
+    } },
+  { id: "c-proportion", kind: "concept", beltId: "green", domain: "safety", unit: "G3",
+    nameEnglish: "Only as much as the situation needs", nameHangul: "필요한 만큼만",
+    body: ["Hapkido gives you a ladder of answers to the same grab: leave, control, or damage. The art's own preference is the lowest rung that ends it — which is also, usually, the one you can defend afterwards to a parent, a teacher, or a court.",
+      "This is a skill, not a personality trait, and it is trained the same way technique is: by drilling the lower rungs far more often than the higher ones. A student who has only ever practised the most damaging answer will produce it under stress, because it is the only one they own."],
+    keyPoints: ["Leave, control, damage — the art prefers the lowest rung that ends it", "Restraint is trained by repetition, not by good intentions", "Whatever you drill most is what arrives under stress; drill the low rungs most"],
+    quiz: {
+      recog:   { q: "Hapkido's preferred answer to a grab is…", a: "The least forceful option that actually ends the situation", d: ["Whichever is most impressive", "Always the joint lock", "Whatever ends it fastest regardless of force"] },
+      unsafe:  { q: "Which belief here is DANGEROUS?", a: "'I will just use the gentle option when it matters, even though I only ever drill the hard one'", d: ["'Restraint is trained, not decided'", "'Leaving is a legitimate answer'", "'Drill the low rungs most often'"], why: "Under stress you produce what you have rehearsed. Intentions do not survive adrenaline; repetitions do." },
+      scenario:{ q: "Someone grabs your sleeve in a crowded hallway and lets go when you turn. You…", a: "Let it end there — it already ended", d: ["Apply a lock anyway, for the practice", "Escalate so they learn not to", "Follow them to continue it"] }
+    } },
+
+  /* ============ G4 · When Both Wrists Are Taken ============ */
+  { id: "x-yangsonmok-ppaegi", kind: "technique", beltId: "green", domain: "releases", unit: "G4",
+    nameEnglish: "Both wrists grabbed — release", nameHangul: "양손목 빼기", romanization: "yangsonmok ppaegi",
+    purpose: "Free both wrists at once when someone has committed both hands, using structure and footwork rather than a pulling contest.",
+    attackOrGrab: "Both of your wrists held, one in each of their hands, from the front.",
+    safetyClass: "partnerWithCare", soloSafe: false, partnerRequired: true, instructorRequired: false,
+    practiceRestrictions: "Partner drill, in class. The temptation here is a strength contest — the drill only teaches anything if both people stay slow enough for structure to matter.",
+    stepSequence: [
+      "Drop your weight and take your elbows in toward your own ribs — structure before movement",
+      "Step off the line at an angle so you are no longer directly in front of them",
+      "Turn both wrists so the narrow edge of your forearm meets the gap at their thumbs",
+      "Bring both hands up through that gap together, along the line your step created",
+      "Finish with your hands free, in front of your own centre, facing them at the new angle"
+    ],
+    keyDetails: ["Elbows come in to your own body first; wide arms have no structure to use", "Escape through the thumbs, which is the gap in any grip, never against the whole hand", "The step off the line does most of the work — pulling straight back does almost none"],
+    commonErrors: ["Turning it into a tug of war, which the stronger person always wins", "Pulling straight backwards so the grip simply follows you", "Freeing one wrist and forgetting the other is still held"],
+    safetyNotes: ["Partner drill in class. Grips slip and fingernails catch — agree the pace and stop for anything that stings.", "No locks or counters from this position at this belt; the escape is the whole exercise."],
+    instructorCheckpoints: ["Elbows drawn in before any attempt to move", "Angle stepped off the line, not straight back", "Both wrists exiting through the thumb gap", "Slow enough that structure, not strength, is doing it"],
+    media: {}, approvalStatus: "provisional" },
+  { id: "x-yangsonmok-jeap", kind: "technique", beltId: "green", domain: "locks", unit: "G4",
+    nameEnglish: "Both wrists — release into control", nameHangul: "양손목 빼기에서 제압", romanization: "yangsonmok ppaegi-eseo jeap",
+    purpose: "Continue the two-wrist release into a wrist lock on one arm, so the encounter ends in control rather than in more distance.",
+    attackOrGrab: "Both wrists held from the front, as in the release you have just learned.",
+    safetyClass: "instructorSupervisionRequired", soloSafe: false, partnerRequired: true, instructorRequired: true,
+    practiceRestrictions: "Chain into a joint — instructor supervision without exception. Learn the shape and the recognition here; the drilling is class-only and slow.",
+    stepSequence: [
+      "Complete the two-wrist release, stepping off the line as taught",
+      "Choose the arm that is already nearest your centre — do not reach across for the other",
+      "Keep contact with that hand as it comes free rather than letting it drop away",
+      "Take the wrist lock you already know on that arm, at the angle their reaction offers",
+      "Stop at the edge of the range, and release the instant they tap"
+    ],
+    keyDetails: ["Take the arm that is already there; reaching across gives the position back", "The release must genuinely work on its own before anything is added to it", "Same stopping discipline as every lock — edge of range, tap ends it immediately"],
+    commonErrors: ["Rushing the release because the lock is the interesting part", "Crossing your own centre to reach the far arm and losing the angle", "Speeding up because it is a chain — chains reach the joint sooner, not later"],
+    safetyNotes: ["Instructor supervision required. A lock arriving out of a scramble has less warning than one applied from stillness.", "If your partner cannot tap freely at any moment, the chain is too fast."],
+    instructorCheckpoints: ["Release complete and functional before the lock is attempted", "Nearest arm taken, centre not crossed", "Lock applied gradually, on the offered angle", "Immediate release on the tap at chain speed"],
+    media: {}, approvalStatus: "provisional" },
+
+  /* ============ G5 · Grabbed by the Clothing ============ */
+  { id: "x-myeoksal-bangeo", kind: "technique", beltId: "green", domain: "grabs", unit: "G5",
+    nameEnglish: "Collar grab — one hand", nameHangul: "멱살 잡기 방어", romanization: "myeoksal japgi bangeo",
+    purpose: "Answer a single-hand collar grab by trapping the hand and turning their own committed arm into the lever.",
+    attackOrGrab: "One hand gripping the front of your collar or lapel.",
+    safetyClass: "instructorSupervisionRequired", soloSafe: false, partnerRequired: true, instructorRequired: true,
+    practiceRestrictions: "A collar grab sits at the throat, so this is supervised without exception and drilled with the grip on the CLOTH, never on the neck.",
+    stepSequence: [
+      "Trap their gripping hand flat against your chest so it cannot let go or travel",
+      "Tuck your chin and drop your weight — this protects the throat and takes the slack out",
+      "Turn your body away from their thumb, taking their wrist with you because you have pinned it",
+      "Let that turn bend their wrist into the lock their own grip has already set up",
+      "Stop at the edge of the range and release the moment they tap"
+    ],
+    keyDetails: ["Pin the hand FIRST — everything after depends on it not being able to leave", "Chin down and weight down protects the throat before any technique happens", "The turn of your whole body is the lever; the wrist is only where it arrives"],
+    commonErrors: ["Trying to peel the fingers off one at a time, which is slow and rarely works", "Turning toward their fingers instead of away from the thumb", "Letting the grip ride up onto the neck instead of keeping it on the cloth"],
+    safetyNotes: ["Instructor supervision required — this technique lives at the throat.", "The grip stays on the cloth. If it slides onto the neck, the drill stops and resets.", "No pushing or pulling into the neck in either direction at this belt."],
+    instructorCheckpoints: ["Hand pinned flat before anything else", "Chin tucked and weight dropped", "Turn away from the thumb, whole body driving it", "Grip stays on cloth; instant release on the tap"],
+    media: {}, approvalStatus: "provisional" },
+  { id: "x-yangsonmyeoksal", kind: "technique", beltId: "green", domain: "grabs", unit: "G5",
+    nameEnglish: "Collar grab — two hands", nameHangul: "양손 멱살 잡기 방어", romanization: "yangson myeoksal japgi bangeo",
+    purpose: "Answer a two-handed collar grab, where the threat to the neck is higher and the attacker's balance is more committed.",
+    attackOrGrab: "Both hands gripping the front of your clothing at chest or collar height.",
+    safetyClass: "instructorSupervisionRequired", soloSafe: false, partnerRequired: true, instructorRequired: true,
+    practiceRestrictions: "Two hands at the collar is close to the throat and close to a choke, which puts it firmly in supervised territory. Grips stay on cloth. Drilled slowly, briefly, and stopped on request without discussion.",
+    stepSequence: [
+      "Chin down and weight down immediately — protect the airway before anything clever",
+      "Bring one arm up and over both of theirs, close to your own body where it is strong",
+      "Turn your hips sharply away from the side you raised, taking their arms with you",
+      "Their grip breaks against the turn rather than against your arm strength",
+      "Recover your base facing them at the new angle, hands up, and stop there"
+    ],
+    keyDetails: ["Airway first, always — chin and weight before technique", "The arm goes over close to your own body; reaching out gives away the leverage", "Hips break the grip, not the arm — if your shoulder is straining, the hips did not turn"],
+    commonErrors: ["Pulling at their wrists with both hands and getting into a strength contest", "Raising the arm wide, where it has no structure", "Continuing past the escape into a counter that this belt does not teach"],
+    safetyNotes: ["Instructor supervision required, without exception — the neck is close and the position resembles a choke.", "Grips stay on cloth, never the throat. Any slip stops the drill immediately.", "The person being grabbed ends the repetition whenever they choose, no reason needed."],
+    instructorCheckpoints: ["Chin and weight drop before anything else", "Arm travels over close to the body", "Hip turn is what breaks the grip", "Grip stays on cloth; stop signal honoured instantly"],
+    media: {}, approvalStatus: "provisional" },
+
+  /* ============ G6 · Wrapped Up ============ */
+  { id: "x-ap-kkyeoanki", kind: "technique", beltId: "green", domain: "grabs", unit: "G6",
+    nameEnglish: "Held from the front", nameHangul: "앞 껴안기 빼기", romanization: "ap kkyeoanki ppaegi",
+    purpose: "Recover space and base when someone wraps you from the front, whether your arms are inside or outside theirs.",
+    attackOrGrab: "Bear hug from the front, around the chest or waist.",
+    safetyClass: "partnerWithCare", soloSafe: false, partnerRequired: true, instructorRequired: false,
+    practiceRestrictions: "Partner drill in class. Being held chest to chest is uncomfortable for many people — agree the pace and the stop signal before you start, and honour it instantly.",
+    stepSequence: [
+      "Drop your weight and widen your base before they can lift or move you",
+      "Make a frame with your forearms against their chest or hips, whichever your arms can reach",
+      "Turn your hips to one side so you are no longer square to their strongest direction",
+      "Step your outside foot back to open the space your frame created",
+      "Recover to your own base facing them, hands up, and stop there"
+    ],
+    keyDetails: ["Weight down first — height is what makes a person liftable", "A frame is structure, not a push; keep your elbows in where they are strong", "Turning off square is what makes the space; wriggling straight back does not"],
+    commonErrors: ["Standing tall and trying to push them off with the arms", "Leaning back, which hands over your balance completely", "Struggling at speed before the base is recovered"],
+    safetyNotes: ["Partner drill in class. Agree a stop signal first; close contact can be genuinely distressing and that is reason enough to stop.", "No strikes, headbutts or throws from this position at this belt — the escape is the exercise."],
+    instructorCheckpoints: ["Weight drops before anything is attempted", "Frame built with elbows in", "Hips turn off square", "Stop signal agreed and honoured both directions"],
+    media: {}, approvalStatus: "provisional" },
+  { id: "x-dwi-pinned", kind: "technique", beltId: "green", domain: "grabs", unit: "G6",
+    nameEnglish: "Held from behind, arms pinned", nameHangul: "팔 갇힌 뒤 껴안기 빼기", romanization: "pal gadhin dwi kkyeoanki ppaegi",
+    purpose: "Recover base and free your arms when someone wraps you from behind over the arms, so that anything else becomes possible.",
+    attackOrGrab: "Bear hug from behind with your arms trapped inside the hold.",
+    safetyClass: "instructorSupervisionRequired", soloSafe: false, partnerRequired: true, instructorRequired: true,
+    practiceRestrictions: "Arms pinned from behind is the position with the fewest options and the most alarm, and lifting is a real risk. Instructor supervision required; no lifting or throwing in either direction at this belt.",
+    stepSequence: [
+      "Drop your weight hard and widen your base before any lift can happen",
+      "Push your hips back under yourself so you are not folded forward",
+      "Make space by bringing your elbows out and down against their arms, close to your body",
+      "Turn toward their thumb side, using the space your elbows made rather than fighting the whole hold",
+      "Recover your base facing them, hands up, and stop there"
+    ],
+    keyDetails: ["Weight down is the whole first move — a lifted person has no answers at all", "Elbows work down and out close to your body, where your structure is strongest", "Turn toward the opening you made, never straight forward against the full hold"],
+    commonErrors: ["Trying to pry the hands apart, which pits your fingers against their whole grip", "Bending forward at the waist, which makes lifting easier for them", "Thrashing at speed instead of dropping and recovering base"],
+    safetyNotes: ["Instructor supervision required. This position carries a real lifting risk and the fewest escape options of the bear hugs.", "No lifting, throwing, or taking anyone off their feet in either direction at this belt.", "The person being held ends the repetition whenever they choose."],
+    instructorCheckpoints: ["Weight drops immediately and base widens", "Hips recovered underneath rather than folding", "Elbows working down and out close to the body", "No lifting attempted in either direction"],
+    media: {}, approvalStatus: "provisional" },
+
+  /* ============ G7 · Hair, and Taking Control ============ */
+  { id: "x-meorichae", kind: "technique", beltId: "green", domain: "grabs", unit: "G7",
+    nameEnglish: "Hair grab", nameHangul: "머리채 잡기 방어", romanization: "meorichae japgi bangeo",
+    purpose: "Stop a hair grab from steering your head — which is how it steers all of you — and recover your posture.",
+    attackOrGrab: "A handful of your hair taken from the front or the side.",
+    safetyClass: "instructorSupervisionRequired", soloSafe: false, partnerRequired: true, instructorRequired: true,
+    practiceRestrictions: "Drilled with a light grip or on a training partner's own terms — never with a real pull. Supervised without exception, and stopped instantly on request.",
+    stepSequence: [
+      "Pin their hand flat to your head with both of yours so it cannot pull or travel",
+      "Move your head WITH their hand rather than against it — pulling away is what tears",
+      "Step in toward them, which puts slack in the arm they are pulling with",
+      "Turn under or into their arm, taking their wrist with you because you have pinned it",
+      "Recover your posture facing them, and stop there"
+    ],
+    keyDetails: ["Pin first — an unpinned hand keeps steering your head wherever it likes", "Step IN. Every instinct says pull away, and pulling away is what does the damage", "Your head and their hand move as one unit until the position is recovered"],
+    commonErrors: ["Pulling backwards away from the grip, which hurts and keeps you steered", "Reaching for their face or eyes instead of solving the actual hold", "Drilling this with a genuine pull, which is how training injuries happen"],
+    safetyNotes: ["Instructor supervision required. Hair grabs cause real pain and real neck strain, so this is drilled light, never at speed.", "The person being held sets the intensity and ends the drill whenever they choose, no reason required.", "Long hair is tied for this drill, and any real pulling stops it immediately."],
+    instructorCheckpoints: ["Hand pinned with both hands before moving", "Student steps IN rather than pulling away", "Head and hand move together throughout", "Light grip only; stop signal honoured instantly"],
+    media: {}, approvalStatus: "provisional" },
+  { id: "x-jeap-hosong", kind: "technique", beltId: "green", domain: "locks", unit: "G7",
+    nameEnglish: "Taking control after the lock", nameHangul: "꺾어 제압하기", romanization: "kkeokkeo jeaphagi",
+    purpose: "Turn a working lock into a position you can actually hold — so the situation can end without escalating.",
+    attackOrGrab: "Any of the wrist locks you already hold, once it is working.",
+    safetyClass: "instructorSupervisionRequired", soloSafe: false, partnerRequired: true, instructorRequired: true,
+    practiceRestrictions: "This is where control replaces force, and the margin narrows because the position is held for longer. Supervised without exception, drilled slowly, with the tap ending it at any moment.",
+    stepSequence: [
+      "From the working lock, move to their outside where you can see their whole body",
+      "Bring the locked arm in close to your own centre so the control costs you no strength",
+      "Lower your base so their structure is bent and yours is not",
+      "Hold the position at the edge of the range, breathing, without adding pressure",
+      "Release on the tap, on the word, or the moment the situation has ended"
+    ],
+    keyDetails: ["Control is a POSITION, not a squeeze — if you are straining, you are in the wrong place", "Stand outside their line where you can see both of their hands", "Holding without adding pressure is the actual skill being trained here"],
+    commonErrors: ["Cranking harder to prove the lock is working, which is how joints get hurt", "Standing square in front where you can neither see nor control", "Holding on after it is over, which turns defence into something else entirely"],
+    safetyNotes: ["Instructor supervision required. Held positions accumulate pressure without anyone deciding to add it — the tap ends it instantly, every time.", "This is control, not punishment. Holding on longer than the situation requires is a failure of the technique, not a demonstration of it."],
+    instructorCheckpoints: ["Position taken outside their line with both hands visible", "Locked arm brought in to the student's own centre", "Held at the edge of range with no added pressure", "Instant release on tap or on the word"],
+    media: {}, approvalStatus: "provisional" },
+
+  /* ============ G8 · Green Evaluation ============ */
+  { id: "c-green-test", kind: "concept", beltId: "green", domain: "testprep", unit: "G8",
+    nameEnglish: "Testing while you are the one being held", nameHangul: "심사 5",
+    body: ["(Provisional — Grandmaster Lee sets the real standards.) Up to now much of what you showed was something you did. From green belt on, a good deal of it is something done TO you first — a grab, a hold, a hand on your collar — and the examiner is watching what happens in the first half-second, before technique arrives.",
+      "What they are looking for is not speed. It is whether your base drops, your chin tucks, your elbows come in, and your head stays working. Those four things are the same in every hold on this belt, which is why they are drilled far more often than the escapes themselves."],
+    keyPoints: ["From here you are examined on what you do while being held, not only on what you initiate", "The first half-second — base, chin, elbows, composure — matters more than the escape that follows", "The same four fundamentals underlie every hold on this belt"],
+    quiz: {
+      recog:   { q: "From green belt, a large part of the evaluation is…", a: "What you do in the first half-second of being held", d: ["How fast your kicks have become", "How many techniques you can name", "How hard you can grip"] },
+      scenario:{ q: "In a test you escape a bear hug quickly but stood tall and folded forward doing it. An examiner would most likely note…", a: "That the base was never recovered — the escape worked despite the fundamentals, not because of them", d: ["Nothing, because the escape worked", "That it should have been faster", "That you should have countered afterwards"] }
     } }
   ]
 };

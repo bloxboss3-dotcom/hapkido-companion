@@ -75,7 +75,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   **Heads-up:** adding a rung means items that were "mastered" now have one more
   thing to do, so the Knowledge-mastered count dips once. That is honest, not a
   bug — there is genuinely more to know.
-- **Content:** 124 provisional items across FOUR belts —
+- **Content:** 142 provisional items across FIVE belts —
   White (53: etiquette, commands, counting, principles, safety, stances,
   falls-knowledge, first strikes, wrist releases), White·Yellow Stripe (30:
   front fall/forward roll, roundhouse/side/knee kicks, danjeon breathing, 3 more
@@ -85,13 +85,24 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   chains — release into lock and into arm bar; the first two throws as
   KNOWLEDGE ONLY, restricted-class, no practice assignment; combination and
   stepping kicks; held-from-behind and side-headlock escapes; balance and
-  throwing vocabulary; the ethics of putting someone on the floor)**. Belts
-  5-11 are empty shells ("Awaiting Grandmaster Lee's curriculum").
+  throwing vocabulary; the ethics of putting someone on the floor)**, and
+  **Green (18: the self-defence core — two-hand wrist grabs and the release
+  into control, one- and two-hand collar grabs, bear hugs front and rear
+  including arms-pinned, hair grabs, and holding a lock as control; plus
+  distance, what a two-handed grab costs the attacker, what being held does
+  to judgement, and proportionality)**. Belts 6-11 are empty shells
+  ("Awaiting Grandmaster Lee's curriculum").
+- **Emphasis is deliberate.** Kevin's steer: the striking/stance material is
+  welcome but the app exists for the SELF-DEFENCE side — holds, grabs, locks.
+  Self-defence domains (releases/grabs/locks/throws) are now 55% of technique
+  items, up from 46%; Green belt is entirely holds and control. Keep new belts
+  weighted that way. Everything on Green is restricted class — being held is a
+  partner situation by definition, and none of it is solo-practicable.
 - **Content gates in CI.** The matrix now tests the CONTENT, not just the
   machinery: every technique in a falls/locks/throws/choke/weapon domain must
   be instructor-gated and non-practicable; every technique must carry
   safetyNotes, 3+ keyDetails, 2+ commonErrors, 4-6 steps and checkpoints; no
-  item may claim approval; every one of the 529 generated exercises must be
+  item may claim approval; every one of the 609 generated exercises must be
   well formed (4 distinct options, answer exactly once); and nothing may be
   scheduled in a course but missing from that course's path. A future belt
   cannot ship mis-gated or malformed.
@@ -127,11 +138,15 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 2. **Grandmaster Lee's questionnaire** (`docs/grandmaster-lee-curriculum-intake.md`)
    — when answered, replace the provisional ladder/requirements (data-only change),
    flip approvalStatus per item as he approves, and re-badge the UI accordingly.
-3. **Next belts** (all provisional, same synthesis method as before — see the
-   Phase-0 report §2.3 for the documented progression arc): Yellow·Green — lock
-   chains (release→lock transitions), first throws *knowledge* (hip throw, outer
-   reap — restricted-class), harder kick combos; then punch-defense chains,
-   headlock/bear-hug defenses, first danbong knowledge at later belts.
+3. **Next belts** (all provisional; research broadly and write it ourselves —
+   invariant 4 was rewritten to make that explicit). Yellow·Green and Green are
+   now authored. Remaining, following the arc in Phase-0 §2.3 and Kevin's steer
+   toward self-defence: Green·Blue — punch-defence chains, seated and ground
+   defence, defence against a push or shove; Blue — choke defences (the most
+   restricted category yet), multiple-hold combinations, kick-catching; Red —
+   first weapon knowledge (danbong, cane), multiple attackers as recognition;
+   Black — weapons depth, teaching, and whatever Grandmaster Lee's dan
+   standards turn out to be. Kevin wants the ladder built all the way up.
 4. **Media pipeline** when videos exist: WebVTT subtitles, unverified-translation
    badges, angle switcher (fields exist on item.media; player UI is minimal now).
 5. **Untested surface (honest list):** real TTS on devices, actual video files,
