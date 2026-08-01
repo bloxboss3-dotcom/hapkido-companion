@@ -368,9 +368,20 @@ function otherCourses() {
   const a = activeCourse();
   return COURSES.filter(c => !a || c.id !== a.id);
 }
+/* A unit belongs to a course if it CONTAINS any of that course's items.
+
+   It used to be decided by unitTrack(), which hands a mixed unit wholly to
+   Techniques — so a unit like "Falling Without Fear", which quite naturally
+   holds both the Korean word 낙법 and the falls themselves, vanished from the
+   Terminology path and took its vocabulary with it. That silently hid 47 of
+   83 Terminology items and 31 of 41 Techniques items from the path they
+   belong to: still scheduled, still quizzed, just invisible where the student
+   looks. A unit can legitimately teach a word and the movement it names;
+   the model has to allow that rather than force the content to split. */
 function courseUnits(courseSel, belt) {
   const course = asCourse(courseSel);
-  return ((belt || activeBelt()).units || []).filter(u => !course || unitTrack(u) === course.track);
+  return ((belt || activeBelt()).units || []).filter(u => !course ||
+    SEQUENCE.some(id => ITEMS[id].unit === u.id && courseIdOf(ITEMS[id]) === course.id));
 }
 
 /* Each course carries its own daily new-item budget — studying one

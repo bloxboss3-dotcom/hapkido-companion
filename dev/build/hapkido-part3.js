@@ -154,8 +154,13 @@ function renderCourses() {
 }
 
 /* ---------- the belt path (home) ---------- */
-function unitState(u) {
-  const ids = SEQUENCE.filter(id => ITEMS[id].unit === u.id);
+/* Counts are per course: a unit shown on the Terminology path reports its
+   terms, not the techniques that happen to share it. Without the filter a
+   mixed unit reads "0/6 learned" on a path that only contains two of them. */
+function unitState(u, courseSel) {
+  const course = asCourse(courseSel);
+  const ids = SEQUENCE.filter(id => ITEMS[id].unit === u.id &&
+    (!course || courseIdOf(ITEMS[id]) === course.id));
   const intro = ids.filter(id => S.introduced[id]).length;
   const held = ids.filter(id => {
     const it = ITEMS[id];
@@ -186,7 +191,7 @@ function renderPath() {
 
   // One lane — this course's. Its own numbering, its own glowing next step.
   const renderLane = laneUnits => {
-    const states = laneUnits.map(u => unitState(u));
+    const states = laneUnits.map(u => unitState(u, course));
     let activeIdx = states.findIndex(s => !s.done);
     return laneUnits.map((u, i) => {
       const s = states[i];
