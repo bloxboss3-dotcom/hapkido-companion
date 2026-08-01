@@ -1010,6 +1010,99 @@ async function answerCurrentRight() {
   await page.evaluate(() => { window.__HKD.view = 'today'; window.__HKD.render(); });
   await sleep(200);
 
+  /* ---- 19c. CONTENT GATES ----
+     Everything above tests machinery. These test the CONTENT, across every
+     item that exists — so a future belt cannot ship a mis-gated technique, a
+     malformed quiz, or an item quietly claiming Grandmaster Lee's approval.
+     Content is the part that grows; this is the part that has to keep up. */
+  ok('content: every technique in a restricted category is actually gated', await page.evaluate(() => {
+    const H = window.__HKD;
+    // Classify by authored domain, not free text — "block" contains "lock".
+    const DANGER = /fall|lock|throw|takedown|choke|weapon|grapple|escape/i;
+    const RESTRICTED = ['partnerWithCare', 'instructorSupervisionRequired', 'academyOnly', 'restrictedByAge'];
+    const bad = H.SEQUENCE.map(i => H.ITEMS[i]).filter(t => t.kind === 'technique')
+      .filter(t => DANGER.test(t.domain || '') && !RESTRICTED.includes(t.safetyClass));
+    return bad.length === 0;
+  }), 'a falls/locks/throws item is not instructor-gated');
+  ok('content: nothing restricted is solo-practicable or carries a practice assignment', await page.evaluate(() => {
+    const H = window.__HKD;
+    const RESTRICTED = ['partnerWithCare', 'instructorSupervisionRequired', 'academyOnly', 'restrictedByAge'];
+    const bad = H.SEQUENCE.map(i => H.ITEMS[i]).filter(t => t.kind === 'technique')
+      .filter(t => RESTRICTED.includes(t.safetyClass) &&
+        (t.practiceAssignment || t.soloSafe === true || canPractice(t)));
+    return bad.length === 0;
+  }), 'a restricted technique is practicable or has a practice assignment');
+  ok('content: every technique carries the authoring minimum', await page.evaluate(() => {
+    const H = window.__HKD;
+    const bad = H.SEQUENCE.map(i => H.ITEMS[i]).filter(t => t.kind === 'technique').filter(t =>
+      !t.safetyClass || !(t.safetyNotes || []).length ||
+      (t.keyDetails || []).length < 3 || (t.commonErrors || []).length < 2 ||
+      ((t.stepSequence || []).length && (t.stepSequence.length < 4 || t.stepSequence.length > 6)) ||
+      (t.instructorRequired && !(t.instructorCheckpoints || []).length));
+    return bad.length === 0;
+  }), 'a technique is missing safetyNotes / keyDetails / commonErrors / checkpoints, or has a bad step count');
+  ok('content: nothing claims Grandmaster Lee has approved it', await page.evaluate(() => {
+    const H = window.__HKD;
+    return H.SEQUENCE.every(id => H.ITEMS[id].approvalStatus !== 'approved') &&
+      H.CURRICULUM_APPROVAL !== 'approved';
+  }));
+  // Every exercise a student can ever be shown, checked for real defects.
+  ok('content: every generated exercise is well formed', await page.evaluate(() => {
+    const H = window.__HKD;
+    const norm = s => String(s == null ? '' : s).trim().toLowerCase().replace(/\s+/g, ' ');
+    const bad = [];
+    H.SEQUENCE.forEach(id => H.ladderFor(H.ITEMS[id]).forEach(skill => {
+      let ex;
+      try { ex = makeExercise(H.ck(id, skill)); } catch (e) { return bad.push(id + '/' + skill + ' threw'); }
+      if (!ex.prompt) bad.push(id + '/' + skill + ' no prompt');
+      if (/undefined|null|\[object/.test([ex.prompt, ex.target, ex.answer].join(' '))) bad.push(id + '/' + skill + ' undefined text');
+      if (ex.type === 'mc') {
+        const o = (ex.options || []).map(norm);
+        if (o.length < 4) bad.push(id + '/' + skill + ' only ' + o.length + ' options');
+        if (new Set(o).size !== o.length) bad.push(id + '/' + skill + ' duplicate options');
+        if (o.filter(x => x === norm(ex.answer)).length !== 1) bad.push(id + '/' + skill + ' answer not exactly once');
+        if (o.some(x => !x)) bad.push(id + '/' + skill + ' blank option');
+      } else if (ex.type === 'build' && (!ex.tiles || ex.tiles.length < 3)) bad.push(id + '/' + skill + ' too few tiles');
+    }));
+    window.__contentBad = bad;
+    return bad.length === 0;
+  }), await page.evaluate(() => (window.__contentBad || []).slice(0, 4).join(' | ')));
+  // The one that matters: nothing a student is scheduled may be missing from
+  // the path of the course it belongs to. A unit is allowed to hold both a
+  // Korean word and the movement it names — but then it has to appear on both
+  // paths, showing each course only its own items.
+  ok('content: no item is scheduled in a course but missing from that course path', await page.evaluate(() => {
+    const H = window.__HKD;
+    const bad = [];
+    H.COURSES.forEach(c => {
+      const onPath = new Set();
+      H.BELTS.forEach(b => H.courseUnits(c.id, b).forEach(u => onPath.add(u.id)));
+      H.SEQUENCE.map(i => H.ITEMS[i]).filter(i => H.courseIdOf(i) === c.id)
+        .forEach(i => { if (!onPath.has(i.unit)) bad.push(c.id + ': ' + (i.ko || i.name) + ' in ' + i.unit); });
+    });
+    window.__unitBad = bad;
+    return bad.length === 0;
+  }), await page.evaluate(() => (window.__unitBad || []).slice(0, 4).join(' | ')));
+  ok('content: a unit on a course path always has something in it for that course', await page.evaluate(() => {
+    const H = window.__HKD;
+    const bad = [];
+    H.COURSES.forEach(c => H.BELTS.forEach(b => H.courseUnits(c.id, b).forEach(u => {
+      const n = H.SEQUENCE.map(i => H.ITEMS[i]).filter(i => i.unit === u.id && H.courseIdOf(i) === c.id).length;
+      if (!n) bad.push(c.id + '/' + b.id + '/' + u.id);
+    })));
+    return bad.length === 0;
+  }));
+  ok('content: a populated belt reaches both courses, so neither path goes blank', await page.evaluate(() => {
+    const H = window.__HKD;
+    const bad = [];
+    H.BELTS.forEach(b => {
+      const items = H.SEQUENCE.map(i => H.ITEMS[i]).filter(i => i.beltId === b.id);
+      if (!items.length) return;                       // an empty belt is a known placeholder
+      if (new Set(items.map(i => H.courseIdOf(i))).size < 2) bad.push(b.id);
+    });
+    return bad.length === 0;
+  }));
+
   /* ---- 20. the DEPLOYED file ----
      Everything above runs against the folder build (external curriculum).
      GitHub Pages serves the single-file build at the repo root, with the

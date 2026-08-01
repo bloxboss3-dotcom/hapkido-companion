@@ -143,7 +143,7 @@ declares them; `domain.track` assigns items. Adding a third = one data entry.
 ```bash
 npm ci                                # once: playwright, exactly as locked
 npm run build                         # rebuilds both index.html files
-npm test                              # 132 checks; needs playwright + chromium
+npm test                              # 140 checks; needs playwright + chromium
 npm run check                         # build + in-sync check + test (what CI runs)
 npm run smoke                         # optional: tests the DEPLOYED site (needs network)
 ```
@@ -157,7 +157,7 @@ deploy-only failures (stale deploy, 404 or wrong MIME on an asset) that a
 `file://` matrix structurally cannot see. It is not in CI and needs real
 network — a sandbox that blocks the browser's egress can't run it.
 
-The matrix must pass 132/132 (grow it with every feature — count goes up, never
+The matrix must pass 140/140 (grow it with every feature — count goes up, never
 down). It covers: boot, course picker + switching + persistence, per-course paths,
 per-course daily budgets, course-scoped and both-course sessions, course-scoped vs
 whole-belt readiness, FSRS values against hand-computed expectations, wrong-answer
@@ -202,10 +202,18 @@ can't test TTS or real video playback.
   arc documented in `docs/hapkido-companion-phase0-report.md` — read it before
   authoring new belts. Locks arrived at yellow; throws/pins/chokes/weapons are
   future belts, all restricted-class.
-- New belts want units in BOTH courses, or one course's path goes empty at that
-  belt (handled gracefully, but it reads as neglect). A unit's course is decided
-  by its items' domains — `unitTrack()` — so a unit mixing tracks lands in
-  Techniques. Keep units single-track.
+- New belts want items in BOTH courses, or one course's path goes empty at that
+  belt (handled gracefully, but it reads as neglect). A test enforces it.
+- **A unit MAY hold both courses' items** — "Falling Without Fear" naturally
+  teaches the word 낙법 and the falls themselves. `courseUnits()` puts such a
+  unit on *both* paths and `unitState()` counts only that course's items, so
+  each path shows its own material and its own totals. This replaces the old
+  "keep units single-track" rule, which existed because `unitTrack()` handed a
+  mixed unit wholly to Techniques — quietly hiding 47 of 83 Terminology items
+  and 31 of 41 Techniques items from the path they belonged to. They were still
+  scheduled and quizzed, just invisible where the student looks. Two tests now
+  pin it: nothing scheduled in a course may be missing from that course's path,
+  and no unit may appear on a path with nothing on it for that course.
 
 ## Context
 

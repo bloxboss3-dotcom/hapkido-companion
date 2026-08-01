@@ -21,7 +21,7 @@ window.CURRICULUM = {
     school: "Lee's Martial Arts Academy (branding placeholder)",
     appName: "Hapkido Companion",
     workingTitle: true,
-    version: "0.5.0-provisional",
+    version: "0.6.0-provisional",
     approvalStatus: "provisional",          // provisional | approved
     approvedBy: null, approvedDate: null,
     audience: "current-students",
@@ -115,7 +115,19 @@ window.CURRICULUM = {
         { id: "Y8", title: "Yellow Evaluation",      blurb: "Locks change what examiners watch for." }
       ] },
     { id: "yellow-green", order: 4,  gup: 7,  nameEnglish: "Yellow Belt · Green Stripe", nameKorean: "노란띠 · 초록줄", rom: "noran tti",
-      color: "#f2c744", stripe: "#3f9e5f", dark: false, theme: "Awaiting Grandmaster Lee's curriculum", cumulative: true, provisional: true, units: [] },
+      color: "#f2c744", stripe: "#3f9e5f", dark: false,
+      theme: "Chains and balance — releases become locks, and the first throws arrive by name",
+      cumulative: true, provisional: true,
+      units: [
+        { id: "YG1", title: "Words for Balance",     blurb: "The vocabulary that throwing runs on — centre, balance, hip, leg." },
+        { id: "YG2", title: "Balance Comes First",   blurb: "Why nobody is thrown until their balance has already gone." },
+        { id: "YG3", title: "The Weight of a Throw", blurb: "Throwing puts someone on the floor. What that obliges you to do." },
+        { id: "YG4", title: "Release Into Lock",     blurb: "Your releases stop being endings and start being beginnings." },
+        { id: "YG5", title: "First Throws, By Name", blurb: "Named, understood, and recognised — thrown only in class, with your instructor." },
+        { id: "YG6", title: "Kicks That Follow Kicks", blurb: "One kick buys the next: combinations and covering distance." },
+        { id: "YG7", title: "When They Hold You",    blurb: "Held from behind, or round the neck — posture and base before anything." },
+        { id: "YG8", title: "Yellow · Green Evaluation", blurb: "What changes in a test once throwing enters the room." }
+      ] },
     { id: "green",        order: 5,  gup: 6,  nameEnglish: "Green Belt",                nameKorean: "초록띠",      rom: "chorok tti",
       color: "#3f9e5f", stripe: null,      dark: true,  theme: "Awaiting Grandmaster Lee's curriculum", cumulative: true, provisional: true, units: [] },
     { id: "green-blue",   order: 6,  gup: 5,  nameEnglish: "Green Belt · Blue Stripe",  nameKorean: "초록띠 · 파란줄", rom: "chorok tti",
@@ -149,7 +161,8 @@ window.CURRICULUM = {
     { id: "releases",    track: "technique", nameEnglish: "Releases & Escapes",            nameKorean: "빼기" },
     { id: "grabs",       track: "technique", nameEnglish: "Clothing & Body-Grab Defenses", nameKorean: "잡기 방어" },
     { id: "breathing",   track: "technique", nameEnglish: "Breathing & Energy",            nameKorean: "단전호흡" },
-    { id: "locks",       track: "technique", nameEnglish: "Joint Locks",                   nameKorean: "관절기" }
+    { id: "locks",       track: "technique", nameEnglish: "Joint Locks",                   nameKorean: "관절기" },
+    { id: "throws",      track: "technique", nameEnglish: "Throws & Takedowns",            nameKorean: "던지기" }
   ],
 
   items: [
@@ -1154,6 +1167,249 @@ window.CURRICULUM = {
     quiz: {
       recog:   { q: "When locks appear in a belt test, examiners are watching…", a: "Both the technique and whether your partner is safe in your hands", d: ["Only how fast the lock is", "Only the loudness of your kihap", "Whether you can make your partner tap dramatically"] },
       scenario:{ q: "During a test your lock is working but your partner taps early. You…", a: "Release instantly — that IS the test", d: ["Hold one extra second so the examiner sees it", "Look at the examiner and shrug", "Re-apply it harder"] }
+    } },
+
+  /* ================================================================
+     YELLOW BELT · GREEN STRIPE (7th gup) — PROVISIONAL
+     Shape follows the intermediate stage of the broadly-shared arc in
+     docs/hapkido-companion-phase0-report.md §2.3: lock chains, first
+     throws, combination kicks, being held. Wording is original; no
+     school's syllabus, numbering or text is reproduced.
+
+     Throws are KNOWLEDGE ONLY here. They are named, understood and
+     recognised in the app; they are thrown on mats, with an instructor,
+     with a partner who can already fall. Nothing in this belt carries a
+     practiceAssignment except the two solo kicking drills.
+     ================================================================ */
+
+  /* ============ YG1 · Words for Balance ============ */
+  { id: "t-gyunhyeong", kind: "term", beltId: "yellow-green", domain: "terminology", unit: "YG1",
+    ko: "균형", rom: "gyunhyeong", en: "balance",
+    note: "The thing a throw removes before it does anything else." },
+  { id: "t-jungsim", kind: "term", beltId: "yellow-green", domain: "terminology", unit: "YG1",
+    ko: "중심", rom: "jungsim", en: "centre",
+    note: "Your centre of balance. Techniques aim at it long before they aim at a limb." },
+  { id: "t-deonjigi", kind: "term", beltId: "yellow-green", domain: "terminology", unit: "YG1",
+    ko: "던지기", rom: "deonjigi", en: "throwing",
+    note: "A whole family of techniques. You will hear it long before you are allowed to do it." },
+  { id: "t-heori", kind: "term", beltId: "yellow-green", domain: "terminology", unit: "YG1",
+    ko: "허리", rom: "heori", en: "waist / hip",
+    note: "Where most throwing power actually lives — not in the arms." },
+  { id: "t-dari", kind: "term", beltId: "yellow-green", domain: "terminology", unit: "YG1",
+    ko: "다리", rom: "dari", en: "leg",
+    note: "Pairs with 안 (inner) and 밭 (outer) to name which leg a technique attacks." },
+
+  /* ============ YG2 · Balance Comes First ============ */
+  { id: "c-balance-first", kind: "concept", beltId: "yellow-green", domain: "history", unit: "YG2",
+    nameEnglish: "Balance goes before the technique", nameHangul: "균형이 먼저",
+    body: ["Nobody is thrown while they are balanced. What actually happens is quieter and earlier: their weight is moved somewhere their feet cannot follow, and only then does the technique collect them. Beginners try to lift; the art moves the centre first and lets the floor do the rest.",
+      "This is why throwing belongs to Won and Yu rather than to strength. You do not fight the balance — you find where it has already gone and take it a little further."],
+    keyPoints: ["A throw removes balance first; the technique only collects what is already falling", "Aim at the centre, not at the limb you happen to be holding", "If you are lifting, the balance is still theirs — reset rather than muscle it"],
+    quiz: {
+      recog:   { q: "In a throw, the first thing that has to happen is…", a: "Their balance is taken — their weight moves where their feet cannot follow", d: ["They are lifted off the ground with the arms", "They are struck hard enough to fall", "They agree to fall over"] },
+      example: { q: "You are strong enough to lift your partner, so the throw works. The Hapkido problem with that is…", a: "It trains strength instead of the timing that works when they are bigger than you", d: ["Nothing — strength is the point", "It is too slow to be useful", "Lifting is banned by the rules of sport"] },
+      unsafe:  { q: "Which is DANGEROUS thinking when you first meet throws?", a: "'I can try this on a friend outside class — I understand how it works'", d: ["'The person receiving decides the pace'", "'Falling is learned before throwing'", "'Slow is how throws are learned'"], why: "Understanding a throw and being able to land someone safely are different skills. The second one is what an instructor is for." }
+    } },
+  { id: "c-chain-thinking", kind: "concept", beltId: "yellow-green", domain: "history", unit: "YG2",
+    nameEnglish: "Techniques come in chains", nameHangul: "이어지기",
+    body: ["Up to now a release ended a situation: they grabbed, you left. From here, a release is a doorway. The same escape that frees your wrist leaves their arm extended, their balance forward and their elbow available — which is a lock, or a throw, waiting to be noticed.",
+      "Real encounters are not one technique long. Chain thinking is the habit of asking what the last movement made possible, instead of returning to a neutral start each time."],
+    keyPoints: ["A release ends a grab and opens a position — both at once", "Ask what the previous movement made available, not what the textbook says is next", "Chains are trained slowly precisely because each link raises the stakes"],
+    quiz: {
+      recog:   { q: "Chain thinking means…", a: "Noticing what the last movement made possible and continuing from there", d: ["Doing every technique you know in a fixed order", "Repeating one technique until it works", "Memorising longer numbered sequences"] },
+      scenario:{ q: "Your wrist release works and their arm is left straight and extended. Chain thinking asks…", a: "What does this position now offer — and am I cleared to use it?", d: ["How fast can I do the release again", "Which is the strongest strike available", "Whether to step back and restart neutral"] }
+    } },
+
+  /* ============ YG3 · The Weight of a Throw ============ */
+  { id: "c-throw-responsibility", kind: "concept", beltId: "yellow-green", domain: "safety", unit: "YG3",
+    nameEnglish: "You are responsible for their landing", nameHangul: "책임 3",
+    body: ["A lock asks a joint a question and lets go when the answer comes. A throw does something different — it hands a person to the floor. From the moment their balance is yours, their landing is your responsibility, and you cannot hand that back halfway through.",
+      "That is the whole reason throws sit behind an instructor and behind breakfalls. In this app you will learn what each throw is, how it works and how to recognise it. Where you learn to do it is on mats, with someone who can already fall, in front of someone who can stop you."],
+    keyPoints: ["Once you have their balance, their landing is yours — that duty cannot be abandoned mid-throw", "Throws are trained where falling is already reliable, never before", "Knowing a throw and being able to land someone safely are two different skills"],
+    quiz: {
+      recog:   { q: "What makes a throw different in kind from a lock?", a: "You take responsibility for how the other person reaches the floor", d: ["It is faster", "It requires more strength", "It uses the legs rather than the arms"] },
+      unsafe:  { q: "Which is the DANGEROUS belief here?", a: "'I have watched it carefully, so I can try it on someone who has not learned to fall'", d: ["'Their landing is my responsibility'", "'Throws wait for mats and an instructor'", "'Falling is learned before throwing'"], why: "The person most likely to be hurt by a half-learned throw is the person receiving it — and they usually did not choose the risk." },
+      scenario:{ q: "A friend asks you to show them a throw at a party. You…", a: "Describe it, and offer to bring them to a class where it is done safely", d: ["Do it slowly on the carpet", "Do it on grass instead, which is soft", "Do it, but tell them to tuck their chin"] }
+    } },
+  { id: "c-uke-first", kind: "concept", beltId: "yellow-green", domain: "safety", unit: "YG3",
+    nameEnglish: "Someone has to be able to fall", nameHangul: "받는 사람",
+    body: ["Every throw needs two trained people, not one. The person being thrown is doing a technique too — a breakfall — and if they cannot do it yet, the throw simply must not happen. This is why your own falling has been drilled since white belt: half of throwing is being able to receive one.",
+      "Practically, this means your training partner's ability sets the ceiling for the day, not your own. The polite question before any throwing drill is not 'can I do this?' but 'can you receive this, at this speed, right now?'"],
+    keyPoints: ["Both people are performing a technique — throwing and falling", "Your partner's falling ability sets the speed, not your confidence", "Ask what they can receive today; the answer can change between sessions"],
+    quiz: {
+      recog:   { q: "In a throwing drill, the person being thrown is…", a: "Also performing a technique — the breakfall", d: ["Passive, and simply lets it happen", "Resisting as hard as they can", "Only there to make the drill realistic"] },
+      scenario:{ q: "Your partner says they are tired and their falls are getting sloppy. You…", a: "Slow down or stop the throwing drill — their falling sets the ceiling", d: ["Finish your set first, then stop", "Throw more gently but just as often", "Ask someone else to watch and continue"] }
+    } },
+
+  /* ============ YG4 · Release Into Lock ============ */
+  { id: "x-release-to-outward", kind: "technique", beltId: "yellow-green", domain: "locks", unit: "YG4",
+    nameEnglish: "Release into outward wrist lock", nameHangul: "빼기에서 손목 꺾기", romanization: "ppaegi-eseo sonmok kkeokgi",
+    purpose: "Turn a same-side wrist release into the outward wrist lock you already know, without a pause between them.",
+    attackOrGrab: "Same-side wrist grab, which you have released before.",
+    safetyClass: "instructorSupervisionRequired", soloSafe: false, partnerRequired: true, instructorRequired: true,
+    practiceRestrictions: "Chains raise the stakes: the lock arrives while your partner is already moving. Learn the shape and the recognition here; the drilling itself is class-only, slow, with an instructor watching.",
+    stepSequence: [
+      "Release as you already know — turn your wrist against their thumb, not against their whole grip",
+      "Keep the hand you freed in contact rather than snatching it away",
+      "Follow their reaction — as their grip fails, their arm tends to straighten and travel forward",
+      "Take the outward wrist lock on that same arm, at the angle their movement has already offered",
+      "Stop at the edge of the range and wait for the tap, exactly as you were taught"
+    ],
+    keyDetails: ["Do not snatch the freed hand back — contact is what makes the second technique available", "The lock is taken on the angle their reaction gives you, not one you force", "Same stopping discipline as the standalone lock: edge of range, tap ends it instantly"],
+    commonErrors: ["Treating it as two separate techniques with a visible gap between them", "Chasing the lock so hard that the release is rushed and never really works", "Speeding up because it is a chain — the tap has less warning, not more"],
+    safetyNotes: ["Instructor supervision required. Chains reach the joint sooner than single techniques, so the margin for stopping is smaller, not larger.", "If your partner cannot tap freely with either hand at any moment, the chain is going too fast."],
+    instructorCheckpoints: ["The release genuinely works on its own before the lock is added", "Contact maintained rather than the hand being snatched back", "Lock taken on the offered angle, not forced", "Immediate release on the tap, at chain speed"],
+    media: {}, approvalStatus: "provisional" },
+  { id: "x-release-to-armbar", kind: "technique", beltId: "yellow-green", domain: "locks", unit: "YG4",
+    nameEnglish: "Release into standing arm bar", nameHangul: "빼기에서 팔 꺾기", romanization: "ppaegi-eseo pal kkeokgi",
+    purpose: "Use the straightened arm a release leaves behind to enter the standing arm bar you already know.",
+    attackOrGrab: "Cross-hand wrist grab, released as you were taught at yellow belt.",
+    safetyClass: "instructorSupervisionRequired", soloSafe: false, partnerRequired: true, instructorRequired: true,
+    practiceRestrictions: "The elbow is less forgiving than the wrist and gives less warning. Names, steps and recognition here; drilling is class-only, slow, under supervision.",
+    stepSequence: [
+      "Complete the cross-hand release, stepping off their line rather than pulling straight back",
+      "Read the arm — a released cross-hand grab often leaves it extended across their own centre",
+      "Take the position beside that arm, off their line, where you can see their face",
+      "Apply the standing arm bar as taught, control above the elbow, direction along the arm",
+      "Hold at the edge of the range, eyes on your partner, and release the instant they tap"
+    ],
+    keyDetails: ["Step off the line during the release — the arm bar needs that angle, not raw pull", "Control comes from position beside the arm, never from cranking the wrist", "Watch their face, not the elbow — the tap and the wince both arrive there first"],
+    commonErrors: ["Pulling straight backwards on the release, which leaves no angle to work from", "Applying the bar with speed because the entry felt smooth", "Standing square in front of them where you cannot see or control anything"],
+    safetyNotes: ["Instructor supervision required. The elbow gives less warning before injury than the wrist does.", "Slow application is not a beginner phase you graduate from — it is the technique."],
+    instructorCheckpoints: ["Release completed off the line, not straight back", "Position taken beside the arm with the partner's face visible", "Pressure along the arm, gradually applied", "Instant release on the tap, every repetition"],
+    media: {}, approvalStatus: "provisional" },
+
+  /* ============ YG5 · First Throws, By Name ============ */
+  { id: "x-heori-deonjigi", kind: "technique", beltId: "yellow-green", domain: "throws", unit: "YG5",
+    nameEnglish: "Hip throw", nameHangul: "허리 던지기", romanization: "heori deonjigi",
+    purpose: "Knowledge only at this belt: understand how a hip throw takes balance forward and carries it across your hip.",
+    attackOrGrab: "Commonly entered from a grab or a closed distance where you can reach their far side.",
+    safetyClass: "instructorSupervisionRequired", soloSafe: false, partnerRequired: true, instructorRequired: true,
+    practiceRestrictions: "KNOWLEDGE ONLY. Learn the name, the shape and how to recognise it. Throwing happens on mats, with an instructor, with a partner whose breakfalls are reliable — never anywhere else, at any speed.",
+    stepSequence: [
+      "Their balance is broken forward first — the throw starts before you have turned",
+      "Turn in so your hips arrive below and across their centre, back to them",
+      "Your hips become the pivot the throw travels over, not a lifting platform",
+      "Keep contact and control of the arm throughout — the landing is steered by that arm",
+      "Complete the turn so they travel around you and land where you intended"
+    ],
+    keyDetails: ["Balance is broken forward BEFORE the turn — a hip throw entered late becomes a lift", "Hips go below and across the centre; the height of the hips does the work", "The arm you keep is how their landing stays controlled, which is your responsibility"],
+    commonErrors: ["Turning first and trying to lift afterwards, which is heavy and unsafe for both people", "Letting go of the arm on completion so the fall becomes uncontrolled", "Practising the entry on someone who has not learned to breakfall"],
+    safetyNotes: ["Instructor supervision required. This is a throw: the person receiving it must be able to fall reliably first.", "Nothing about this belt permits attempting the throw outside class. The app teaches recognition and understanding only."],
+    instructorCheckpoints: ["Balance broken forward before any turn", "Hip position below and across the partner's centre", "Arm retained throughout for a controlled landing", "Partner's breakfall confirmed reliable before any repetitions"],
+    media: {}, approvalStatus: "provisional" },
+  { id: "x-batdari-hurigi", kind: "technique", beltId: "yellow-green", domain: "throws", unit: "YG5",
+    nameEnglish: "Outer leg reap", nameHangul: "밭다리 후리기", romanization: "batdari hurigi",
+    purpose: "Knowledge only at this belt: understand how a backward reap removes the leg that their weight has just been moved onto.",
+    attackOrGrab: "Entered from close range where their weight can be driven back onto one leg.",
+    safetyClass: "instructorSupervisionRequired", soloSafe: false, partnerRequired: true, instructorRequired: true,
+    practiceRestrictions: "KNOWLEDGE ONLY. This throw lands someone backwards, which is the hardest direction to fall in. Recognition and understanding here; the mat, an instructor and a reliable back breakfall are required for anything more.",
+    stepSequence: [
+      "Their weight is driven backward and onto one leg — that leg becomes the target",
+      "Step alongside so your own base is beside and past theirs, not square to it",
+      "The reaping leg swings back against their weighted leg, calf meeting calf",
+      "Upper body and reaping leg travel in opposite directions, turning them over the missing support",
+      "Retain the arm so the landing is guided rather than dropped"
+    ],
+    keyDetails: ["Reap the leg their weight is already on — an unweighted leg simply moves out of the way", "Upper body and leg work in opposition; that rotation is the throw, not the leg alone", "Backward landings are the least forgiving, so the arm you keep matters most here"],
+    commonErrors: ["Kicking at the leg before their weight has been moved onto it", "Reaping while standing square, leaving your own base under their fall", "Releasing the arm and letting the partner land backwards uncontrolled"],
+    safetyNotes: ["Instructor supervision required. Backward falls carry the highest head-impact risk of any direction, which is exactly why back breakfalls came first.", "Knowledge only at this belt — never attempt this outside class, at any speed, on anyone."],
+    instructorCheckpoints: ["Weight genuinely transferred before the reap", "Own base placed beside and past the partner", "Opposition between upper body and reaping leg", "Arm retained; partner's back breakfall confirmed reliable"],
+    media: {}, approvalStatus: "provisional" },
+
+  /* ============ YG6 · Kicks That Follow Kicks ============ */
+  { id: "x-yeonsok-chagi", kind: "technique", beltId: "yellow-green", domain: "strikes", unit: "YG6",
+    nameEnglish: "Combination kicking", nameHangul: "연속 차기", romanization: "yeonsok chagi",
+    purpose: "Link a front kick into a roundhouse on the other leg so that recovery from the first becomes the setup for the second.",
+    startingPosition: "Fighting stance, with room to move forward.",
+    safetyClass: "soloSafe", soloSafe: true, partnerRequired: false, instructorRequired: false,
+    practiceRestrictions: "Solo, slow, at your own height limit. Combinations tempt you to rush — speed is built in class after the balance is honest.",
+    stepSequence: [
+      "Front kick from the lead leg, re-chambering fully as you were taught",
+      "Set the kicking foot down forward, weight arriving balanced rather than falling onto it",
+      "Let that landing turn your hips ready for the second kick",
+      "Roundhouse with the rear leg, pivoting the support foot as usual",
+      "Re-chamber and set down in a balanced fighting stance, ready to move again"
+    ],
+    keyDetails: ["Both kicks re-chamber — a combination is no excuse to leave a leg hanging", "The set-down of the first kick IS the setup for the second; land balanced, not collapsed", "Slow and balanced beats fast and stumbling; the second kick reveals the first kick's honesty"],
+    commonErrors: ["Skipping the re-chamber on the first kick to reach the second sooner", "Falling forward onto the set-down so the second kick has no base", "Fixing the height before fixing the balance"],
+    safetyNotes: ["Solo: slow form only, waist height or below to begin, with space around you and something to steady yourself if needed."],
+    practiceAssignment: { type: "checklist", selfRateFirst: true, items: [
+      "5 slow combinations per side, pausing fully at each re-chamber",
+      "Check the set-down: balanced, not falling forward",
+      "5 more per side without pausing, still slow, keeping both re-chambers honest",
+      "Finish standing still for a moment in fighting stance — balance is the point" ] },
+    media: {}, approvalStatus: "provisional" },
+  { id: "x-idong-yeopchagi", kind: "technique", beltId: "yellow-green", domain: "strikes", unit: "YG6",
+    nameEnglish: "Stepping side kick", nameHangul: "이동 옆차기", romanization: "idong yeop chagi",
+    purpose: "Cover distance into a side kick so the kick arrives at range instead of waiting for range to arrive.",
+    startingPosition: "Fighting stance, side-on, with clear space ahead.",
+    safetyClass: "soloSafe", soloSafe: true, partnerRequired: false, instructorRequired: false,
+    practiceRestrictions: "Solo, slow, low. The step is the new part — add height only once the step no longer disturbs your balance.",
+    stepSequence: [
+      "From fighting stance, bring the rear foot up behind the lead foot without crossing in front",
+      "Let that step carry your weight forward while your shoulders stay level",
+      "Chamber the side kick on the now-free lead leg, knee high and tight",
+      "Extend along the line of the foot blade, hips turning over as usual",
+      "Re-chamber and set down balanced, side-on and ready"
+    ],
+    keyDetails: ["Step behind, never across the front — crossing your own feet is how balance is lost", "Shoulders stay level through the step; bobbing telegraphs the kick and wastes the distance", "The kick still chambers properly — covering distance changes the entry, not the kick"],
+    commonErrors: ["Crossing the feet in front and tangling the base", "Rising and dropping through the step so the kick loses its line", "Reaching with the foot instead of stepping the whole body into range"],
+    safetyNotes: ["Solo: slow form only, low height at first, with clear space behind you as well as ahead."],
+    practiceAssignment: { type: "checklist", selfRateFirst: true, items: [
+      "10 steps per side with no kick at all — just the step, shoulders level",
+      "5 slow stepping side kicks per side at knee height",
+      "Check the feet: behind, never crossed in front",
+      "Finish with 3 per side, pausing in the chamber to prove the balance" ] },
+    media: {}, approvalStatus: "provisional" },
+
+  /* ============ YG7 · When They Hold You ============ */
+  { id: "x-dwi-kkyeoanki", kind: "technique", beltId: "yellow-green", domain: "grabs", unit: "YG7",
+    nameEnglish: "Held from behind, arms free", nameHangul: "뒤 껴안기 빼기", romanization: "dwi kkyeoanki ppaegi",
+    purpose: "Recover base and posture when someone wraps you from behind above the arms, so that anything else becomes possible.",
+    attackOrGrab: "Bear hug from behind, with your arms still free.",
+    safetyClass: "partnerWithCare", soloSafe: false, partnerRequired: true, instructorRequired: false,
+    practiceRestrictions: "Partner drill, in class only, at a pace you have both agreed. Being held from behind is unpleasant for many people — the person being held sets the intensity and can stop it at any moment.",
+    stepSequence: [
+      "Drop your weight immediately — lower centre, knees bent, feet wider than they expect",
+      "Get your hips back under yourself rather than being carried forward",
+      "Bring your arms up and out to make a frame, protecting your ribs and creating space",
+      "Turn into the space you have made, toward their thumb side rather than against the whole grip",
+      "Face them with your base under you before considering anything further"
+    ],
+    keyDetails: ["Weight down first — height is what makes someone easy to carry", "Frame with the arms rather than prying at the hands; hands are strong, structure is not", "Turn toward the opening, never straight forward against the whole hold"],
+    commonErrors: ["Standing tall and trying to pull the arms apart with strength", "Bending forward at the waist, which hands them your balance completely", "Rushing the escape before the base is recovered"],
+    safetyNotes: ["Partner drill in class. Being held from behind can feel genuinely alarming — agree a stop signal before starting, and honour it instantly.", "No lifting and no throwing from this position at this belt."],
+    instructorCheckpoints: ["Weight drops before anything else is attempted", "Hips recovered underneath rather than folding forward", "Frame made with structure, not hand strength", "Stop signal agreed and respected both directions"],
+    media: {}, approvalStatus: "provisional" },
+  { id: "x-mok-gamgi", kind: "technique", beltId: "yellow-green", domain: "grabs", unit: "YG7",
+    nameEnglish: "Side headlock — posture first", nameHangul: "목 감기 빼기", romanization: "mok gamgi ppaegi",
+    purpose: "Protect the neck and recover posture when your head is wrapped from the side, before attempting anything else.",
+    attackOrGrab: "Side headlock, your head wrapped under their arm.",
+    safetyClass: "instructorSupervisionRequired", soloSafe: false, partnerRequired: true, instructorRequired: true,
+    practiceRestrictions: "Anything near the neck is instructor-supervised without exception. This is trained light, slow and briefly — the drill stops the moment the person held asks, without discussion.",
+    stepSequence: [
+      "Turn your chin toward their body immediately to protect the airway",
+      "Bring the near hand up to their gripping arm to relieve pressure on the neck",
+      "Step your feet in under your own weight and stand your posture back up",
+      "Take the space that standing creates, keeping your chin tucked throughout",
+      "Recover your base facing them, and stop there — the escape is the whole exercise at this belt"
+    ],
+    keyDetails: ["Chin turns in toward them first; that single movement protects the airway", "Posture comes from your feet and legs, not from wrenching your head out", "This is an escape and nothing more at this belt — no counters, no pressure in return"],
+    commonErrors: ["Pulling the head straight out, which grinds the neck and rarely works", "Leaving the feet behind so there is no base to stand up with", "Treating anything near the neck as a normal partner drill rather than a supervised one"],
+    safetyNotes: ["Instructor supervision required, without exception, because this is close to the neck and airway.", "Trained light and brief. The person being held ends the drill whenever they choose and no reason is required.", "No chokes are taught or practised at this belt, in either direction."],
+    instructorCheckpoints: ["Chin turns in immediately and stays tucked", "Escape driven by feet and posture rather than pulling the head", "Light, brief repetitions with an agreed stop signal", "No counter-technique attempted at this belt"],
+    media: {}, approvalStatus: "provisional" },
+
+  /* ============ YG8 · Yellow · Green Evaluation ============ */
+  { id: "c-yg-test", kind: "concept", beltId: "yellow-green", domain: "testprep", unit: "YG8",
+    nameEnglish: "Testing once throwing is in the room", nameHangul: "심사 4",
+    body: ["(Provisional — Grandmaster Lee sets the real standards.) At this stage an evaluation stops being a list of techniques and starts being a set of connections: a release that becomes a lock, a fall that receives a throw, a kick that follows a kick. Examiners are watching the joins as much as the parts.",
+      "Throwing changes the room in one more way. You are now examined on two people at once — what you did, and how the person receiving it landed. A throw that works and lands someone badly is not a pass."],
+    keyPoints: ["Connections between techniques are examined, not just the techniques", "With throws, your partner's landing is part of your assessment", "Cumulative material returns — earlier releases and falls are the foundation being tested"],
+    quiz: {
+      recog:   { q: "Once throws appear in an evaluation, you are being assessed on…", a: "Both your technique and how safely your partner lands", d: ["Only the speed of the throw", "Only how far your partner travels", "Only whether you remember the Korean name"] },
+      scenario:{ q: "In a test your throw succeeds, but your partner lands awkwardly because you let go of the arm. That is…", a: "A control failure — the landing was your responsibility", d: ["Fine, since the throw itself worked", "Your partner's fault for falling badly", "Only a problem if they are injured"] }
     } }
   ]
 };
