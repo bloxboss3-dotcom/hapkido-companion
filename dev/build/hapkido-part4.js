@@ -156,10 +156,48 @@ function renderMethod() {
 }
 
 /* ---------- settings ---------- */
+/* Focus — choose what you are NOT working on right now. Grouped by category
+   because that is how the wish arrives ("leave the stances alone"), with a
+   per-item escape hatch on each item's own page for finer cuts. */
+function renderFocus() {
+  const muted = mutedCount();
+  const rows = ((window.CURRICULUM && CURRICULUM.domains) || []).map(d => {
+    const ids = SEQUENCE.filter(id => ITEMS[id].domain === d.id);
+    if (!ids.length) return '';
+    const off = (S.settings.mutedDomains || []).indexOf(d.id) >= 0;
+    const items = ids.filter(id => (S.settings.mutedItems || []).indexOf(id) >= 0).length;
+    const course = COURSE_BY_TRACK[d.track];
+    return `<div class="focus-row${off ? ' off' : ''}">
+      <button class="focus-tog" data-mutedom="${esc(d.id)}" role="switch" aria-checked="${off ? 'false' : 'true'}"
+        aria-label="${off ? 'Include' : 'Skip'} ${esc(d.nameEnglish)}">${off ? '＋' : '−'}</button>
+      <div class="focus-body">
+        <div class="focus-name">${esc(d.nameEnglish)}${course ? ` <span class="faint">· ${esc(course.shortName)}</span>` : ''}</div>
+        <div class="focus-sub">${ids.length} item${ids.length === 1 ? '' : 's'}${off ? ' · skipped for now' : items ? ` · ${items} skipped individually` : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+  return `
+  <div class="card">
+    <h2>Focus — what to skip for now</h2>
+    <p class="sub">Turn a category off and it stops appearing in sessions, new and review alike. Nothing is deleted:
+    every card keeps its schedule and its history, and turning it back on brings it straight back.</p>
+    <div class="focus-list">${rows}</div>
+    <div class="notice" style="margin-top:12px">
+      <b>This never changes your belt readiness.</b> The Belt tab keeps measuring the whole belt, because
+      Grandmaster Lee still tests the whole belt. Skipping something here changes what you study today —
+      it does not change what you will be asked to show.
+    </div>
+    ${muted ? `<div class="row" style="margin-top:12px">
+      <button class="btn" data-act="unmuteall">Bring back everything (${muted} item${muted === 1 ? '' : 's'} skipped)</button>
+    </div>` : ''}
+  </div>`;
+}
+
 function renderSettings() {
   const st = stats();
   const koVoices = voices;
   return `
+  ${renderFocus()}
   <div class="card">
     <h2>Study settings</h2>
     <p class="sub">These are the two dials that actually matter. Everything else is cosmetic.</p>

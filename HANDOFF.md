@@ -15,7 +15,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   assigns items; a third course is a data entry.
 - **Engine:** Hanbit's FSRS-5 scheduler, session planner, FX/celebration system,
   storage/migration safety — preserved via the transform-override build
-  (`dev/build/`). 140/140 automated checks passing.
+  (`dev/build/`). 148/148 automated checks passing.
 - **Repo:** `npm run build` / `npm test` / `npm run check`, plus a GitHub Actions
   job that rebuilds `index.html` on every PR and fails if the deployed file has
   drifted from the source it is generated from. Dependencies are locked
@@ -98,6 +98,14 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   items, up from 46%; Green belt is entirely holds and control. Keep new belts
   weighted that way. Everything on Green is restricted class — being held is a
   partner situation by definition, and none of it is solo-practicable.
+- **Focus — skip what you are not working on.** Settings has a Focus panel
+  listing every category with a toggle; each item's own page has a "skip this
+  one for now" button. Muted material stops appearing in sessions, new and
+  review alike, and a fully-skipped unit reads "Skipped for now" on the path
+  rather than sitting at 0/4 looking neglected. Nothing is deleted — cards keep
+  their schedule and come back untouched. **Muting deliberately does not move
+  belt readiness**, because the school still tests the whole belt; the Focus
+  panel says so and a test enforces it.
 - **Content gates in CI.** The matrix now tests the CONTENT, not just the
   machinery: every technique in a falls/locks/throws/choke/weapon domain must
   be instructor-gated and non-practicable; every technique must carry
@@ -115,7 +123,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 - **Deploy:** GitHub Pages serves root `index.html` (generated single-file), now
   by `git push` to `main` rather than manual upload. **Fully automatic:** the
   `auto-merge` job in `verify.yml` squash-merges a green non-draft `claude/*`
-  PR and Pages republishes itself, so nobody clicks merge. The 140-check matrix
+  PR and Pages republishes itself, so nobody clicks merge. The 148-check matrix
   is therefore the only gate before students see a change — grow it, and keep
   PRs in draft until they are actually finished. The repo had drifted — only
   a hand-uploaded `index.html` was on GitHub, one build behind (still the old
@@ -163,7 +171,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 npm ci                                           # playwright, exactly as locked
 npm run check                                    # build + in-sync check + matrix
 ```
-Confirm 140/140, commit any drift, then pick up item 1 or 3 above with Kevin.
+Confirm 148/148, commit any drift, then pick up item 1 or 3 above with Kevin.
 After a deploy lands, `npm run smoke` checks the live site (needs network).
 When authoring the next belt, remember it wants units in BOTH courses.
 Original Hanbit app must never be modified: `dev/hanbit-korean.BACKUP-2026-07-30.html`

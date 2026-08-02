@@ -159,8 +159,12 @@ function renderCourses() {
    mixed unit reads "0/6 learned" on a path that only contains two of them. */
 function unitState(u, courseSel) {
   const course = asCourse(courseSel);
-  const ids = SEQUENCE.filter(id => ITEMS[id].unit === u.id &&
+  const all = SEQUENCE.filter(id => ITEMS[id].unit === u.id &&
     (!course || courseIdOf(ITEMS[id]) === course.id));
+  // Muted items drop out of the unit's counts, so a unit you are skipping does
+  // not sit at "0/4 learned" forever looking like neglected work.
+  const ids = all.filter(id => !isMuted(ITEMS[id]));
+  const skipped = all.length - ids.length;
   const intro = ids.filter(id => S.introduced[id]).length;
   const held = ids.filter(id => {
     const it = ITEMS[id];
@@ -170,7 +174,8 @@ function unitState(u, courseSel) {
   const mastered = ids.filter(id => knowledgeMastered(ITEMS[id])).length;
   const techs = ids.filter(id => ITEMS[id].kind === 'technique' && ITEMS[id].instructorRequired);
   const verified = techs.filter(id => S.verifications[id]).length;
-  return { ids, intro, held, mastered, done: ids.length > 0 && intro === ids.length && held === ids.length,
+  return { ids, intro, held, mastered, skipped, allCount: all.length,
+           done: ids.length > 0 && intro === ids.length && held === ids.length,
            sealed: techs.length > 0 && verified === techs.length, techCount: techs.length, verified };
 }
 
@@ -195,13 +200,16 @@ function renderPath() {
     let activeIdx = states.findIndex(s => !s.done);
     return laneUnits.map((u, i) => {
       const s = states[i];
-      const cls = s.done ? 'done' : i === activeIdx ? 'active' : 'up';
+      const allSkipped = s.allCount > 0 && s.ids.length === 0;
+      const cls = allSkipped ? 'skipped' : s.done ? 'done' : i === activeIdx ? 'active' : 'up';
       return `<div class="pnode ${cls}" data-gotounit="${u.id}" style="--nodec:${nodec}">
-        <div class="dot">${s.done ? check : (i + 1)}</div>
+        <div class="dot">${allSkipped ? '–' : s.done ? check : (i + 1)}</div>
         <div class="pinfo">
           <div class="pt">${esc(u.title)}${s.sealed ? '<span class="seal" title="All techniques instructor-verified">✓</span>' : ''}</div>
           <div class="ps">${esc(u.blurb)}</div>
-          <div class="ps">${s.intro}/${s.ids.length} learned${s.mastered ? ` · ${s.mastered} mastered` : ''}${s.techCount ? ` · ${s.verified}/${s.techCount} verified` : ''}</div>
+          <div class="ps">${allSkipped
+            ? `Skipped for now · ${s.allCount} item${s.allCount === 1 ? '' : 's'} waiting`
+            : `${s.intro}/${s.ids.length} learned${s.mastered ? ` · ${s.mastered} mastered` : ''}${s.techCount ? ` · ${s.verified}/${s.techCount} verified` : ''}${s.skipped ? ` · ${s.skipped} skipped` : ''}`}</div>
         </div>
       </div>`;
     }).join('');
@@ -482,7 +490,17 @@ function drillProgressBlock(it) {
 function renderItemDetail(it) {
   const badge = it.approvalStatus && it.approvalStatus !== 'approved'
     ? '<div style="margin:6px 0 10px"><span class="badge-prov sm">Provisional — awaiting Grandmaster Lee</span></div>' : '';
-  const prov = badge + drillProgressBlock(it);
+  const domOff = (S.settings.mutedDomains || []).indexOf(it.domain) >= 0;
+  const selfOff = (S.settings.mutedItems || []).indexOf(it.id) >= 0;
+  const skip = `<div class="skip-row">
+    <button class="btn ${selfOff ? '' : 'ghost'}" data-muteitem="${esc(it.id)}" ${domOff ? 'disabled' : ''}>
+      ${selfOff ? 'Bring this back into sessions' : 'Skip this one for now'}</button>
+    <span class="faint">${domOff
+      ? 'The whole ' + esc((DOMAIN_BY_ID[it.domain] || {}).nameEnglish || 'category') + ' category is skipped in Settings.'
+      : selfOff ? 'Not scheduled right now. Nothing is lost — its history is waiting.'
+                : 'Keeps it out of sessions without deleting anything. Belt readiness still counts it.'}</span>
+  </div>`;
+  const prov = badge + drillProgressBlock(it) + skip;
 
   if (it.kind === 'term') {
     return `${prov}<div class="row" style="align-items:center;gap:14px">

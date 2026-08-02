@@ -215,11 +215,43 @@ function cumulativeStats(belt, courseSel) {
 
 /* ---------- belt gating: schedule only your belt and below.
    FSRS never unlocks a belt, and never unlocks physical practice. */
+/* ---------- focus: skip what you are not working on right now ----------
+   A student mid-belt often wants to drill locks and grabs and leave the
+   stances alone for a fortnight. Muting keeps those items out of scheduling
+   without touching a single card — nothing is deleted, and unmuting brings
+   the item straight back with its history intact.
+
+   What muting deliberately does NOT do is move the belt. beltStats() reads
+   beltItems(), never eligibleSequence(), so the five readiness measures keep
+   counting the whole belt whether you are studying it or not. That is the
+   point: skipping the front kick is a study choice, but Grandmaster Lee still
+   tests the front kick, and an app that reported you "ready" because you had
+   hidden half the syllabus would be lying about the only thing it exists to
+   report. The Settings copy says so out loud. */
+function isMuted(item) {
+  if (!item) return false;
+  const s = S.settings;
+  return (s.mutedItems || []).indexOf(item.id) >= 0 ||
+         (s.mutedDomains || []).indexOf(item.domain) >= 0;
+}
+function mutedCount() { return SEQUENCE.filter(id => isMuted(ITEMS[id])).length; }
+function setMuted(kind, key, on) {
+  const s = S.settings;
+  const listName = kind === 'domain' ? 'mutedDomains' : 'mutedItems';
+  const list = (s[listName] || []).slice();
+  const at = list.indexOf(key);
+  if (on && at < 0) list.push(key);
+  if (!on && at >= 0) list.splice(at, 1);
+  s[listName] = list;
+  save();
+}
+
 function eligibleSequence(courseSel) {
   const ab = activeBelt();
   const course = asCourse(courseSel);
   return SEQUENCE.filter(id => ITEMS[id].beltOrder <= ab.order &&
-    (!course || courseIdOf(ITEMS[id]) === course.id));
+    (!course || courseIdOf(ITEMS[id]) === course.id) &&
+    !isMuted(ITEMS[id]));
 }
 
 /* ---------- milestones (hapkido) ---------- */
@@ -418,6 +450,10 @@ function plan(courseSel) {
   const course = asCourse(courseSel);
   const now = Date.now();
   let due = dueCards(now);
+  // Muted items stop coming up for review too, not just for new material —
+  // otherwise "skip this for now" only half works. The cards keep their
+  // schedule and simply wait.
+  due = due.filter(k => { const it = cardItem(k); return it && !isMuted(it); });
   if (course) due = due.filter(k => { const it = cardItem(k); return it && courseIdOf(it) === course.id; });
   const newSlots = Math.max(0, S.settings.dailyNew - newToday(course));
   const newIds = nextNewItems(newSlots, course);

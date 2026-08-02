@@ -112,7 +112,9 @@ DEFAULTS_NEW = '''const DEFAULTS = {
     volume: 0.5,
     spokenPraise: false,
     activeBeltId: '',       // the belt currently being trained for
-    activeCourseId: ''      // '' until the student picks a course
+    activeCourseId: '',     // '' until the student picks a course
+    mutedDomains: [],       // focus: whole categories skipped for now
+    mutedItems: []          // focus: individual items skipped for now
   },
   milestones: {},           // one-time celebrations already fired
   cards: {},                // "itemId|skill" -> FSRS card (KNOWLEDGE only)

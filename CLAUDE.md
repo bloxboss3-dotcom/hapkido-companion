@@ -108,6 +108,16 @@ Working title. Read `HANDOFF.md` for current state and roadmap before doing anyt
   every theme. The dojang room and portraits use FIXED mid-tones for that
   reason. (b) *Korean without romanization.* Kevin cannot read Hangul yet —
   any new Korean-displaying UI must follow `showRomanization` like the rest.
+- **Focus (`isMuted`, part1)** — `settings.mutedDomains` / `mutedItems` keep
+  chosen categories or items out of scheduling, filtered in
+  `eligibleSequence()` (new) and in `plan()`'s due list (reviews). Nothing is
+  deleted: cards keep their schedule and unmuting restores them untouched.
+  **Muting must never move the belt.** `beltStats()` reads `beltItems()`, not
+  `eligibleSequence()`, so the five readiness measures keep counting the whole
+  belt — Grandmaster Lee still tests what you skipped, and an app that called
+  you "ready" because you hid half the syllabus would be lying about the one
+  thing it exists to report. A test pins this; keep any new measure on
+  `beltItems()`.
 - **Pedagogy — what the exercise mix is for.** Four technique rungs are multiple
   choice (recognition); `t-explain` is the one that makes the student PRODUCE
   before seeing the answer, which is why it exists and why it is weighted 2.5.
@@ -153,7 +163,7 @@ declares them; `domain.track` assigns items. Adding a third = one data entry.
 ```bash
 npm ci                                # once: playwright, exactly as locked
 npm run build                         # rebuilds both index.html files
-npm test                              # 140 checks; needs playwright + chromium
+npm test                              # 148 checks; needs playwright + chromium
 npm run check                         # build + in-sync check + test (what CI runs)
 npm run smoke                         # optional: tests the DEPLOYED site (needs network)
 ```
@@ -167,7 +177,7 @@ deploy-only failures (stale deploy, 404 or wrong MIME on an asset) that a
 `file://` matrix structurally cannot see. It is not in CI and needs real
 network — a sandbox that blocks the browser's egress can't run it.
 
-The matrix must pass 140/140 (grow it with every feature — count goes up, never
+The matrix must pass 148/148 (grow it with every feature — count goes up, never
 down). It covers: boot, course picker + switching + persistence, per-course paths,
 per-course daily budgets, course-scoped and both-course sessions, course-scoped vs
 whole-belt readiness, FSRS values against hand-computed expectations, wrong-answer

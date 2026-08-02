@@ -1010,6 +1010,97 @@ async function answerCurrentRight() {
   await page.evaluate(() => { window.__HKD.view = 'today'; window.__HKD.render(); });
   await sleep(200);
 
+  /* ---- 19d. FOCUS — skip what you are not working on ----
+     The load-bearing rule is the LAST one: skipping changes what you study
+     today, never what the belt says you are ready for. */
+  await page.evaluate(() => {
+    const H = window.__HKD;
+    H.S.settings.mutedDomains = []; H.S.settings.mutedItems = [];
+    H.S.settings.activeCourseId = 'art'; H.save(); H.view = 'today'; H.render();
+  });
+  await sleep(200);
+  ok('focus: muting a category removes it from scheduling', await page.evaluate(() => {
+    const H = window.__HKD;
+    const before = H.eligibleSequence('art').length;
+    H.setMuted('domain', 'strikes', true);
+    const after = H.eligibleSequence('art').length;
+    const anyStrike = H.eligibleSequence('art').some(id => H.ITEMS[id].domain === 'strikes');
+    return after < before && !anyStrike;
+  }));
+  ok('focus: muted items never reach the session plan, new or due', await page.evaluate(() => {
+    const H = window.__HKD;
+    // give every strike a due card so they WOULD appear if not filtered
+    H.SEQUENCE.filter(id => H.ITEMS[id].domain === 'strikes').forEach(id => {
+      H.S.introduced[id] = Date.now();
+      H.ladderFor(H.ITEMS[id]).forEach(sk => {
+        H.S.cards[H.ck(id, sk)] = { S: 2, D: 5, due: Date.now() - 86400000, last: Date.now() - 2 * 86400000, reps: 2, lapses: 0, state: 'review' };
+      });
+    });
+    H.save();
+    const p = H.plan('art');
+    const ids = p.newIds.concat(p.due.map(k => k.split('|')[0]));
+    return ids.length >= 0 && ids.every(id => !H.isMuted(H.ITEMS[id]));
+  }));
+  // THE one that matters.
+  ok('focus: skipping never changes belt readiness — the belt still tests it', await page.evaluate(() => {
+    const H = window.__HKD;
+    H.S.settings.mutedDomains = []; H.save();
+    const open = H.beltStats(H.activeBelt());
+    H.S.settings.mutedDomains = ['strikes', 'stances', 'locks']; H.save();
+    const muted = H.beltStats(H.activeBelt());
+    return open.total === muted.total && open.mastered === muted.mastered &&
+      open.practicable === muted.practicable && open.vreq === muted.vreq;
+  }));
+  ok('focus: the settings screen says readiness is unaffected', await page.evaluate(() => {
+    const H = window.__HKD; H.view = 'settings'; H.render();
+    return /never changes your belt readiness/i.test(document.body.innerText);
+  }));
+  ok('focus: nothing is deleted — unmuting restores the cards untouched', await page.evaluate(() => {
+    const H = window.__HKD;
+    const id = H.SEQUENCE.find(x => H.ITEMS[x].domain === 'strikes' && H.S.cards[H.ck(x, H.ladderFor(H.ITEMS[x])[0])]);
+    if (!id) return false;
+    const key = H.ck(id, H.ladderFor(H.ITEMS[id])[0]);
+    const snapshot = JSON.stringify(H.S.cards[key]);
+    H.setMuted('domain', 'strikes', true);
+    const whileMuted = JSON.stringify(H.S.cards[key]);
+    H.setMuted('domain', 'strikes', false);
+    const after = JSON.stringify(H.S.cards[key]);
+    return snapshot === whileMuted && snapshot === after &&
+      H.eligibleSequence('art').indexOf(id) >= 0;          // and it comes back
+  }));
+  ok('focus: a single item can be skipped on its own', await page.evaluate(() => {
+    const H = window.__HKD;
+    H.S.settings.mutedDomains = []; H.S.settings.mutedItems = []; H.save();
+    const id = H.SEQUENCE.find(x => H.ITEMS[x].domain === 'strikes');
+    H.setMuted('item', id, true);
+    const gone = H.eligibleSequence('art').indexOf(id) < 0;
+    const othersStay = H.eligibleSequence('art').some(x => H.ITEMS[x].domain === 'strikes');
+    return gone && othersStay && H.mutedCount() === 1;
+  }));
+  await page.evaluate(() => { window.__HKD.view = 'settings'; window.__HKD.render(); });
+  await sleep(250);
+  ok('focus: bring-back-everything clears the lot', await page.evaluate(() => {
+    const btn = document.querySelector('[data-act="unmuteall"]');
+    if (!btn) return false;
+    btn.click();
+    const H = window.__HKD;
+    return H.mutedCount() === 0 && (H.S.settings.mutedDomains || []).length === 0;
+  }));
+  ok('focus: a fully-skipped unit reads as skipped on the path, not as neglect', await page.evaluate(() => {
+    const H = window.__HKD;
+    H.setMuted('domain', 'strikes', true);
+    H.view = 'today'; H.render();
+    const nodes = [...document.querySelectorAll('.pnode.skipped')];
+    return nodes.length > 0 && /skipped for now/i.test(nodes[0].textContent);
+  }));
+  await page.screenshot({ path: 'shots/focus-path.png' });
+  await page.evaluate(() => {
+    const H = window.__HKD;
+    H.S.settings.mutedDomains = []; H.S.settings.mutedItems = [];
+    H.save(); H.view = 'today'; H.render();
+  });
+  await sleep(200);
+
   /* ---- 19c. CONTENT GATES ----
      Everything above tests machinery. These test the CONTENT, across every
      item that exists — so a future belt cannot ship a mis-gated technique, a

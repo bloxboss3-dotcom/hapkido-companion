@@ -857,6 +857,25 @@ header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, va
 .fb-steps.marked li.missed { color: var(--tx); font-weight: 600; }
 .fb-steps.marked li.missed::marker { color: var(--bad); font-weight: 700; }
 
+/* ---- focus: skipping what you are not working on ---- */
+.focus-list { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
+.focus-row { display: flex; align-items: center; gap: 11px; padding: 9px 2px; border-bottom: 1px solid var(--line-soft); }
+.focus-row:last-child { border-bottom: none; }
+.focus-row.off .focus-name, .focus-row.off .focus-sub { color: var(--tx-faint); }
+.focus-tog { flex: none; width: 30px; height: 30px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--bg-raise); color: var(--tx-dim); font-size: 15px; line-height: 1; cursor: pointer; }
+.focus-row:not(.off) .focus-tog { border-color: var(--accent); color: var(--accent); }
+.focus-body { flex: 1; min-width: 0; }
+.focus-name { font-size: 13.5px; font-weight: 600; }
+.focus-sub { font-size: 11.5px; color: var(--tx-faint); margin-top: 1px; }
+
+.skip-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; }
+.skip-row .faint { font-size: 11.5px; flex: 1; min-width: 140px; line-height: 1.45; }
+
+/* A unit you are skipping should read as a deliberate choice, not as neglect. */
+.pnode.skipped { opacity: .55; }
+.pnode.skipped .dot { border-style: dashed; }
+
 /* ---- explain-it-yourself rung ---- */
 .explain-cue { border-style: dashed; }
 .ex-purpose { font-size: 14px; line-height: 1.55; margin-bottom: 8px; }
@@ -3878,7 +3897,9 @@ const DEFAULTS = {
     volume: 0.5,
     spokenPraise: false,
     activeBeltId: '',       // the belt currently being trained for
-    activeCourseId: ''      // '' until the student picks a course
+    activeCourseId: '',     // '' until the student picks a course
+    mutedDomains: [],       // focus: whole categories skipped for now
+    mutedItems: []          // focus: individual items skipped for now
   },
   milestones: {},           // one-time celebrations already fired
   cards: {},                // "itemId|skill" -> FSRS card (KNOWLEDGE only)
@@ -6141,11 +6162,43 @@ function cumulativeStats(belt, courseSel) {
 
 /* ---------- belt gating: schedule only your belt and below.
    FSRS never unlocks a belt, and never unlocks physical practice. */
+/* ---------- focus: skip what you are not working on right now ----------
+   A student mid-belt often wants to drill locks and grabs and leave the
+   stances alone for a fortnight. Muting keeps those items out of scheduling
+   without touching a single card — nothing is deleted, and unmuting brings
+   the item straight back with its history intact.
+
+   What muting deliberately does NOT do is move the belt. beltStats() reads
+   beltItems(), never eligibleSequence(), so the five readiness measures keep
+   counting the whole belt whether you are studying it or not. That is the
+   point: skipping the front kick is a study choice, but Grandmaster Lee still
+   tests the front kick, and an app that reported you "ready" because you had
+   hidden half the syllabus would be lying about the only thing it exists to
+   report. The Settings copy says so out loud. */
+function isMuted(item) {
+  if (!item) return false;
+  const s = S.settings;
+  return (s.mutedItems || []).indexOf(item.id) >= 0 ||
+         (s.mutedDomains || []).indexOf(item.domain) >= 0;
+}
+function mutedCount() { return SEQUENCE.filter(id => isMuted(ITEMS[id])).length; }
+function setMuted(kind, key, on) {
+  const s = S.settings;
+  const listName = kind === 'domain' ? 'mutedDomains' : 'mutedItems';
+  const list = (s[listName] || []).slice();
+  const at = list.indexOf(key);
+  if (on && at < 0) list.push(key);
+  if (!on && at >= 0) list.splice(at, 1);
+  s[listName] = list;
+  save();
+}
+
 function eligibleSequence(courseSel) {
   const ab = activeBelt();
   const course = asCourse(courseSel);
   return SEQUENCE.filter(id => ITEMS[id].beltOrder <= ab.order &&
-    (!course || courseIdOf(ITEMS[id]) === course.id));
+    (!course || courseIdOf(ITEMS[id]) === course.id) &&
+    !isMuted(ITEMS[id]));
 }
 
 /* ---------- milestones (hapkido) ---------- */
@@ -6344,6 +6397,10 @@ function plan(courseSel) {
   const course = asCourse(courseSel);
   const now = Date.now();
   let due = dueCards(now);
+  // Muted items stop coming up for review too, not just for new material —
+  // otherwise "skip this for now" only half works. The cards keep their
+  // schedule and simply wait.
+  due = due.filter(k => { const it = cardItem(k); return it && !isMuted(it); });
   if (course) due = due.filter(k => { const it = cardItem(k); return it && courseIdOf(it) === course.id; });
   const newSlots = Math.max(0, S.settings.dailyNew - newToday(course));
   const newIds = nextNewItems(newSlots, course);
@@ -7156,8 +7213,12 @@ function renderCourses() {
    mixed unit reads "0/6 learned" on a path that only contains two of them. */
 function unitState(u, courseSel) {
   const course = asCourse(courseSel);
-  const ids = SEQUENCE.filter(id => ITEMS[id].unit === u.id &&
+  const all = SEQUENCE.filter(id => ITEMS[id].unit === u.id &&
     (!course || courseIdOf(ITEMS[id]) === course.id));
+  // Muted items drop out of the unit's counts, so a unit you are skipping does
+  // not sit at "0/4 learned" forever looking like neglected work.
+  const ids = all.filter(id => !isMuted(ITEMS[id]));
+  const skipped = all.length - ids.length;
   const intro = ids.filter(id => S.introduced[id]).length;
   const held = ids.filter(id => {
     const it = ITEMS[id];
@@ -7167,7 +7228,8 @@ function unitState(u, courseSel) {
   const mastered = ids.filter(id => knowledgeMastered(ITEMS[id])).length;
   const techs = ids.filter(id => ITEMS[id].kind === 'technique' && ITEMS[id].instructorRequired);
   const verified = techs.filter(id => S.verifications[id]).length;
-  return { ids, intro, held, mastered, done: ids.length > 0 && intro === ids.length && held === ids.length,
+  return { ids, intro, held, mastered, skipped, allCount: all.length,
+           done: ids.length > 0 && intro === ids.length && held === ids.length,
            sealed: techs.length > 0 && verified === techs.length, techCount: techs.length, verified };
 }
 
@@ -7192,13 +7254,16 @@ function renderPath() {
     let activeIdx = states.findIndex(s => !s.done);
     return laneUnits.map((u, i) => {
       const s = states[i];
-      const cls = s.done ? 'done' : i === activeIdx ? 'active' : 'up';
+      const allSkipped = s.allCount > 0 && s.ids.length === 0;
+      const cls = allSkipped ? 'skipped' : s.done ? 'done' : i === activeIdx ? 'active' : 'up';
       return `<div class="pnode ${cls}" data-gotounit="${u.id}" style="--nodec:${nodec}">
-        <div class="dot">${s.done ? check : (i + 1)}</div>
+        <div class="dot">${allSkipped ? '–' : s.done ? check : (i + 1)}</div>
         <div class="pinfo">
           <div class="pt">${esc(u.title)}${s.sealed ? '<span class="seal" title="All techniques instructor-verified">✓</span>' : ''}</div>
           <div class="ps">${esc(u.blurb)}</div>
-          <div class="ps">${s.intro}/${s.ids.length} learned${s.mastered ? ` · ${s.mastered} mastered` : ''}${s.techCount ? ` · ${s.verified}/${s.techCount} verified` : ''}</div>
+          <div class="ps">${allSkipped
+            ? `Skipped for now · ${s.allCount} item${s.allCount === 1 ? '' : 's'} waiting`
+            : `${s.intro}/${s.ids.length} learned${s.mastered ? ` · ${s.mastered} mastered` : ''}${s.techCount ? ` · ${s.verified}/${s.techCount} verified` : ''}${s.skipped ? ` · ${s.skipped} skipped` : ''}`}</div>
         </div>
       </div>`;
     }).join('');
@@ -7479,7 +7544,17 @@ function drillProgressBlock(it) {
 function renderItemDetail(it) {
   const badge = it.approvalStatus && it.approvalStatus !== 'approved'
     ? '<div style="margin:6px 0 10px"><span class="badge-prov sm">Provisional — awaiting Grandmaster Lee</span></div>' : '';
-  const prov = badge + drillProgressBlock(it);
+  const domOff = (S.settings.mutedDomains || []).indexOf(it.domain) >= 0;
+  const selfOff = (S.settings.mutedItems || []).indexOf(it.id) >= 0;
+  const skip = `<div class="skip-row">
+    <button class="btn ${selfOff ? '' : 'ghost'}" data-muteitem="${esc(it.id)}" ${domOff ? 'disabled' : ''}>
+      ${selfOff ? 'Bring this back into sessions' : 'Skip this one for now'}</button>
+    <span class="faint">${domOff
+      ? 'The whole ' + esc((DOMAIN_BY_ID[it.domain] || {}).nameEnglish || 'category') + ' category is skipped in Settings.'
+      : selfOff ? 'Not scheduled right now. Nothing is lost — its history is waiting.'
+                : 'Keeps it out of sessions without deleting anything. Belt readiness still counts it.'}</span>
+  </div>`;
+  const prov = badge + drillProgressBlock(it) + skip;
 
   if (it.kind === 'term') {
     return `${prov}<div class="row" style="align-items:center;gap:14px">
@@ -7680,10 +7755,48 @@ function renderMethod() {
 }
 
 /* ---------- settings ---------- */
+/* Focus — choose what you are NOT working on right now. Grouped by category
+   because that is how the wish arrives ("leave the stances alone"), with a
+   per-item escape hatch on each item's own page for finer cuts. */
+function renderFocus() {
+  const muted = mutedCount();
+  const rows = ((window.CURRICULUM && CURRICULUM.domains) || []).map(d => {
+    const ids = SEQUENCE.filter(id => ITEMS[id].domain === d.id);
+    if (!ids.length) return '';
+    const off = (S.settings.mutedDomains || []).indexOf(d.id) >= 0;
+    const items = ids.filter(id => (S.settings.mutedItems || []).indexOf(id) >= 0).length;
+    const course = COURSE_BY_TRACK[d.track];
+    return `<div class="focus-row${off ? ' off' : ''}">
+      <button class="focus-tog" data-mutedom="${esc(d.id)}" role="switch" aria-checked="${off ? 'false' : 'true'}"
+        aria-label="${off ? 'Include' : 'Skip'} ${esc(d.nameEnglish)}">${off ? '＋' : '−'}</button>
+      <div class="focus-body">
+        <div class="focus-name">${esc(d.nameEnglish)}${course ? ` <span class="faint">· ${esc(course.shortName)}</span>` : ''}</div>
+        <div class="focus-sub">${ids.length} item${ids.length === 1 ? '' : 's'}${off ? ' · skipped for now' : items ? ` · ${items} skipped individually` : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+  return `
+  <div class="card">
+    <h2>Focus — what to skip for now</h2>
+    <p class="sub">Turn a category off and it stops appearing in sessions, new and review alike. Nothing is deleted:
+    every card keeps its schedule and its history, and turning it back on brings it straight back.</p>
+    <div class="focus-list">${rows}</div>
+    <div class="notice" style="margin-top:12px">
+      <b>This never changes your belt readiness.</b> The Belt tab keeps measuring the whole belt, because
+      Grandmaster Lee still tests the whole belt. Skipping something here changes what you study today —
+      it does not change what you will be asked to show.
+    </div>
+    ${muted ? `<div class="row" style="margin-top:12px">
+      <button class="btn" data-act="unmuteall">Bring back everything (${muted} item${muted === 1 ? '' : 's'} skipped)</button>
+    </div>` : ''}
+  </div>`;
+}
+
 function renderSettings() {
   const st = stats();
   const koVoices = voices;
   return `
+  ${renderFocus()}
   <div class="card">
     <h2>Study settings</h2>
     <p class="sub">These are the two dials that actually matter. Everything else is cosmetic.</p>
@@ -8053,11 +8166,27 @@ function doImport(file) {
 }
 
 /* ---------- extra event wiring (new data-attributes only) ---------- */
-const HKD_ACTS = new Set(['selfreveal', 'psave', 'pback', 'instructor', 'pinset', 'pinsubmit', 'instrexit', 'start-both']);
+const HKD_ACTS = new Set(['selfreveal', 'psave', 'pback', 'instructor', 'pinset', 'pinsubmit', 'instrexit', 'start-both', 'unmuteall']);
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-selfgrade],[data-beltsel],[data-practice],[data-pcheck],[data-prate],[data-verify],[data-gotounit],[data-instrbelt],[data-course],[data-scope],[data-act]');
+  const t = e.target.closest('[data-selfgrade],[data-beltsel],[data-practice],[data-pcheck],[data-prate],[data-verify],[data-gotounit],[data-instrbelt],[data-course],[data-scope],[data-mutedom],[data-muteitem],[data-act]');
   if (!t) return;
+
+  // Focus toggles — skipping is always reversible, so no confirmation.
+  if (t.dataset.mutedom) {
+    Sfx.play('tap');
+    const on = (S.settings.mutedDomains || []).indexOf(t.dataset.mutedom) >= 0;
+    setMuted('domain', t.dataset.mutedom, !on);
+    render();
+    return;
+  }
+  if (t.dataset.muteitem) {
+    Sfx.play('tap');
+    const on = (S.settings.mutedItems || []).indexOf(t.dataset.muteitem) >= 0;
+    setMuted('item', t.dataset.muteitem, !on);
+    render();
+    return;
+  }
 
   if (t.dataset.course) { switchCourse(t.dataset.course); return; }
   if (t.dataset.scope) {
@@ -8089,6 +8218,10 @@ document.addEventListener('click', e => {
   const act = t.dataset.act;
   if (!act || !HKD_ACTS.has(act)) return;
   if (act === 'start-both') { startSession('*'); return; }
+  if (act === 'unmuteall') {
+    S.settings.mutedDomains = []; S.settings.mutedItems = [];
+    save(); showToast('Everything is back in your sessions.'); render(); return;
+  }
   if (act === 'selfreveal') { if (sess && liveEx && liveEx.type === 'self') { sess.selfOpen = true; render(); } return; }
   if (act === 'psave') { savePractice(); return; }
   if (act === 'pback') { practiceItemId = null; practiceState = null; view = 'belt'; render(); return; }
@@ -8211,7 +8344,8 @@ window.__HKD = {
   save, render, plan, planTotal, stats, beltStats, cumulativeStats, activeBelt, ladderFor, knowledgeMastered,
   itemStatus, eligibleSequence, newCard, ck, ITEMS, SEQUENCE, BELTS, schedule, retrievability, itemTrack,
   COURSES, COURSE_BY_ID, activeCourse, switchCourse, courseOf, courseIdOf, courseUnits, newToday, startSession,
-  sequenceFastMs, itemProgress, skillShare, rungProgress, skillWeight
+  sequenceFastMs, itemProgress, skillShare, rungProgress, skillWeight,
+  isMuted, mutedCount, setMuted
 };
 // The dojang layer adds its own handles in part6 — its consts live after this
 // point, so naming them here would hit the temporal dead zone.
