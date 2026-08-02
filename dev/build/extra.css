@@ -227,6 +227,25 @@ header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, va
 .fb-steps.marked li.missed { color: var(--tx); font-weight: 600; }
 .fb-steps.marked li.missed::marker { color: var(--bad); font-weight: 700; }
 
+/* ---- focus: skipping what you are not working on ---- */
+.focus-list { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
+.focus-row { display: flex; align-items: center; gap: 11px; padding: 9px 2px; border-bottom: 1px solid var(--line-soft); }
+.focus-row:last-child { border-bottom: none; }
+.focus-row.off .focus-name, .focus-row.off .focus-sub { color: var(--tx-faint); }
+.focus-tog { flex: none; width: 30px; height: 30px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--bg-raise); color: var(--tx-dim); font-size: 15px; line-height: 1; cursor: pointer; }
+.focus-row:not(.off) .focus-tog { border-color: var(--accent); color: var(--accent); }
+.focus-body { flex: 1; min-width: 0; }
+.focus-name { font-size: 13.5px; font-weight: 600; }
+.focus-sub { font-size: 11.5px; color: var(--tx-faint); margin-top: 1px; }
+
+.skip-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; }
+.skip-row .faint { font-size: 11.5px; flex: 1; min-width: 140px; line-height: 1.45; }
+
+/* A unit you are skipping should read as a deliberate choice, not as neglect. */
+.pnode.skipped { opacity: .55; }
+.pnode.skipped .dot { border-style: dashed; }
+
 /* ---- explain-it-yourself rung ---- */
 .explain-cue { border-style: dashed; }
 .ex-purpose { font-size: 14px; line-height: 1.55; margin-bottom: 8px; }

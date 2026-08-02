@@ -283,11 +283,27 @@ function doImport(file) {
 }
 
 /* ---------- extra event wiring (new data-attributes only) ---------- */
-const HKD_ACTS = new Set(['selfreveal', 'psave', 'pback', 'instructor', 'pinset', 'pinsubmit', 'instrexit', 'start-both']);
+const HKD_ACTS = new Set(['selfreveal', 'psave', 'pback', 'instructor', 'pinset', 'pinsubmit', 'instrexit', 'start-both', 'unmuteall']);
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-selfgrade],[data-beltsel],[data-practice],[data-pcheck],[data-prate],[data-verify],[data-gotounit],[data-instrbelt],[data-course],[data-scope],[data-act]');
+  const t = e.target.closest('[data-selfgrade],[data-beltsel],[data-practice],[data-pcheck],[data-prate],[data-verify],[data-gotounit],[data-instrbelt],[data-course],[data-scope],[data-mutedom],[data-muteitem],[data-act]');
   if (!t) return;
+
+  // Focus toggles — skipping is always reversible, so no confirmation.
+  if (t.dataset.mutedom) {
+    Sfx.play('tap');
+    const on = (S.settings.mutedDomains || []).indexOf(t.dataset.mutedom) >= 0;
+    setMuted('domain', t.dataset.mutedom, !on);
+    render();
+    return;
+  }
+  if (t.dataset.muteitem) {
+    Sfx.play('tap');
+    const on = (S.settings.mutedItems || []).indexOf(t.dataset.muteitem) >= 0;
+    setMuted('item', t.dataset.muteitem, !on);
+    render();
+    return;
+  }
 
   if (t.dataset.course) { switchCourse(t.dataset.course); return; }
   if (t.dataset.scope) {
@@ -319,6 +335,10 @@ document.addEventListener('click', e => {
   const act = t.dataset.act;
   if (!act || !HKD_ACTS.has(act)) return;
   if (act === 'start-both') { startSession('*'); return; }
+  if (act === 'unmuteall') {
+    S.settings.mutedDomains = []; S.settings.mutedItems = [];
+    save(); showToast('Everything is back in your sessions.'); render(); return;
+  }
   if (act === 'selfreveal') { if (sess && liveEx && liveEx.type === 'self') { sess.selfOpen = true; render(); } return; }
   if (act === 'psave') { savePractice(); return; }
   if (act === 'pback') { practiceItemId = null; practiceState = null; view = 'belt'; render(); return; }
@@ -441,7 +461,8 @@ window.__HKD = {
   save, render, plan, planTotal, stats, beltStats, cumulativeStats, activeBelt, ladderFor, knowledgeMastered,
   itemStatus, eligibleSequence, newCard, ck, ITEMS, SEQUENCE, BELTS, schedule, retrievability, itemTrack,
   COURSES, COURSE_BY_ID, activeCourse, switchCourse, courseOf, courseIdOf, courseUnits, newToday, startSession,
-  sequenceFastMs, itemProgress, skillShare, rungProgress, skillWeight
+  sequenceFastMs, itemProgress, skillShare, rungProgress, skillWeight,
+  isMuted, mutedCount, setMuted
 };
 // The dojang layer adds its own handles in part6 — its consts live after this
 // point, so naming them here would hit the temporal dead zone.
