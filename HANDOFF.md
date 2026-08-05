@@ -106,6 +106,21 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   their schedule and come back untouched. **Muting deliberately does not move
   belt readiness**, because the school still tests the whole belt; the Focus
   panel says so and a test enforces it.
+- **Structural lesson from reference footage (not yet built).** Kevin shared
+  Grandmaster Bong Soo Han's Green Belt Requirements videos. The important
+  takeaway is not any single technique, it is the SHAPE: real Hapkido teaches
+  many answers to the SAME attack, catalogued by attack category first ("one
+  wrist grabbed", "one wrist, two hands", "two wrists grabbed") and then
+  numbered — his green belt has at least nine responses to a single wrist grab
+  alone. Our curriculum currently has ONE technique per situation, which is not
+  how the art is organised or taught. Intake questions 3.3 and 3.4 now ask
+  Grandmaster Lee whether he teaches and numbers variations, because his answer
+  decides whether items should gain an `attack` grouping + `variation` field.
+  Do not adopt anyone else's numbering — that is invariant 4, and a student
+  whose school numbers differently would be actively confused.
+  The videos themselves cannot ship: they are a third-party rip of a commercial
+  DVD (the last frame solicits donations), and 476×360 would look poor beside
+  Grandmaster Lee's own footage anyway. Reference for us, not media for the app.
 - **Content gates in CI.** The matrix now tests the CONTENT, not just the
   machinery: every technique in a falls/locks/throws/choke/weapon domain must
   be instructor-gated and non-practicable; every technique must carry
