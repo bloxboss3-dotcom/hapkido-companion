@@ -83,6 +83,29 @@
 특정 기술을 먼저 배워야만 배울 수 있는 기술이 있습니까?
 →
 
+**3.3** Do you teach several different answers to the SAME attack — for example more
+than one defence for a single wrist grab? If so, roughly how many at each belt, and do
+you number them (No. 1, No. 2, No. 3…) or name them?
+같은 공격에 대해 여러 가지 대응 기술을 가르치십니까? (예: 한 손목 잡혔을 때의 방어가
+여러 개인 경우) 그렇다면 띠마다 대략 몇 개이며, 번호로 부르십니까 (1번, 2번, 3번…)
+아니면 이름으로 부르십니까?
+→
+
+> Why we ask: many Hapkido systems organise self-defence by *attack category* first
+> (one wrist grabbed / one wrist, two hands / two wrists / lapel / from behind) and then
+> list several numbered answers under each. If that is how you teach it, the app should
+> be built the same way — one attack, several responses — rather than one technique per
+> situation. **Your numbering is yours**; the app will use whatever you use, and will not
+> borrow another school's.
+> 참고: 많은 합기도 체계가 공격 유형별로 정리한 뒤 각각에 번호를 붙인 여러 대응 기술을
+> 가르칩니다. 관장님께서 그렇게 가르치신다면 앱도 같은 구조로 만들겠습니다.
+
+**3.4** For self-defence, which attacks matter most to you at the lower belts?
+(wrist grabs, lapel/collar, bear hug, headlock, hair, punch, push…)
+하위 띠에서 특히 중요하게 여기시는 공격 유형은 무엇입니까?
+(손목 잡기, 멱살 잡기, 뒤에서 껴안기, 목 조르기, 머리채, 주먹, 밀기 등)
+→
+
 ---
 
 ## 4. Testing standards · 심사 기준
