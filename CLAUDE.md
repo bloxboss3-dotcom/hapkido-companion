@@ -87,6 +87,19 @@ Working title. Read `HANDOFF.md` for current state and roadmap before doing anyt
   mastered, so the game points back at the work. Winning unlocks a character
   and the next obstacle, never a rank. `simulateBattle()` is pure and returns
   an event log; playback just animates it, which is why it is testable.
+  **The pipeline is one-way and must stay that way:** `simulateBattle()` →
+  `buildBeats()` (pure re-shaping of the log into round → charge → strikes →
+  regroup → wind-up → counter-swing) → `paintBeat()` (DOM only). A test asserts
+  every event survives into the beats in order, so the scene can never show a
+  different fight from the one that was simulated — never let the view decide
+  anything. Playback is scaled to `BT_TARGET_MS` so a 60-round grind still
+  ends, and Skip applies the whole log at once (safe to replay: health values
+  are absolute, and a tag-in whose slot already moved finds nothing to swap).
+  Scene rules that keep biting: the mat uses **fixed mid-tones** (uniform trap
+  (a) below); the named roster rows, bench line and `aria-live` announcer live
+  **outside** `#bt-arena`, so their lookups must not be scoped to it; and every
+  figure animation drives `transform`, so exactly one may be on a figure at a
+  time — `btAnim()` enforces that in JS rather than relying on CSS ordering.
 - part6's economy: **기 (ki) pays for WORK, never for being right.** It is
   derived from `S.days[*].reviews`, which counts every graded answer whatever
   the grade — so there is nothing to hook and it survives import for free. Only
@@ -176,7 +189,7 @@ declares them; `domain.track` assigns items. Adding a third = one data entry.
 ```bash
 npm ci                                # once: playwright, exactly as locked
 npm run build                         # rebuilds both index.html files
-npm test                              # 156 checks; needs playwright + chromium
+npm test                              # 163 checks; needs playwright + chromium
 npm run check                         # build + in-sync check + test (what CI runs)
 npm run smoke                         # optional: tests the DEPLOYED site (needs network)
 ```
@@ -190,7 +203,7 @@ deploy-only failures (stale deploy, 404 or wrong MIME on an asset) that a
 `file://` matrix structurally cannot see. It is not in CI and needs real
 network — a sandbox that blocks the browser's egress can't run it.
 
-The matrix must pass 156/156 (grow it with every feature — count goes up, never
+The matrix must pass 163/163 (grow it with every feature — count goes up, never
 down). It covers: boot, course picker + switching + persistence, per-course paths,
 per-course daily budgets, course-scoped and both-course sessions, course-scoped vs
 whole-belt readiness, FSRS values against hand-computed expectations, wrong-answer

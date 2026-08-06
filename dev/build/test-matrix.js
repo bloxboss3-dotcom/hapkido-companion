@@ -1186,9 +1186,103 @@ async function answerCurrentRight() {
     H.bt = null;
     return !!isNew && H.bossState().cleared[H.BOSS_ROSTER[0].id] === 1;
   }));
+  ok('boss: the choreography is a re-shaping of the log, never a second opinion', await page.evaluate(() => {
+    const H = window.__HKD;
+    const mk = (n, r) => Array.from({ length: n }, (_, i) => ({ id: 'u' + i, name: 'U' + i, r,
+      max: H.BOSS_UNIT[r].hp, hp: H.BOSS_UNIT[r].hp, atk: H.BOSS_UNIT[r].atk }));
+    // Every damaging event survives into the beats, in order, unchanged — the
+    // scene can never show a different fight from the one that was simulated.
+    for (const bossIdx of [0, 3]) {
+      const sim = H.simulateBattle(H.BOSS_ROSTER[bossIdx], mk(9, 'common'), 0);
+      const beats = H.buildBeats(sim.log);
+      const back = beats.filter(b => b.ev).map(b => b.ev);
+      if (back.length !== sim.log.length) return false;
+      if (back.some((e, i) => e !== sim.log[i])) return false;
+      // Every round is announced exactly once, and announced before its hits.
+      const rounds = beats.filter(b => b.k === 'round').map(b => b.n);
+      if (rounds.join() !== rounds.slice().sort((a, b2) => a - b2).join()) return false;
+      if (new Set(rounds).size !== rounds.length) return false;
+      const firstHit = beats.findIndex(b => b.k === 'hit');
+      if (firstHit >= 0 && beats.findIndex(b => b.k === 'round') > firstHit) return false;
+      // The class goes in together and comes back: a charge is always paired.
+      if (beats.filter(b => b.k === 'charge').length !== beats.filter(b => b.k === 'regroup').length) return false;
+    }
+    return true;
+  }));
+  // Drive a real fight on screen. Everything below is about the SCENE, which
+  // is the half a pure simulation test cannot see.
+  await page.evaluate(() => {
+    const H = window.__HKD, d = H.djState();
+    H.DJ_ROSTER.slice(0, 11).forEach(c => { d.owned[c.id] = 1; });
+    H.bossState().cleared = {};
+    H.save();
+    H.view = 'dojang'; H.djTab = 'battle'; H.render();
+    H.startBattle('forgetting');
+  });
+  await sleep(1500);
+  ok('boss: the fight is a dojang you can see into — everyone on the mat, nobody off it', await page.evaluate(() => {
+    const scene = document.querySelector('.bt-scene');
+    if (!scene) return false;
+    const figs = [...document.querySelectorAll('.bt-fig')];
+    const boss = document.querySelector('.bt-bosschar');
+    if (figs.length !== window.__HKD.BT_ACTIVE || !boss) return false;
+    const sr = scene.getBoundingClientRect();
+    // Positioned art, not a list: every figure and the obstacle stay inside
+    // the mat at any width, mid-charge included.
+    return figs.concat([boss]).every(el => {
+      const r = el.getBoundingClientRect();
+      return r.left >= sr.left - 1 && r.right <= sr.right + 1 && r.bottom <= sr.bottom + 1 && r.width > 0;
+    });
+  }));
+  ok('boss: the scene keeps its own fixed tones, so no uniform can vanish', await page.evaluate(() => {
+    const room = getComputedStyle(document.querySelector('.bt-scene')).backgroundColor;
+    const wall = getComputedStyle(document.querySelector('.bt-wall')).backgroundImage;
+    // Same rule as the dojang room: fixed mid-tone floor, fixed wall, neither
+    // taken from the theme — uniforms run from near-white to near-black.
+    return /135, 112, 79/.test(room) && wall.indexOf('gradient') >= 0;
+  }));
+  ok('boss: every fighter carries a live health bar and a spelled-out name', await page.evaluate(() => {
+    const bars = document.querySelectorAll('.bt-fig .bt-fighp i').length;
+    const rows = [...document.querySelectorAll('[data-bur]')];
+    const named = rows.every(r => r.querySelector('.bt-un').textContent.trim().length > 0 &&
+      r.querySelector('.dj-tag') && r.querySelector('.bt-uhp i'));
+    return bars === window.__HKD.BT_ACTIVE && rows.length === window.__HKD.BT_ACTIVE && named;
+  }));
+  ok('boss: the obstacle takes visible damage as the fight runs', await page.evaluate(() => {
+    const H = window.__HKD;
+    const num = document.querySelector('.bt-bosshp-num').textContent;
+    const bar = document.querySelector('.bt-bosshp i').style.width;
+    return H.bt && H.bt.bossHp < H.bt.boss.hp && num.indexOf(String(H.bt.bossHp)) === 0 &&
+      parseFloat(bar) < 100 && parseFloat(bar) > 0;
+  }));
+  ok('320px: every dojang sub-tab is visible, none clipped off the edge', await (async () => {
+    await page.setViewportSize({ width: 320, height: 900 }); await sleep(250);
+    const r = await page.evaluate(() => {
+      const bar = document.querySelector('.dj-tabs');
+      const br = bar.getBoundingClientRect();
+      const btns = [...bar.querySelectorAll('button')];
+      return btns.length === 3 && btns.every(b => {
+        const rect = b.getBoundingClientRect();
+        return rect.right <= br.right + 1 && rect.left >= br.left - 1;
+      });
+    });
+    await page.setViewportSize({ width: 390, height: 844 }); await sleep(250);
+    return r;
+  })());
+  ok('boss: watching is optional — Skip jumps straight to the result', await page.evaluate(async () => {
+    const H = window.__HKD;
+    const btn = document.querySelector('[data-bt="skip"]');
+    if (!btn) return false;
+    btn.click();
+    await new Promise(r => setTimeout(r, 60));
+    // Skipping applies the whole log, so the ending matches the simulation
+    // exactly — it is a fast-forward, not a different fight.
+    return H.bt && H.bt.done && !!document.querySelector('.bt-result') &&
+      (H.bt.sim.win ? H.bt.bossHp === 0 : H.bt.bossHp > 0);
+  }));
   await page.evaluate(() => {
     const H = window.__HKD;
-    H.bt = null; H.bossState().cleared = {}; H.save();
+    H.bt = null; H.bossState().cleared = {}; H.djTab = 'room'; H.save();
     H.view = 'today'; H.render();
   });
   await sleep(200);

@@ -15,7 +15,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   assigns items; a third course is a data entry.
 - **Engine:** Hanbit's FSRS-5 scheduler, session planner, FX/celebration system,
   storage/migration safety — preserved via the transform-override build
-  (`dev/build/`). 156/156 automated checks passing.
+  (`dev/build/`). 163/163 automated checks passing.
 - **Repo:** `npm run build` / `npm test` / `npm run check`, plus a GitHub Actions
   job that rebuilds `index.html` on every PR and fails if the deployed file has
   drifted from the source it is generated from. Dependencies are locked
@@ -102,7 +102,19 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   collected class goes in — six on the mat, the rest tag in as people tire —
   each with an individual health bar, rarity driving toughness and damage, and
   the fight plays out as an animation until one side is down. Four obstacles
-  unlock in order. **The enemy is never a person**: 망각 (The Forgetting),
+  unlock in order.
+- **The fight is a scene, not a list.** You are looking into a dojang: wall,
+  wood floor, your six in two ranks on the left, the obstacle across from them.
+  A round reads as a round — the banner names it, the class charges in together
+  and lands in a fan (not a queue), each strike throws a ring, sparks and a
+  damage number, they hop back, the obstacle swells as it winds up and swings
+  back, someone takes it and recoils. Roughly 15-20s for a typical win, capped
+  so a grinding loss still ends, with **Skip to the result** always available.
+  Under the mat, named rows carry each fighter's rarity and exact health,
+  because a 38px bar cannot say who it belongs to. Reduced motion or FX off
+  skips the show entirely and lands on the result. The scene never decides
+  anything: `simulateBattle()` → `buildBeats()` → paint, one way, with a test
+  pinning that every simulated event survives into the choreography in order. **The enemy is never a person**: 망각 (The Forgetting),
   Impatience, Sloppiness, Overconfidence, drawn as abstract shapes — an
   illustrated human fight is the copyable-technique problem again, and ganging
   up on someone contradicts the proportionality content. **Losing costs
@@ -151,7 +163,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 - **Deploy:** GitHub Pages serves root `index.html` (generated single-file), now
   by `git push` to `main` rather than manual upload. **Fully automatic:** the
   `auto-merge` job in `verify.yml` squash-merges a green non-draft `claude/*`
-  PR and Pages republishes itself, so nobody clicks merge. The 156-check matrix
+  PR and Pages republishes itself, so nobody clicks merge. The 163-check matrix
   is therefore the only gate before students see a change — grow it, and keep
   PRs in draft until they are actually finished. The repo had drifted — only
   a hand-uploaded `index.html` was on GitHub, one build behind (still the old
@@ -199,7 +211,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 npm ci                                           # playwright, exactly as locked
 npm run check                                    # build + in-sync check + matrix
 ```
-Confirm 156/156, commit any drift, then pick up item 1 or 3 above with Kevin.
+Confirm 163/163, commit any drift, then pick up item 1 or 3 above with Kevin.
 After a deploy lands, `npm run smoke` checks the live site (needs network).
 When authoring the next belt, remember it wants units in BOTH courses.
 Original Hanbit app must never be modified: `dev/hanbit-korean.BACKUP-2026-07-30.html`

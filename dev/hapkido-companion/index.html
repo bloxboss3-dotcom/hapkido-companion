@@ -874,56 +874,147 @@ header.top { background: linear-gradient(color-mix(in srgb, var(--accent) 7%, va
 .bt-card-meta { font-size: 11px; color: var(--tx-faint); margin-top: 4px; font-family: var(--mono); }
 .bt-go { flex: none; }
 
-.bt-arena { position: relative; overflow: hidden; }
-.bt-bosswrap { text-align: center; padding: 6px 0 14px; }
-.bt-boss { position: relative; width: 104px; height: 116px; margin: 0 auto; }
-.bt-boss .boss-svg { width: 100%; height: 100%; }
-.bt-bossname { font-size: 15px; font-weight: 700; margin-top: 4px; }
-.bt-bosshp { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; margin: 8px auto 0; max-width: 300px; }
-.bt-bosshp i { display: block; height: 100%; background: var(--bad); border-radius: 5px; transition: width .28s ease; }
-.bt-bosshp-num { font-family: var(--mono); font-size: 11.5px; color: var(--tx-dim); margin-top: 4px; }
-.bt-bossline { font-size: 11.5px; margin-top: 4px; }
+/* ---- the mat ----
+   A room you can see into: wall at the back, wood floor, your six in two
+   ranks on the left, the obstacle across from them. Everything in here is a
+   FIXED tone, never a theme colour — see the dojang room for why. */
+.bt-wrap { position: relative; }
+.bt-scene { position: relative; height: 304px; overflow: hidden;
+  border: 1px solid var(--line-soft); border-radius: var(--radius);
+  background-color: #87704f;
+  background-image: repeating-linear-gradient(180deg, rgba(0,0,0,.07) 0 1px, transparent 1px 38px); }
+.bt-wall { position: absolute; left: 0; right: 0; top: 0; height: 88px;
+  display: flex; align-items: flex-end; padding: 0 0 4px 11px;
+  background: linear-gradient(180deg, #3d4354, #474e62); box-shadow: 0 2px 8px rgba(0,0,0,.28); }
+/* Down in the corner, out of the health bar's way — it is dressing, not data. */
+.bt-scene .dj-scroll { font-size: 15px; letter-spacing: 3px; opacity: .34; }
 
-.bt-units { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
-.bt-unit { position: relative; display: flex; align-items: center; gap: 8px; padding: 7px 8px;
-  background: var(--bg-soft); border: 1px solid var(--line-soft);
-  border-left: 3px solid var(--rc, var(--line)); border-radius: 8px; }
-.bt-unit.down { opacity: .42; }
-.bt-uart { flex: none; width: 34px; height: 40px; }
-.bt-uart .dj-svg { height: 40px; }
-.bt-ubody { flex: 1; min-width: 0; }
-.bt-uname { font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 5px; min-width: 0; }
-/* The name yields; the rarity label never truncates, because it is the thing
-   that stops rarity being conveyed by colour alone. */
+.bt-hud { position: absolute; left: 10px; right: 10px; top: 8px; text-align: center; z-index: 20; }
+.bt-hud-name { font-size: 13px; font-weight: 700; color: #fdf6e9; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+.bt-hud-name .ko { color: #e6dbc4; }
+.bt-hud-name .dj-rom { color: #cbbda2; font-style: italic; font-size: 11px; }
+.bt-bosshp { height: 9px; border-radius: 5px; overflow: hidden; margin: 5px auto 0; max-width: 260px;
+  background: rgba(0,0,0,.42); border: 1px solid rgba(0,0,0,.3); }
+.bt-bosshp i { display: block; height: 100%; border-radius: 5px; transition: width .3s ease;
+  background: linear-gradient(90deg, #cf4f4b, #e8846c); }
+.bt-bosshp-num { font-family: var(--mono); font-size: 10.5px; color: #ece2d0; margin-top: 2px;
+  text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+
+/* Outer element carries the charge (a live-measured translate); the inner
+   wrapper carries the depth scale. Splitting them means one can animate
+   without stamping on the other. */
+.bt-fig { position: absolute; width: 54px; margin-left: -27px; transform-origin: bottom center; }
+.bt-figwrap { transform: scale(var(--s, 1)); transform-origin: bottom center; }
+.bt-figart .dj-svg { display: block; height: 72px; margin: 0 auto; }
+.bt-fighp { position: absolute; left: 50%; bottom: -8px; margin-left: -19px; width: 38px; height: 5px;
+  border-radius: 3px; overflow: hidden; background: rgba(0,0,0,.45);
+  border: 1px solid var(--rc, rgba(0,0,0,.3)); }
+/* Fixed green on purpose: a bar that changed hue with rarity would be unreadable
+   for half the roster, and rarity is already spelled out in the row below. */
+.bt-fighp i { display: block; height: 100%; border-radius: 3px; background: #74c583; transition: width .25s ease; }
+.bt-fig.down { opacity: .42; }
+.bt-fig.down .bt-figwrap { transform: scale(var(--s, 1)) rotate(-11deg) translateY(5px); }
+
+.bt-bosschar { position: absolute; right: 2%; bottom: 26px; width: 124px; height: 136px; z-index: 8;
+  transform-origin: center bottom; transition: transform .3s ease, filter .3s ease; }
+.bt-bosschar .boss-svg { display: block; width: 100%; height: 100%; }
+.bt-bosschar.windup { transform: scale(1.1) translateY(-4px); filter: brightness(1.3) saturate(1.25); }
+
+/* A band, not floating text: over a wood floor, a text shadow alone is not
+   enough contrast for the one line that says what is happening. */
+.bt-banner { position: absolute; left: 0; right: 0; top: 42%; z-index: 25; text-align: center;
+  pointer-events: none; opacity: 0; font-size: 17px; font-weight: 800; letter-spacing: .4px;
+  padding: 7px 8px; color: #fff7e6; text-shadow: 0 2px 6px rgba(0,0,0,.85);
+  background: linear-gradient(90deg, transparent, rgba(22,18,14,.66) 15%, rgba(22,18,14,.66) 85%, transparent); }
+.bt-banner.warn { color: #ffd7ae; }
+
+/* Impact: one ring and a few sparks, spawned and thrown away. */
+.bt-burst { position: absolute; width: 0; height: 0; z-index: 30; pointer-events: none; }
+.bt-burst b { position: absolute; left: -16px; top: -16px; width: 32px; height: 32px;
+  border-radius: 50%; border: 2px solid #fff2cd; opacity: .95; }
+.bt-burst i { position: absolute; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; background: #ffe7a8; }
+.bt-burst.small b { left: -11px; top: -11px; width: 22px; height: 22px; border-color: #ffcdbf; }
+.bt-burst.small i { background: #ffc2ae; }
+.bt-float { position: absolute; top: 20%; z-index: 32; transform: translateX(-50%); pointer-events: none;
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  color: #ffdbd2; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+
+/* The readable half. The mat shows who is where; these say who they are —
+   six 38px bars cannot carry a name, and rarity must never be colour alone. */
+.bt-units { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+.bt-unit { padding: 6px 7px; min-width: 0; background: var(--bg-soft);
+  border: 1px solid var(--line-soft); border-left: 3px solid var(--rc, var(--line)); border-radius: 8px; }
+.bt-unit.down { opacity: .45; }
+.bt-uname { font-size: 10.5px; font-weight: 600; display: flex; align-items: center;
+  flex-wrap: wrap; gap: 4px; min-width: 0; }
 .bt-un { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bt-unit .dj-tag { flex: none; }
-.bt-unit .dj-tag.sm { font-size: 9.5px; }
-.bt-uhp { height: 6px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 4px; }
-.bt-uhp i { display: block; height: 100%; background: var(--good); border-radius: 4px; transition: width .25s ease; }
-.bt-ustate { font-size: 10px; color: var(--tx-faint); font-family: var(--mono); margin-top: 2px; }
-.bt-bench { font-size: 11.5px; text-align: center; margin-top: 10px; }
-.bt-running { text-align: center; font-size: 12px; margin-top: 12px; }
+.bt-unit .dj-tag.sm { font-size: 9px; }
+.bt-uhp { height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 4px; }
+.bt-uhp i { display: block; height: 100%; background: var(--good); border-radius: 3px; transition: width .25s ease; }
+.bt-ustate { font-size: 9.5px; color: var(--tx-faint); font-family: var(--mono); margin-top: 2px; }
+.bt-bench { font-size: 11.5px; text-align: center; margin-top: 8px; }
+.bt-running { align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 12px; }
 
 .bt-result { margin-top: 14px; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--bg-raise); }
 .bt-result.win { border-color: var(--good); }
 .bt-result .sub { margin-top: 4px; }
-.bt-float { position: absolute; left: 50%; top: 20%; transform: translateX(-50%);
-  font-family: var(--mono); font-size: 13px; font-weight: 700; pointer-events: none; color: var(--bad); }
+
+/* Announced, not drawn — the scene means nothing to a screen reader. */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 @media (prefers-reduced-motion: no-preference) {
-  html:not(.fx-off) .bt-unit.lunge { animation: btLunge .34s ease; }
-  html:not(.fx-off) .bt-unit.hurt { animation: btHurt .3s ease; }
-  html:not(.fx-off) .bt-boss.shake { animation: btShake .3s ease; }
-  html:not(.fx-off) .bt-boss.boss-lunge { animation: btBossLunge .34s ease; }
-  html:not(.fx-off) .bt-float { animation: btFloat .9s ease-out forwards; }
+  /* The destination is measured live and handed over as --cx/--cy, so one
+     pair of keyframes covers every screen width. The midpoint lifts them off
+     the floor: a straight slide reads as gliding, an arc reads as a jump. */
+  /* Idle life, on the innermost element so it can never collide with the
+     charge (outer) or the strike (wrapper) — both of those drive transform. */
+  html:not(.fx-off) .bt-figart { animation: btIdle 2.6s ease-in-out var(--idle, 0s) infinite; }
+  html:not(.fx-off) .bt-fig.down .bt-figart { animation: none; }
+  html:not(.fx-off) .bt-bosschar .boss-svg { animation: btHover 3.6s ease-in-out infinite; }
+  html:not(.fx-off) .bt-fig.charging { animation: btCharge .52s cubic-bezier(.35, .05, .3, 1) both; }
+  html:not(.fx-off) .bt-fig.back { animation: btBack .4s cubic-bezier(.4, 0, .5, 1) both; }
+  html:not(.fx-off) .bt-fig.strike .bt-figwrap { animation: btStrike .3s ease; }
+  html:not(.fx-off) .bt-fig.hurt { animation: btHurt .32s ease; }
+  html:not(.fx-off) .bt-fig.tagin { animation: btTagIn .45s cubic-bezier(.2, 1.3, .4, 1); }
+  html:not(.fx-off) .bt-bosschar.shake { animation: btShake .3s ease; }
+  html:not(.fx-off) .bt-bosschar.boss-lunge { animation: btBossLunge .42s ease; }
+  html:not(.fx-off) .bt-banner.show { animation: btBanner 1.05s ease-out; }
+  html:not(.fx-off) .bt-float { animation: btFloat .95s ease-out forwards; }
+  html:not(.fx-off) .bt-burst b { animation: btRing .5s ease-out forwards; }
+  html:not(.fx-off) .bt-burst i { animation: btSpark .5s ease-out forwards; animation-delay: var(--d, 0ms); }
 }
-@keyframes btLunge { 0% { transform: none; } 40% { transform: translateY(-9px) scale(1.04); } 100% { transform: none; } }
-@keyframes btHurt { 0%, 100% { transform: none; } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
-@keyframes btShake { 0%, 100% { transform: none; } 25% { transform: translateX(-6px) rotate(-2deg); } 75% { transform: translateX(6px) rotate(2deg); } }
-@keyframes btBossLunge { 0% { transform: none; } 40% { transform: translateY(8px) scale(1.05); } 100% { transform: none; } }
-@keyframes btFloat { from { opacity: 1; transform: translate(-50%, 0); } to { opacity: 0; transform: translate(-50%, -34px); } }
+/* Keyframes that touch a scaled element have to carry the scale through, or
+   the figure snaps to full size for the length of the animation. */
+@keyframes btIdle { 0%, 100% { transform: none; } 50% { transform: translateY(-3px); } }
+@keyframes btHover { 0%, 100% { transform: none; } 50% { transform: translateY(-6px); } }
+@keyframes btCharge {
+  0%   { transform: none; }
+  55%  { transform: translate(calc(var(--cx, 0px) * .62), calc(var(--cy, 0px) * .62 - 20px)) scale(1.1); }
+  100% { transform: translate(var(--cx, 0px), var(--cy, 0px)) scale(1.06); } }
+@keyframes btBack {
+  0%   { transform: translate(var(--cx, 0px), var(--cy, 0px)) scale(1.06); }
+  45%  { transform: translate(calc(var(--cx, 0px) * .5), calc(var(--cy, 0px) * .5 - 14px)) scale(1.04); }
+  100% { transform: none; } }
+@keyframes btStrike { 0%, 100% { transform: scale(var(--s, 1)); }
+  45% { transform: scale(var(--s, 1)) translateX(9px) rotate(5deg); } }
+@keyframes btHurt { 0%, 100% { transform: none; } 25% { transform: translateX(-5px); } 70% { transform: translateX(5px); } }
+@keyframes btTagIn { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
+@keyframes btShake { 0%, 100% { transform: none; } 25% { transform: translateX(-7px) rotate(-2deg); } 70% { transform: translateX(7px) rotate(2deg); } }
+@keyframes btBossLunge { 0% { transform: none; } 38% { transform: translateX(-52px) scale(1.06) rotate(-3deg); } 100% { transform: none; } }
+@keyframes btBanner { 0% { opacity: 0; transform: translateY(9px) scale(.92); } 18% { opacity: 1; transform: none; }
+  72% { opacity: 1; } 100% { opacity: 0; transform: translateY(-9px); } }
+@keyframes btFloat { from { opacity: 1; transform: translate(-50%, 0); } to { opacity: 0; transform: translate(-50%, -36px); } }
+@keyframes btRing { from { transform: scale(.3); opacity: .95; } to { transform: scale(1.7); opacity: 0; } }
+@keyframes btSpark { from { transform: translate(0, 0); opacity: 1; } to { transform: translate(var(--tx, 0), var(--ty, 0)); opacity: 0; } }
 
-@media (max-width: 360px) { .bt-units { grid-template-columns: 1fr; } }
+@media (max-width: 380px) {
+  .bt-scene { height: 274px; }
+  .bt-bosschar { width: 96px; height: 106px; }
+  .bt-figart .dj-svg { height: 64px; }
+  .bt-fig { width: 46px; margin-left: -23px; }
+}
 
 /* ---- focus: skipping what you are not working on ---- */
 .focus-list { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
@@ -1015,8 +1106,9 @@ nav.tabs button { padding: 7px 11px; }
 .dj-head .dj-bal .ko { color: var(--accent); font-weight: 700; display: inline-flex; align-items: baseline; gap: 4px; }
 .dj-rom { font-style: normal; font-family: var(--mono); font-size: 10px; font-weight: 400; color: var(--tx-faint); }
 .dj-pity { font-size: 12px; margin-top: 10px; }
-.dj-tabs { display: flex; gap: 6px; margin: 14px 0 12px; overflow-x: auto; scrollbar-width: none; }
-.dj-tabs::-webkit-scrollbar { display: none; }
+/* Wraps rather than scrolls: at 320px a third tab hanging off the edge is a
+   tab nobody finds. Same reason the main nav wraps. */
+.dj-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 12px; }
 .dj-tabs button { background: none; border: 1px solid transparent; color: var(--tx-dim); border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap; }
 .dj-tabs button.on { background: var(--bg-card); color: var(--tx); border-color: var(--line); }
 
@@ -7223,7 +7315,7 @@ function simulateBattle(boss, roster, bonus) {
       if (u.hp <= 0) continue;
       const dmg = Math.max(1, Math.round(u.atk * mul * jitter()));
       bossHp = Math.max(0, bossHp - dmg);
-      log.push({ t: 'hit', unit: u.id, dmg, bossHp });
+      log.push({ t: 'hit', unit: u.id, dmg, bossHp, round });
       if (bossHp <= 0) { log.push({ t: 'win', round }); return { log, win: true, round, bossHp: 0 }; }
     }
     // The longer it drags on, the harder it presses — a stalemate is a loss,
@@ -7235,14 +7327,14 @@ function simulateBattle(boss, roster, bonus) {
       const target = standing[Math.floor(Math.random() * standing.length)];
       const dmg = Math.max(1, Math.round(boss.atk * jitter()));
       target.hp = Math.max(0, target.hp - dmg);
-      log.push({ t: 'boss', unit: target.id, dmg, hp: target.hp });
+      log.push({ t: 'boss', unit: target.id, dmg, hp: target.hp, round });
       if (target.hp <= 0) {
-        log.push({ t: 'down', unit: target.id });
+        log.push({ t: 'down', unit: target.id, round });
         const next = bench.shift();
         if (next) {
           const slot = active.indexOf(target);
           active[slot] = next;
-          log.push({ t: 'tagin', unit: next.id, replaces: target.id, hp: next.hp, max: next.max });
+          log.push({ t: 'tagin', unit: next.id, replaces: target.id, hp: next.hp, max: next.max, round });
         }
       }
     }
@@ -7252,10 +7344,70 @@ function simulateBattle(boss, roster, bonus) {
   return { log, win: false, round, bossHp };
 }
 
+/* ---------- the scene ----------
+   Six mats' worth of people on the left, the obstacle on the right, both on a
+   fixed mid-tone floor for the same reason the dojang room has one: uniforms
+   run from near-white to near-black, so a theme-coloured backdrop makes one
+   family of characters vanish.
+
+   Slot 0 is the strongest of the six (battleRoster() sorts that way), so the
+   slots put slot 0 at the front where you can see them. x is a percentage
+   across the floor, b is pixels up from it, s is the depth scale. */
+const BT_SLOTS = [
+  { x: 31, b: 26,  s: 1.02, z: 6 },   // front rank
+  { x: 15, b: 20,  s: 1.04, z: 7 },
+  { x: 43, b: 42,  s: 0.93, z: 5 },
+  { x: 25, b: 96,  s: 0.78, z: 3 },   // back rank
+  { x: 9,  b: 88,  s: 0.80, z: 4 },
+  { x: 40, b: 110, s: 0.73, z: 2 }
+];
+
+/* How long each beat of the choreography holds, before pacing is applied.
+   A round reads as: banner, the class charges in together, each strike lands,
+   they regroup, the obstacle winds up, it swings back, everyone resets. */
+const BT_BEAT_MS = {
+  round: 520, charge: 470, hit: 205, regroup: 380,
+  windup: 500, boss: 380, down: 460, tagin: 430, recover: 400, end: 320
+};
+/* A won fight is usually a handful of rounds, which lands around 15-20s — long
+   enough to watch, short enough to want again. A grinding loss can run sixty,
+   so the whole thing is scaled to fit inside this budget rather than making
+   anyone sit through four minutes. There is a Skip button either way. */
+const BT_TARGET_MS = 34000;
+const BT_MIN_SPEED = 0.2;
+
 /* ---------- battle state + playback ---------- */
-let bt = null;              // { boss, roster, sim, i, done, live:{id:hp}, bossHp }
+let bt = null;              // { boss, roster, sim, i, done, live:{id:hp}, bossHp, beats, bi }
 let btTimers = [];
 function btClear() { btTimers.forEach(clearTimeout); btTimers = []; }
+
+/* Group the flat event log into beats. The simulation already tags every
+   event with its round, so this is pure re-shaping — no game logic lives
+   here, and changing the choreography can never change who wins. */
+function buildBeats(log) {
+  const beats = [];
+  let i = 0;
+  while (i < log.length) {
+    if (log[i].t === 'win' || log[i].t === 'lose') { beats.push({ k: 'end', ev: log[i++] }); continue; }
+    const round = log[i].round;
+    const hits = [], swings = [];
+    while (i < log.length && log[i].t === 'hit' && log[i].round === round) hits.push(log[i++]);
+    while (i < log.length && log[i].round === round && log[i].t !== 'hit' &&
+           log[i].t !== 'win' && log[i].t !== 'lose') swings.push(log[i++]);
+    beats.push({ k: 'round', n: round, hits: hits.length });
+    if (hits.length) {
+      beats.push({ k: 'charge', units: hits.map(h => h.unit) });
+      hits.forEach(h => beats.push({ k: 'hit', ev: h }));
+      beats.push({ k: 'regroup', units: hits.map(h => h.unit) });
+    }
+    if (swings.length) {
+      beats.push({ k: 'windup' });
+      swings.forEach(e => beats.push({ k: e.t, ev: e }));
+      beats.push({ k: 'recover' });
+    }
+  }
+  return beats;
+}
 
 function startBattle(bossId) {
   const boss = BOSS_BY_ID[bossId];
@@ -7267,7 +7419,8 @@ function startBattle(bossId) {
   const live = {};
   roster.forEach(u => { live[u.id] = u.max; });
   bt = { boss, roster, sim, i: 0, done: false, live, bossHp: boss.hp,
-         active: roster.slice(0, BT_ACTIVE).map(u => u.id), rewarded: null };
+         active: roster.slice(0, BT_ACTIVE).map(u => u.id), rewarded: null,
+         beats: buildBeats(sim.log), bi: 0, round: 0 };
   djTab = 'battle';
   render();
   playBattle();
@@ -7282,17 +7435,31 @@ function btInstant() {
 
 function playBattle() {
   if (!bt) return;
-  const log = bt.sim.log;
-  if (btInstant()) { bt.i = log.length; applyBattleEvents(log); finishBattle(); return; }
-  const step = Math.max(90, Math.min(280, Math.round(3400 / Math.max(1, log.length))));
+  if (btInstant()) { bt.i = bt.sim.log.length; applyBattleEvents(bt.sim.log); finishBattle(); return; }
+  const beats = bt.beats;
+  const total = beats.reduce((n, b) => n + (BT_BEAT_MS[b.k] || 200), 0);
+  const speed = Math.max(BT_MIN_SPEED, Math.min(1, BT_TARGET_MS / Math.max(1, total)));
   const tick = () => {
-    if (!bt || bt.i >= log.length) { finishBattle(); return; }
-    const ev = log[bt.i++];
-    applyBattleEvents([ev]);
-    paintBattleEvent(ev);
-    btTimers.push(setTimeout(tick, step));
+    if (!bt || bt.done) return;
+    if (bt.bi >= beats.length) { finishBattle(); return; }
+    const b = beats[bt.bi++];
+    if (b.ev) { applyBattleEvents([b.ev]); bt.i++; }
+    paintBeat(b);
+    btTimers.push(setTimeout(tick, Math.max(55, Math.round((BT_BEAT_MS[b.k] || 200) * speed))));
   };
-  btTimers.push(setTimeout(tick, 420));
+  btTimers.push(setTimeout(tick, 460));
+}
+
+/* Watching is optional. Applying the whole log is safe to do twice: a tag-in
+   whose slot has already been swapped finds nothing to replace, and the
+   health values are absolute rather than deltas. */
+function btSkip() {
+  if (!bt || bt.done) return;
+  btClear();
+  applyBattleEvents(bt.sim.log);
+  bt.i = bt.sim.log.length;
+  bt.bi = bt.beats.length;
+  finishBattle();
 }
 
 function applyBattleEvents(evs) {
@@ -7307,50 +7474,222 @@ function applyBattleEvents(evs) {
   });
 }
 
-/* Direct DOM updates rather than a re-render, so CSS animations survive. */
-function paintBattleEvent(ev) {
-  const arena = document.getElementById('bt-arena');
-  if (!arena) return;
-  const bossEl = arena.querySelector('.bt-boss');
-  const setBar = (el, frac) => { if (el) el.style.width = Math.max(0, Math.min(1, frac)) * 100 + '%'; };
+/* ---------- painting a beat ----------
+   Direct DOM updates rather than a re-render, so in-flight CSS transitions
+   and animations survive the next beat. */
+function btFig(arena, id) {
+  return Array.prototype.find.call(arena.querySelectorAll('.bt-fig'), f => f.dataset.bu === id);
+}
+/* The named rows, the bench line and the announcer sit OUTSIDE the scene —
+   the scene is the picture, they are the readable half — so these look at the
+   document rather than at the arena. Scoping them to the arena silently found
+   nothing and left every row frozen at full health. */
+function btRow(id) {
+  return Array.prototype.find.call(document.querySelectorAll('[data-bur]'), r => r.dataset.bur === id);
+}
 
-  if (ev.t === 'hit') {
-    const u = arena.querySelector(`[data-bu="${ev.unit}"]`);
-    if (u) { u.classList.remove('lunge'); void u.offsetWidth; u.classList.add('lunge'); }
-    if (bossEl) { bossEl.classList.remove('shake'); void bossEl.offsetWidth; bossEl.classList.add('shake'); }
-    setBar(arena.querySelector('.bt-bosshp i'), bt.bossHp / bt.boss.hp);
-    const n = arena.querySelector('.bt-bosshp-num');
-    if (n) n.textContent = bt.bossHp + ' / ' + bt.boss.hp;
-    floatNum(bossEl, '-' + ev.dmg, 'dmg');
-  } else if (ev.t === 'boss') {
-    const u = arena.querySelector(`[data-bu="${ev.unit}"]`);
-    if (u) {
-      u.classList.remove('hurt'); void u.offsetWidth; u.classList.add('hurt');
-      const unit = bt.roster.find(x => x.id === ev.unit);
-      setBar(u.querySelector('.bt-uhp i'), unit ? ev.hp / unit.max : 0);
-      floatNum(u, '-' + ev.dmg, 'dmg');
+/* Every animation on a figure drives `transform`, so exactly one may be on it
+   at a time. Deciding that here rather than by CSS ordering means adding a
+   sixth animation later cannot silently cancel the charge. */
+const BT_FIG_ANIM = ['charging', 'back', 'hurt', 'tagin'];
+function btAnim(f, cls) {
+  BT_FIG_ANIM.forEach(c => f.classList.remove(c));
+  void f.offsetWidth;                       // restart even if it is the same class
+  if (cls) f.classList.add(cls);
+}
+
+function paintBeat(b) {
+  const arena = document.getElementById('bt-arena');
+  if (!arena || !bt) return;
+  const bossEl = arena.querySelector('.bt-bosschar');
+
+  if (b.k === 'round') {
+    bt.round = b.n;
+    btBanner(arena, 'Round ' + b.n);
+    btSay('Round ' + b.n + '. ' + bt.boss.name + ' at ' +
+      Math.max(0, bt.bossHp) + ' of ' + bt.boss.hp + '.');
+  } else if (b.k === 'charge') {
+    btMove(arena, b.units, true);
+  } else if (b.k === 'regroup') {
+    btMove(arena, b.units, false);
+  } else if (b.k === 'hit') {
+    const f = btFig(arena, b.ev.unit);
+    if (f) { f.classList.remove('strike'); void f.offsetWidth; f.classList.add('strike'); }
+    if (bossEl) {
+      bossEl.classList.remove('shake'); void bossEl.offsetWidth; bossEl.classList.add('shake');
+      btBurst(bossEl);
+      floatNum(bossEl, '-' + b.ev.dmg, 'dmg');
     }
-    if (bossEl) { bossEl.classList.remove('boss-lunge'); void bossEl.offsetWidth; bossEl.classList.add('boss-lunge'); }
-  } else if (ev.t === 'down') {
-    const u = arena.querySelector(`[data-bu="${ev.unit}"]`);
-    if (u) { u.classList.add('down'); const s = u.querySelector('.bt-ustate'); if (s) s.textContent = 'catching their breath'; }
-  } else if (ev.t === 'tagin') {
-    render();                          // a new face on the mat needs real markup
+    btSetBossHp(arena);
+  } else if (b.k === 'windup') {
+    if (bossEl) bossEl.classList.add('windup');
+    btBanner(arena, bt.boss.name + ' answers', 'warn');
+  } else if (b.k === 'boss') {
+    if (bossEl) {
+      bossEl.classList.remove('windup');
+      bossEl.classList.remove('boss-lunge'); void bossEl.offsetWidth; bossEl.classList.add('boss-lunge');
+    }
+    const f = btFig(arena, b.ev.unit);
+    if (f) {
+      f.style.animationDelay = '0ms';
+      btAnim(f, 'hurt');
+      btBurst(f, 'small');
+      floatNum(f, '-' + b.ev.dmg, 'dmg');
+    }
+    btSetUnitHp(arena, b.ev.unit, b.ev.hp);
+  } else if (b.k === 'down') {
+    const f = btFig(arena, b.ev.unit);
+    if (f) f.classList.add('down');
+    btSetUnitHp(arena, b.ev.unit, 0);
+  } else if (b.k === 'tagin') {
+    btSwapIn(arena, b.ev);
+  } else if (b.k === 'recover') {
+    if (bossEl) bossEl.classList.remove('windup');
   }
+}
+
+/* Where each attacker lands, as a fraction of the obstacle's own box. Fanned
+   on purpose: sent to one point they stack into a single silhouette and the
+   whole thing reads as a queue instead of a class going in together. */
+const BT_LAND = [
+  [-0.34, 0.10], [-0.02, -0.14], [-0.48, -0.06],
+  [0.16, 0.16], [-0.24, 0.36], [0.24, -0.02]
+];
+
+/* Everyone still standing runs in together, hops onto the obstacle, then
+   drops back to their spot. Distances are measured live against the two
+   boxes, so it lands correctly at any width without hard-coded pixels. */
+function btMove(arena, ids, forward) {
+  const bossEl = arena.querySelector('.bt-bosschar');
+  if (!bossEl) return;
+  const br = bossEl.getBoundingClientRect();
+  ids.forEach((id, i) => {
+    const f = btFig(arena, id);
+    if (!f) return;
+    if (!forward) {
+      f.style.animationDelay = (i * 40) + 'ms';
+      f.style.zIndex = f.dataset.z || '';
+      btAnim(f, 'back');
+      return;
+    }
+    if (f.classList.contains('down')) return;
+    const r = f.getBoundingClientRect();
+    const land = BT_LAND[i % BT_LAND.length];
+    const dx = (br.left + br.width * (0.44 + land[0])) - (r.left + r.width / 2);
+    const dy = (br.top + br.height * (0.58 + land[1])) - (r.top + r.height * 0.62);
+    f.style.setProperty('--cx', Math.round(dx) + 'px');
+    f.style.setProperty('--cy', Math.round(dy) + 'px');
+    f.style.animationDelay = (i * 60) + 'ms';
+    f.style.zIndex = 40 + i;             // in front of the obstacle, not behind it
+    btAnim(f, 'charging');
+  });
+}
+
+function btSetBossHp(arena) {
+  const bar = arena.querySelector('.bt-bosshp i');
+  if (bar) bar.style.width = Math.max(0, Math.min(1, bt.bossHp / bt.boss.hp)) * 100 + '%';
+  const n = arena.querySelector('.bt-bosshp-num');
+  if (n) n.textContent = Math.max(0, bt.bossHp) + ' / ' + bt.boss.hp;
+}
+
+function btSetUnitHp(arena, id, hp) {
+  const u = bt.roster.find(x => x.id === id);
+  if (!u) return;
+  const frac = Math.max(0, Math.min(1, hp / u.max));
+  const f = btFig(arena, id);
+  if (f) {
+    const bar = f.querySelector('.bt-fighp i');
+    if (bar) bar.style.width = frac * 100 + '%';
+    if (hp <= 0) f.classList.add('down');
+  }
+  const row = btRow(id);
+  if (row) {
+    const bar = row.querySelector('.bt-uhp i');
+    if (bar) bar.style.width = frac * 100 + '%';
+    const st = row.querySelector('.bt-ustate');
+    if (st) st.textContent = hp <= 0 ? 'catching their breath' : hp + ' / ' + u.max;
+    row.classList.toggle('down', hp <= 0);
+  }
+}
+
+/* A fresh face on the mat takes the tired one's slot, markup and all. Doing
+   it in place rather than re-rendering keeps every other animation alive. */
+function btSwapIn(arena, ev) {
+  const u = bt.roster.find(x => x.id === ev.unit);
+  if (!u) return;
+  const slot = bt.active.indexOf(ev.unit);
+  const host = Array.prototype.find.call(arena.querySelectorAll('.bt-fig'),
+    f => Number(f.dataset.slot) === slot);
+  if (host) {
+    host.classList.remove('down', 'strike');
+    host.style.zIndex = host.dataset.z || '';
+    host.style.animationDelay = '0ms';
+    host.dataset.bu = u.id;
+    host.innerHTML = btFigInner(u, bt.live[u.id]);
+    btAnim(host, 'tagin');
+  }
+  const row = btRow(ev.replaces);
+  if (row) row.outerHTML = btUnitRow(u, bt.live[u.id]);
+  const bench = document.querySelector('.bt-bench');
+  if (bench) {
+    const left = bt.roster.filter(x => bt.active.indexOf(x.id) < 0 && bt.live[x.id] > 0).length;
+    bench.textContent = left ? left + ' more waiting to tag in' : 'nobody left on the bench';
+  }
+  btSay(u.name + ' tags in.');
+}
+
+function btBanner(arena, text, cls) {
+  const el = arena.querySelector('.bt-banner');
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'bt-banner' + (cls ? ' ' + cls : '');
+  void el.offsetWidth;
+  el.classList.add('show');
+}
+
+/* The scene is meaningless to a screen reader, so say what happened. Coarse
+   on purpose — once a round, not once a punch. */
+function btSay(text) {
+  const el = document.querySelector('.bt-say');
+  if (el) el.textContent = text;
+}
+
+/* A ring and a few sparks where the strike lands. Pure decoration: it is
+   spawned and removed, and nothing reads it. */
+function btBurst(host, size) {
+  if (!host) return;
+  const w = document.createElement('span');
+  w.className = 'bt-burst' + (size === 'small' ? ' small' : '');
+  w.setAttribute('aria-hidden', 'true');
+  let sparks = '';
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 + Math.random() * 0.7;
+    const d = 16 + Math.random() * 14;
+    sparks += '<i style="--tx:' + Math.round(Math.cos(a) * d) + 'px;--ty:' +
+      Math.round(Math.sin(a) * d) + 'px;--d:' + (i * 30) + 'ms"></i>';
+  }
+  w.innerHTML = '<b></b>' + sparks;
+  w.style.left = (36 + Math.random() * 28) + '%';
+  w.style.top = (30 + Math.random() * 28) + '%';
+  host.appendChild(w);
+  setTimeout(() => w.remove(), 700);
 }
 
 function floatNum(host, text, cls) {
   if (!host) return;
   const s = document.createElement('span');
   s.className = 'bt-float ' + (cls || '');
+  s.setAttribute('aria-hidden', 'true');
   s.textContent = text;
+  s.style.left = (30 + Math.random() * 40) + '%';
   host.appendChild(s);
-  setTimeout(() => s.remove(), 900);
+  setTimeout(() => s.remove(), 950);
 }
 
 function finishBattle() {
   if (!bt || bt.done) return;
   bt.done = true;
+  btClear();
   const boss = bt.boss;
   const st = bossState();
   if (bt.sim.win) {
@@ -7403,7 +7742,7 @@ function renderBossPick() {
       <p class="sub">Open a pack first — your class is who shows up.</p>
     </div>`;
   }
-  const cards = BOSS_ROSTER.map((b, i) => {
+  const cards = BOSS_ROSTER.map(b => {
     const unlocked = bossIsUnlocked(b.id);
     const clears = st.cleared[b.id] || 0;
     return `<div class="bt-card${unlocked ? '' : ' locked'}" style="--bc:${b.tint}">
@@ -7419,7 +7758,7 @@ function renderBossPick() {
   }).join('');
   return `<div class="card">
     <h2>The obstacle course</h2>
-    <p class="sub">Your whole class goes in — six on the mat, the rest tag in as people tire.
+    <p class="sub">Your whole class walks onto the mat — six at a time, the rest tagging in as people tire.
     Rarer students hit harder and last longer, and <b>${bonus}% of your damage comes from what you have actually mastered</b>.
     Losing costs nothing at all: no entry fee, nobody lost, retry as often as you like.</p>
     <p class="sub faint">These are not people. They are the things that actually beat martial artists —
@@ -7428,38 +7767,57 @@ function renderBossPick() {
   <div class="bt-list">${cards}</div>`;
 }
 
+/* One figure's insides. Shared by the first render and by a tag-in, so the
+   swapped-in student is built exactly the same way. */
+function btFigInner(u, hp) {
+  const c = DJ_BY_ID[u.id];
+  const frac = Math.max(0, Math.min(1, hp / u.max)) * 100;
+  return `<div class="bt-figwrap"><div class="bt-figart">${c ? djCharSvg(c, { cls: 'bt-char' }) : ''}</div></div>
+    <div class="bt-fighp" style="--rc:${DJ_RARITY[u.r].c}"><i style="width:${frac}%"></i></div>`;
+}
+
+/* The readable half. The scene shows who is where; this says who they are and
+   how they are doing, because six 38px bars cannot carry a name. */
+function btUnitRow(u, hp) {
+  return `<div class="bt-unit${hp <= 0 ? ' down' : ''}" data-bur="${esc(u.id)}" style="--rc:${DJ_RARITY[u.r].c}">
+    <div class="bt-uname"><span class="bt-un">${esc(u.name)}</span>${djRarityTag(u.r, true)}</div>
+    <div class="bt-uhp"><i style="width:${Math.max(0, Math.min(1, hp / u.max)) * 100}%"></i></div>
+    <div class="bt-ustate">${hp <= 0 ? 'catching their breath' : hp + ' / ' + u.max}</div>
+  </div>`;
+}
+
 function renderBattle() {
   const b = bt.boss;
-  const bossFrac = bt.bossHp / b.hp;
-  const activeIds = bt.active;
-  const units = activeIds.map(id => bt.roster.find(u => u.id === id)).filter(Boolean);
-  const bench = bt.roster.filter(u => activeIds.indexOf(u.id) < 0 && bt.live[u.id] > 0).length;
+  const units = bt.active.map(id => bt.roster.find(u => u.id === id)).filter(Boolean);
+  const bench = bt.roster.filter(u => bt.active.indexOf(u.id) < 0 && bt.live[u.id] > 0).length;
   const done = bt.done;
   const won = done && bt.sim.win;
+  const rom = S.settings.showRomanization;
 
-  const rows = units.map(u => {
+  const figs = units.map((u, slot) => {
+    const p = BT_SLOTS[slot] || BT_SLOTS[0];
     const hp = bt.live[u.id];
-    const c = DJ_BY_ID[u.id];
-    return `<div class="bt-unit${hp <= 0 ? ' down' : ''}" data-bu="${esc(u.id)}" style="--rc:${DJ_RARITY[u.r].c}">
-      <div class="bt-uart">${c ? djCharSvg(c) : ''}</div>
-      <div class="bt-ubody">
-        <div class="bt-uname"><span class="bt-un">${esc(u.name)}</span>${djRarityTag(u.r, true)}</div>
-        <div class="bt-uhp"><i style="width:${Math.max(0, hp / u.max) * 100}%"></i></div>
-        <div class="bt-ustate">${hp <= 0 ? 'catching their breath' : hp + ' / ' + u.max}</div>
-      </div>
-    </div>`;
+    return `<div class="bt-fig${hp <= 0 ? ' down' : ''}" data-bu="${esc(u.id)}" data-slot="${slot}" data-z="${p.z}"
+      style="left:${p.x}%;bottom:${p.b}px;--s:${p.s};--idle:${(slot * 0.34).toFixed(2)}s;z-index:${p.z}">${btFigInner(u, hp)}</div>`;
   }).join('');
 
-  return `<div class="card bt-arena" id="bt-arena">
-    <div class="bt-bosswrap">
-      <div class="bt-boss" style="--bc:${b.tint}">${bossSvg(b)}</div>
-      <div class="bt-bossname">${esc(b.name)} <span class="ko faint">${esc(b.ko)}</span></div>
-      <div class="bt-bosshp"><i style="width:${Math.max(0, bossFrac) * 100}%"></i></div>
-      <div class="bt-bosshp-num">${Math.max(0, bt.bossHp)} / ${b.hp}</div>
-      <div class="bt-bossline faint">${esc(b.line)}</div>
+  return `<div class="card bt-wrap">
+    <div class="bt-scene" id="bt-arena" role="img"
+         aria-label="Your class facing ${esc(b.name)} on the mat">
+      <div class="bt-wall"><span class="dj-scroll ko" aria-hidden="true">수련</span></div>
+      <div class="bt-hud">
+        <div class="bt-hud-name">${esc(b.name)} <span class="ko">${esc(b.ko)}</span>${
+          rom ? ` <i class="dj-rom">${esc(b.rom)}</i>` : ''}</div>
+        <div class="bt-bosshp"><i style="width:${Math.max(0, bt.bossHp / b.hp) * 100}%"></i></div>
+        <div class="bt-bosshp-num">${Math.max(0, bt.bossHp)} / ${b.hp}</div>
+      </div>
+      <div class="bt-banner" aria-hidden="true"></div>
+      ${figs}
+      <div class="bt-bosschar" style="--bc:${b.tint}">${bossSvg(b)}</div>
     </div>
-    <div class="bt-units">${rows}</div>
-    ${bench ? `<div class="bt-bench faint">${bench} more waiting to tag in</div>` : ''}
+    <p class="bt-say sr-only" aria-live="polite"></p>
+    <div class="bt-units">${units.map(u => btUnitRow(u, bt.live[u.id])).join('')}</div>
+    <div class="bt-bench faint">${bench ? bench + ' more waiting to tag in' : 'nobody left on the bench'}</div>
     ${done ? `<div class="bt-result ${won ? 'win' : 'lose'}">
       <b>${won ? esc(b.name) + ' is done for today.' : 'Not this time.'}</b>
       <div class="sub">${won
@@ -7471,18 +7829,27 @@ function renderBattle() {
         <button class="btn primary" data-boss="${esc(b.id)}">Go again</button>
         <button class="btn ghost" data-dj="tab-battle">Back to the list</button>
       </div>
-    </div>` : `<div class="bt-running faint">fighting…</div>`}
+    </div>` : `<div class="row bt-running">
+      <span class="faint">Round ${bt.round || 1}…</span>
+      <button class="btn ghost sm" data-bt="skip">Skip to the result</button>
+    </div>`}
   </div>`;
 }
 
 /* Debug/test handles — declared here for the same TDZ reason as part6's. */
 Object.assign(window.__HKD, {
-  BOSS_ROSTER, BOSS_BY_ID, BOSS_UNIT, BT_ACTIVE,
+  BOSS_ROSTER, BOSS_BY_ID, BOSS_UNIT, BT_ACTIVE, BT_SLOTS,
   bossState, bossIsUnlocked, bossUnlockedIndex, studyBonus,
-  battleRoster, simulateBattle, startBattle, finishBattle
+  battleRoster, simulateBattle, buildBeats, startBattle, finishBattle, btSkip
 });
 Object.defineProperty(window.__HKD, 'bt', {
   get() { return bt; }, set(v) { bt = v; }, configurable: true
+});
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-bt]');
+  if (!t) return;
+  if (t.dataset.bt === 'skip') btSkip();
 });
 
 
