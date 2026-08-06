@@ -163,3 +163,70 @@ function djCharSvg(c, opts) {
   </g>
 </svg>`;
 }
+
+/* ============================================================
+   THE OBSTACLES — what the class actually trains against
+   ------------------------------------------------------------
+   Deliberately NOT people. Two reasons, both load-bearing:
+
+   1. The no-technique rule above applies here too. A fight scene between
+      illustrated humans is exactly the "here is how you do it to someone"
+      picture that safety misinformation is made of. Abstract shapes cannot
+      be copied onto a training partner.
+   2. The curriculum this app teaches says leave > control > damage, lowest
+      rung first, and that you are responsible for the other person. A game
+      where the class gangs up on a human and empties their health bar
+      argues the opposite of the Green belt content. So the enemy is what
+      genuinely defeats martial artists: forgetting, impatience, sloppiness,
+      overconfidence.
+
+   Nothing here is rank, and beating one never awards a belt.
+   ============================================================ */
+
+const BOSS_ROSTER = [
+  { id: 'forgetting', name: 'The Forgetting', ko: '망각', rom: 'manggak',
+    hp: 330, atk: 9, tint: '#5b6b8c', shape: 'drift',
+    blurb: 'Eats whatever you stop revisiting. Slow, patient, always there.',
+    line: 'It is not fast. It simply never stops.',
+    rewardTier: 'rare' },
+  { id: 'impatience', name: 'Impatience', ko: '조급함', rom: 'jogeupham',
+    hp: 720, atk: 18, tint: '#b3673f', shape: 'spike',
+    blurb: 'Wants it all today. Skips the warm-up, rushes the rep, learns nothing.',
+    line: 'Hits first, hits often, and tires early.',
+    rewardTier: 'rare' },
+  { id: 'sloppiness', name: 'Sloppiness', ko: '허술함', rom: 'heosulham',
+    hp: 1080, atk: 26, tint: '#6a7f52', shape: 'blob',
+    blurb: 'Good enough, near enough, close enough — until the day it is not.',
+    line: 'Soaks up damage the way bad habits soak up time.',
+    rewardTier: 'legendary' },
+  { id: 'overconfidence', name: 'Overconfidence', ko: '자만', rom: 'jaman',
+    hp: 1550, atk: 34, tint: '#7d5b9e', shape: 'crown',
+    blurb: 'The last one, and the one that catches people who think they have arrived.',
+    line: 'Strongest when you think you have already won.',
+    rewardTier: 'mythical' }
+];
+const BOSS_BY_ID = Object.fromEntries(BOSS_ROSTER.map(b => [b.id, b]));
+
+/* One obstacle, as an inline SVG. Shapes are deliberately non-human: a mass
+   with eyes, never a figure with limbs a student could imitate. */
+function bossSvg(b, opts) {
+  const o = opts || {};
+  const t = b.tint;
+  const body = {
+    drift: 'M32 6 q20 2 24 20 q4 18 -6 30 q-10 12 -18 12 q-8 0 -18 -12 q-10 -12 -6 -30 q4 -18 24 -20 Z',
+    spike: 'M32 4 l9 14 l15 -6 l-6 15 l14 9 l-14 9 l6 15 l-15 -6 l-9 14 l-9 -14 l-15 6 l6 -15 l-14 -9 l14 -9 l-6 -15 l15 6 Z',
+    blob:  'M32 8 q22 0 26 18 q4 16 -4 26 q-8 10 -22 10 q-14 0 -22 -10 q-8 -10 -4 -26 q4 -18 26 -18 Z',
+    crown: 'M32 4 l8 12 l10 -8 l2 14 l12 4 l-10 10 l6 14 l-14 -2 l-6 14 l-8 -12 l-8 12 l-6 -14 l-14 2 l6 -14 l-10 -10 l12 -4 l2 -14 l10 8 Z'
+  }[b.shape] || 'M32 8 q22 0 26 18 q4 16 -4 26 q-8 10 -22 10 q-14 0 -22 -10 q-8 -10 -4 -26 q4 -18 26 -18 Z';
+  return `<svg class="boss-svg${o.cls ? ' ' + o.cls : ''}" viewBox="0 0 64 76" xmlns="http://www.w3.org/2000/svg"
+    role="img" aria-label="${esc(b.name)}">
+    <ellipse cx="32" cy="71" rx="19" ry="3.5" fill="#000" opacity=".28"/>
+    <path d="${body}" fill="${t}" opacity=".92"/>
+    <path d="${body}" fill="none" stroke="#000" stroke-width="1" opacity=".28"/>
+    <ellipse cx="25" cy="32" rx="4.6" ry="5.4" fill="#0e1016"/>
+    <ellipse cx="39" cy="32" rx="4.6" ry="5.4" fill="#0e1016"/>
+    <circle cx="26.4" cy="30.2" r="1.5" fill="#fff" opacity=".9"/>
+    <circle cx="40.4" cy="30.2" r="1.5" fill="#fff" opacity=".9"/>
+    <path d="M25 45 q7 -4 14 0" stroke="#0e1016" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}

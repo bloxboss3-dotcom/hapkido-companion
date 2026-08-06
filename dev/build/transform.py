@@ -152,7 +152,7 @@ s = repl_region(s, 'const MASCOT_SVG = `', '</svg>`;', avatar, 'mascot-svg')
 # ---------- 8. splice in the hapkido layer before BOOT ----------
 parts = (BUILD / 'course-art.js').read_text(encoding='utf-8') + '\n\n' + \
         (BUILD / 'dojang-art.js').read_text(encoding='utf-8') + '\n\n' + \
-        '\n\n'.join((BUILD / f'hapkido-part{i}.js').read_text(encoding='utf-8') for i in range(1, 7))
+        '\n\n'.join((BUILD / f'hapkido-part{i}.js').read_text(encoding='utf-8') for i in range(1, 8))
 M_BOOT = '/* ---------------------------------------------------------------\n   12. BOOT'
 assert M_BOOT in s, 'BOOT MARKER MISSING'
 s = s.replace(M_BOOT, parts + '\n\n' + M_BOOT, 1)
