@@ -1101,6 +1101,98 @@ async function answerCurrentRight() {
   });
   await sleep(200);
 
+  /* ---- 19e. THE OBSTACLE COURSE ---- */
+  ok('boss: the enemy is never a person, and never awards rank', await page.evaluate(() => {
+    const H = window.__HKD;
+    // Non-human shapes only, and no rank language anywhere in the roster.
+    const shapes = ['drift', 'spike', 'blob', 'crown'];
+    const text = H.BOSS_ROSTER.map(b => [b.name, b.blurb, b.line].join(' ')).join(' ');
+    return H.BOSS_ROSTER.every(b => shapes.indexOf(b.shape) >= 0) &&
+      !/belt|rank|gup|dan\b|promot/i.test(text);
+  }));
+  ok('boss: rarity drives both toughness and damage', await page.evaluate(() => {
+    const H = window.__HKD, U = H.BOSS_UNIT;
+    return U.common.hp < U.rare.hp && U.rare.hp < U.legendary.hp && U.legendary.hp < U.mythical.hp &&
+      U.common.atk < U.rare.atk && U.rare.atk < U.legendary.atk && U.legendary.atk < U.mythical.atk;
+  }));
+  ok('boss: everyone fights — reserves tag in when someone goes down', await page.evaluate(() => {
+    const H = window.__HKD;
+    const mk = (n, r) => Array.from({ length: n }, (_, i) => ({ id: 'u' + r + i, name: 'U', r,
+      max: H.BOSS_UNIT[r].hp, hp: H.BOSS_UNIT[r].hp, atk: H.BOSS_UNIT[r].atk }));
+    // A weak, oversized squad against a late obstacle guarantees casualties.
+    const sim = H.simulateBattle(H.BOSS_ROSTER[3], mk(14, 'common'), 0);
+    const downs = sim.log.filter(e => e.t === 'down').length;
+    const tags = sim.log.filter(e => e.t === 'tagin').length;
+    const fought = new Set(sim.log.filter(e => e.t === 'hit').map(e => e.unit));
+    return downs > 0 && tags > 0 && fought.size > H.BT_ACTIVE;   // more than the front six swung
+  }));
+  ok('boss: studying makes the class hit harder', await page.evaluate(() => {
+    const H = window.__HKD;
+    const mk = n => Array.from({ length: n }, (_, i) => ({ id: 'u' + i, name: 'U', r: 'common',
+      max: H.BOSS_UNIT.common.hp, hp: H.BOSS_UNIT.common.hp, atk: H.BOSS_UNIT.common.atk }));
+    const avg = bonus => {
+      let t = 0;
+      for (let i = 0; i < 120; i++) t += H.simulateBattle(H.BOSS_ROSTER[0], mk(6), bonus).round;
+      return t / 120;
+    };
+    return avg(0.6) < avg(0);                                    // same squad, fewer rounds
+  }));
+  ok('boss: a weak class loses to a late obstacle, a strong one wins', await page.evaluate(() => {
+    const H = window.__HKD;
+    const mk = (n, r) => Array.from({ length: n }, (_, i) => ({ id: 'u' + r + i, name: 'U', r,
+      max: H.BOSS_UNIT[r].hp, hp: H.BOSS_UNIT[r].hp, atk: H.BOSS_UNIT[r].atk }));
+    const rate = (roster, boss, bonus) => {
+      let w = 0;
+      for (let i = 0; i < 120; i++) if (H.simulateBattle(boss, roster, bonus).win) w++;
+      return w / 120;
+    };
+    const weak = rate(mk(5, 'common'), H.BOSS_ROSTER[3], 0);
+    const strong = rate(mk(12, 'common').concat(mk(10, 'rare'), mk(6, 'legendary'), mk(2, 'mythical')), H.BOSS_ROSTER[3], 0.6);
+    const beginner = rate(mk(5, 'common'), H.BOSS_ROSTER[0], 0);
+    return weak < 0.1 && strong > 0.9 && beginner > 0.8;         // a real ladder, welcoming at the bottom
+  }));
+  ok('boss: obstacles unlock in order', await page.evaluate(() => {
+    const H = window.__HKD;
+    H.bossState().cleared = {};
+    const firstOnly = H.BOSS_ROSTER.map(b => H.bossIsUnlocked(b.id));
+    H.bossState().cleared[H.BOSS_ROSTER[0].id] = 1;
+    const twoOpen = H.bossIsUnlocked(H.BOSS_ROSTER[1].id) && !H.bossIsUnlocked(H.BOSS_ROSTER[2].id);
+    H.bossState().cleared = {};
+    return firstOnly[0] && !firstOnly[1] && twoOpen;
+  }));
+  ok('boss: losing costs nothing — no ki, no characters, no entry fee', await page.evaluate(() => {
+    const H = window.__HKD, d = H.djState();
+    const kiBefore = H.kiBalance(), spentBefore = d.spent || 0;
+    const ownedBefore = Object.keys(d.owned).length;
+    // Force a losing run and finish it.
+    H.bt = { boss: H.BOSS_ROSTER[0], roster: [], sim: { log: [], win: false, round: 1 },
+             i: 0, done: false, live: {}, bossHp: 1, active: [], rewarded: null };
+    H.finishBattle();
+    const ok1 = H.kiBalance() === kiBefore && (d.spent || 0) === spentBefore &&
+      Object.keys(d.owned).length === ownedBefore;
+    H.bt = null;
+    return ok1;
+  }));
+  ok('boss: a first clear grants someone you did not already have', await page.evaluate(() => {
+    const H = window.__HKD, d = H.djState();
+    H.bossState().cleared = {};
+    const before = new Set(Object.keys(d.owned));
+    if (before.size >= H.DJ_ROSTER.length) return true;          // collection complete: ki instead
+    H.bt = { boss: H.BOSS_ROSTER[0], roster: [], sim: { log: [], win: true, round: 1 },
+             i: 0, done: false, live: {}, bossHp: 0, active: [], rewarded: null };
+    H.finishBattle();
+    const granted = H.bt && H.bt.rewarded;
+    const isNew = granted && !before.has(granted);
+    H.bt = null;
+    return !!isNew && H.bossState().cleared[H.BOSS_ROSTER[0].id] === 1;
+  }));
+  await page.evaluate(() => {
+    const H = window.__HKD;
+    H.bt = null; H.bossState().cleared = {}; H.save();
+    H.view = 'today'; H.render();
+  });
+  await sleep(200);
+
   /* ---- 19c. CONTENT GATES ----
      Everything above tests machinery. These test the CONTENT, across every
      item that exists — so a future belt cannot ship a mis-gated technique, a

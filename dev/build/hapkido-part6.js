@@ -239,7 +239,7 @@ function renderDojang() {
   const today = djKiToday();
   const canOne = bal >= PACK_COST, canFive = bal >= PACK_COST * 5;
   const st = djCollectionStats();
-  const tab = djTab === 'collection' ? 'collection' : 'room';
+  const tab = ['collection', 'battle'].indexOf(djTab) >= 0 ? djTab : 'room';
   // Romanization follows Hangul everywhere in this app — Kevin cannot read
   // Hangul yet, and a currency he cannot read is a currency he cannot reason
   // about. Honour the same setting the rest of the UI uses.
@@ -271,8 +271,11 @@ function renderDojang() {
   <div class="dj-tabs">
     <button data-dj="tab-room" class="${tab === 'room' ? 'on' : ''}">The room</button>
     <button data-dj="tab-collection" class="${tab === 'collection' ? 'on' : ''}">Collection · ${st.owned}/${st.total}</button>
+    <button data-dj="tab-battle" class="${tab === 'battle' ? 'on' : ''}">Obstacles</button>
   </div>
-  ${tab === 'room' ? renderDojangRoom() : renderDojangCollection()}`;
+  ${tab === 'room' ? renderDojangRoom()
+    : tab === 'collection' ? renderDojangCollection()
+    : (bt ? renderBattle() : renderBossPick())}`;
 }
 
 /* Which dojang sub-tab is showing. */
@@ -300,5 +303,13 @@ document.addEventListener('click', e => {
   else if (a === 'open5') openPacks(5);
   else if (a === 'dismiss') { djState().last = null; save(); render(); }
   else if (a === 'tab-room') { djTab = 'room'; render(); }
-  else if (a === 'tab-collection') { djTab = 'collection'; render(); }
+  else if (a === 'tab-collection') { djTab = 'collection'; btClear(); bt = null; render(); }
+  else if (a === 'tab-battle') { djTab = 'battle'; btClear(); bt = null; render(); }
+});
+
+/* Entering an obstacle. Free, unlimited, and it never costs anything to lose. */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-boss]');
+  if (!t) return;
+  startBattle(t.dataset.boss);
 });

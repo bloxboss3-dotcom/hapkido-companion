@@ -53,16 +53,16 @@ Working title. Read `HANDOFF.md` for current state and roadmap before doing anyt
   session machinery, storage). NEVER modified.
 - `dev/build/transform.py` — builds the app: takes the Hanbit source, deletes the
   Korean course data, applies anchored string substitutions, appends
-  `course-art.js` + `dojang-art.js` + `hapkido-part1..6.js` before BOOT (later function declarations
+  `course-art.js` + `dojang-art.js` + `hapkido-part1..7.js` before BOOT (later function declarations
   override the originals — that's the override mechanism), swaps the mascot SVG
   (`avatar-svg.js`), appends `extra.css`. Writes `dev/hapkido-companion/index.html`
   (folder build, external curriculum) AND repo-root `index.html` (single file,
   curriculum inlined — the deployed one). Every anchor is asserted; a failed
   assert means the source drifted — fix the anchor, don't fumble the region.
-- `dev/build/hapkido-part1..6.js` — the hapkido layer: courses/catalogue/planner
+- `dev/build/hapkido-part1..7.js` — the hapkido layer: courses/catalogue/planner
   (1), exercises/session rendering (2), picker/path/belt/detail views (3), practice/
   instructor/method/settings (4), done/afterRender/actions/listeners/audio (5),
-  dojang economy/packs/collection (6).
+  dojang economy/packs/collection (6), obstacle course (7).
 - `dev/build/course-art.js` — the two course emblems as inline SVG (vector, so the
   single-file build stays small and crisp). `window.HKD_COURSE_ART = {way, art}`
   overrides them per course with a URL or data: URI if real artwork ever arrives.
@@ -74,6 +74,19 @@ Working title. Read `HANDOFF.md` for current state and roadmap before doing anyt
   cheer; an illustrated lock or throw is safety misinformation, same reason
   generated technique art is banned), and nothing here is rank — sashes are
   costume, rarity is never a belt colour, and the screen says so.
+- `dev/build/hapkido-part7.js` — the obstacle course: your collected class
+  fights an obstacle, each unit with its own health bar, rarity driving HP and
+  damage, six on the mat and the rest tagging in. **The enemy is never a
+  person** — they are 망각 (forgetting), impatience, sloppiness, overconfidence,
+  drawn as abstract shapes. Two reasons, both load-bearing: an illustrated
+  fight between humans is the same copyable-technique problem the dojang art
+  rule exists for, and a game where the class gangs up on a person argues the
+  opposite of the Green-belt content on proportionality and responsibility.
+  **Losing costs nothing** — no entry fee, no lost characters, no lost ki,
+  unlimited retries (invariant 5). Part of the damage comes from items actually
+  mastered, so the game points back at the work. Winning unlocks a character
+  and the next obstacle, never a rank. `simulateBattle()` is pure and returns
+  an event log; playback just animates it, which is why it is testable.
 - part6's economy: **기 (ki) pays for WORK, never for being right.** It is
   derived from `S.days[*].reviews`, which counts every graded answer whatever
   the grade — so there is nothing to hook and it survives import for free. Only
@@ -163,7 +176,7 @@ declares them; `domain.track` assigns items. Adding a third = one data entry.
 ```bash
 npm ci                                # once: playwright, exactly as locked
 npm run build                         # rebuilds both index.html files
-npm test                              # 148 checks; needs playwright + chromium
+npm test                              # 156 checks; needs playwright + chromium
 npm run check                         # build + in-sync check + test (what CI runs)
 npm run smoke                         # optional: tests the DEPLOYED site (needs network)
 ```
@@ -177,7 +190,7 @@ deploy-only failures (stale deploy, 404 or wrong MIME on an asset) that a
 `file://` matrix structurally cannot see. It is not in CI and needs real
 network — a sandbox that blocks the browser's egress can't run it.
 
-The matrix must pass 148/148 (grow it with every feature — count goes up, never
+The matrix must pass 156/156 (grow it with every feature — count goes up, never
 down). It covers: boot, course picker + switching + persistence, per-course paths,
 per-course daily budgets, course-scoped and both-course sessions, course-scoped vs
 whole-belt readiness, FSRS values against hand-computed expectations, wrong-answer

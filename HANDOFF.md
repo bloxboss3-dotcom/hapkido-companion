@@ -15,7 +15,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   assigns items; a third course is a data entry.
 - **Engine:** Hanbit's FSRS-5 scheduler, session planner, FX/celebration system,
   storage/migration safety — preserved via the transform-override build
-  (`dev/build/`). 148/148 automated checks passing.
+  (`dev/build/`). 156/156 automated checks passing.
 - **Repo:** `npm run build` / `npm test` / `npm run check`, plus a GitHub Actions
   job that rebuilds `index.html` on every PR and fails if the deployed file has
   drifted from the source it is generated from. Dependencies are locked
@@ -98,6 +98,19 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
   items, up from 46%; Green belt is entirely holds and control. Keep new belts
   weighted that way. Everything on Green is restricted class — being held is a
   partner situation by definition, and none of it is solo-practicable.
+- **The obstacle course (boss fights).** A third Dojang tab. Your whole
+  collected class goes in — six on the mat, the rest tag in as people tire —
+  each with an individual health bar, rarity driving toughness and damage, and
+  the fight plays out as an animation until one side is down. Four obstacles
+  unlock in order. **The enemy is never a person**: 망각 (The Forgetting),
+  Impatience, Sloppiness, Overconfidence, drawn as abstract shapes — an
+  illustrated human fight is the copyable-technique problem again, and ganging
+  up on someone contradicts the proportionality content. **Losing costs
+  nothing** (no fee, no losses, unlimited retries) because invariant 5 forbids
+  punishment mechanics. Study bonus: up to +60% damage from items mastered, so
+  the game points at the work. Balance is tuned as a ladder — a beginner's five
+  commons clear the first at ~98%, and each later obstacle needs real
+  collection growth; a weak class loses the last one ~100% of the time.
 - **Focus — skip what you are not working on.** Settings has a Focus panel
   listing every category with a toggle; each item's own page has a "skip this
   one for now" button. Muted material stops appearing in sessions, new and
@@ -138,7 +151,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 - **Deploy:** GitHub Pages serves root `index.html` (generated single-file), now
   by `git push` to `main` rather than manual upload. **Fully automatic:** the
   `auto-merge` job in `verify.yml` squash-merges a green non-draft `claude/*`
-  PR and Pages republishes itself, so nobody clicks merge. The 148-check matrix
+  PR and Pages republishes itself, so nobody clicks merge. The 156-check matrix
   is therefore the only gate before students see a change — grow it, and keep
   PRs in draft until they are actually finished. The repo had drifted — only
   a hand-uploaded `index.html` was on GitHub, one build behind (still the old
@@ -186,7 +199,7 @@ this repo. Read `CLAUDE.md` first — especially the invariants.
 npm ci                                           # playwright, exactly as locked
 npm run check                                    # build + in-sync check + matrix
 ```
-Confirm 148/148, commit any drift, then pick up item 1 or 3 above with Kevin.
+Confirm 156/156, commit any drift, then pick up item 1 or 3 above with Kevin.
 After a deploy lands, `npm run smoke` checks the live site (needs network).
 When authoring the next belt, remember it wants units in BOTH courses.
 Original Hanbit app must never be modified: `dev/hanbit-korean.BACKUP-2026-07-30.html`
